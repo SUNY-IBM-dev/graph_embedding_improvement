@@ -261,11 +261,13 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
 
          #result_list = [taskname_colnames[i] if value != 0.0 else value for i, value in enumerate(eventdist.tolist())]
 
+         taskname_to_eventdist_dict = dict(zip(taskname_colnames, eventdist))
+         # { "Create": 88, .... }
          
 
 
 
-         data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = result_list
+         data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = taskname_to_eventdist_dict
 
       return data_dict
 
@@ -274,38 +276,54 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
 
 
 
-def eventdist( benign_data_dict, malware_data_dict ):
-    from collections import Counter
-    all_events = set()
+def get_tasknames_unique_to_class( benign_data_dict, malware_data_dict ):
+    
+    # Goal : Get the tasknames that uniquely appear in benign or malware (on the dataset level ; all benign samples vs. all malware samples)
+    benign_sample_global_set = set()
 
-    # Collect all unique events from both dictionaries
-    for events_list in benign_data_dict.values():
-        all_events.update(events_list)
-    for events_list in malware_data_dict.values():
-        all_events.update(events_list)
+    for benign_dataname, taskname_frequency_dict in benign_data_dict.items():
+       benign_sample_global_set += set(taskname_frequency_dict.keys())
 
-    # Initialize counters for both dictionaries
-    counter_dict1 = Counter()
-    counter_dict2 = Counter()
+    malware_sample_global_set = set()
 
-    # Count occurrences of each event in each dictionary
-    for events_list in benign_data_dict.values():
-        counter_dict1.update(events_list)
-    for events_list in malware_data_dict.values():
-        counter_dict2.update(events_list)
+    for malware_dataname, taskname_frequency_dict in malware_data_dict.items():
+       malware_sample_global_set += set(taskname_frequency_dict.keys())
 
-    # Calculate the difference in event counts
-    difference = {event: counter_dict1[event] - counter_dict2[event] for event in all_events}
-
-    # Separate events into more frequent in benign and more frequent in malware
-    more_frequent_in_benign = {event: count for event, count in difference.items() if count > 0}
-    more_frequent_in_malware = {event: -count for event, count in difference.items() if count < 0}
-    common_events_same_count = {event: 0 for event, count in difference.items() if count == 0}
-    # Find common events
-    common_events = {event: 0 for event in difference}
+    tasknames_unique_to_malware = malware_sample_global_set - benign_sample_global_set
+    tasknames_unique_to_benign = benign_sample_global_set - malware_sample_global_set 
+    tasknames_appear_in_both = benign_sample_global_set.intersection(malware_sample_global_set)
 
 
-    return more_frequent_in_benign, more_frequent_in_malware , common_events_same_count, common_events 
+   #  from collections import Counter
+   #  all_events = set()
+
+   #  # Collect all unique events from both dictionaries
+   #  for events_list in benign_data_dict.values():
+   #      all_events.update(events_list)
+   #  for events_list in malware_data_dict.values():
+   #      all_events.update(events_list)
+
+   #  # Initialize counters for both dictionaries
+   #  counter_dict1 = Counter()
+   #  counter_dict2 = Counter()
+
+   #  # Count occurrences of each event in each dictionary
+   #  for events_list in benign_data_dict.values():
+   #      counter_dict1.update(events_list)
+   #  for events_list in malware_data_dict.values():
+   #      counter_dict2.update(events_list)
+
+   #  # Calculate the difference in event counts
+   #  difference = {event: counter_dict1[event] - counter_dict2[event] for event in all_events}
+
+   #  # Separate events into more frequent in benign and more frequent in malware
+   #  more_frequent_in_benign = {event: count for event, count in difference.items() if count > 0}
+   #  more_frequent_in_malware = {event: -count for event, count in difference.items() if count < 0}
+   #  common_events_same_count = {event: 0 for event, count in difference.items() if count == 0}
+   #  # Find common events
+   #  common_events = {event: 0 for event in difference}
+
+    return tasknames_unique_to_benign, tasknames_unique_to_malware , tasknames_appear_in_both
 #**********************************************************************************************************************************************************************
 
 #**********************************************************************************************************************************************************************
@@ -405,13 +423,13 @@ if __name__ == '__main__':
 
     benign_train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= benign_train_dataset )  
     malware_train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= malware_train_dataset )  
-    more_frequent_in_benign, more_frequent_in_malware,common_events_same_count, common_events = eventdist(benign_train_dataset__no_graph_structure_dict,malware_train_dataset__no_graph_structure_dict)
+    more_frequent_in_benign, more_frequent_in_malware,common_events_same_count, common_events = get_tasknames_unique_to_class(benign_train_dataset__no_graph_structure_dict,malware_train_dataset__no_graph_structure_dict)
     with open('/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Analysis_results/benign_vs_malware_train_eventdist_result_case2.json', 'w') as file:
       json.dump({'more_frequent_in_benign': more_frequent_in_benign, 'more_frequent_in_malware': more_frequent_in_malware,'common_events_same_count':common_events_same_count, 'common_events':common_events}, file)
     
     benign_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= benign_test_dataset )  
     malware_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= malware_test_dataset )  
-    more_frequent_in_benign, more_frequent_in_malware, common_events_same_count, common_events = eventdist(benign_test_dataset__no_graph_structure_dict,malware_test_dataset__no_graph_structure_dict)
+    more_frequent_in_benign, more_frequent_in_malware, common_events_same_count, common_events = get_tasknames_unique_to_class(benign_test_dataset__no_graph_structure_dict,malware_test_dataset__no_graph_structure_dict)
     with open('/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Analysis_results/benign_vs_malware_test_eventdist_result_case2.json', 'w') as file:
       json.dump({'more_frequent_in_benign': more_frequent_in_benign, 'more_frequent_in_malware': more_frequent_in_malware, 'common_events_same_count':common_events_same_count, 'common_events':common_events}, file)
     
