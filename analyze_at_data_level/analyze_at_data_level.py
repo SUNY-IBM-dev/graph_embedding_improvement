@@ -14,7 +14,7 @@ from code.model import GIN
 from code.trainer import TrainModel
 '''
 
-sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/source")
+sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_data_level/analyze_at_data_level.py")
 
 from source.dataprocessor_graphs import LoadGraphs
 from source.model import GIN
@@ -78,8 +78,89 @@ from collections import defaultdict
 import time
 #**********************************************************************************************************************************************************************
 
-# silkservice version
-taskname_colnames = [ 
+taskname_colnames_old = [
+   # Based on "TN2int_Revert()" of "/data/d1/jgwak1/tabby/BASELINE_COMPARISONS/Sequential/RF+Ngrams/RFSVM_ngram_flattened_subgraph_only_psh.py"
+
+   "None", #0
+
+   'CLEANUP', #1
+   'CLOSE', #2
+   'CREATE', #3
+   'CREATENEWFILE', #4
+   'DELETEPATH',#5
+   'DIRENUM',#6
+   'DIRNOTIFY',#7
+   'FLUSH',#8
+   'FSCTL',#9
+   'NAMECREATE',#10
+   'NAMEDELETE',#11
+   'OPERATIONEND',#12
+   'QUERYINFO',#13
+   'QUERYINFORMATION',#14
+   'QUERYEA',#15
+   'QUERYSECURITY',#16
+   'READ',#17
+   'WRITE',#18
+   'SETDELETE',#19
+   'SETINFORMATION', #20
+   'PAGEPRIORITYCHANGE',#21
+   'IOPRIORITYCHANGE',#22
+   'CPUBASEPRIORITYCHANGE',#23
+   'IMAGEPRIORITYCHANGE',#24
+   'CPUPRIORITYCHANGE',#25
+   'IMAGELOAD',#26
+   'IMAGEUNLOAD',#27
+   'PROCESSSTOP',#28
+   'PROCESSSTART',#29
+   'PROCESSFREEZE',#30
+   'PSDISKIOATTRIBUTE',#31
+   'PSIORATECONTROL',#32 
+   'THREADSTART',#33
+   'THREADSTOP',#34
+   'THREADWORKONBEHALFUPDATE', #35
+   'JOBSTART',#36
+   'JOBTERMINATE',#37
+   'LOSTEVENT',#38
+   'PSDISKIOATTRIBUTION',#39
+   'RENAME',#40
+   'RENAMEPATH',#41
+   'THISGROUPOFEVENTSTRACKSTHEPERFORMANCEOFFLUSHINGHIVES',#42(index in final bit vector)
+
+   "UDPIP42_DatasentoverUDPprotocol",  #43
+   "UDPIP43_DatareceivedoverUDPprotocol", #44
+   "UDPIP49_UDPconnectionattemptfailed", #45
+
+   "TCPIP10_TCPIPDatasent",   # 46
+   "TCPIP11_TCPIPDatareceived", # 47
+   "TCPIP12_TCPIPConnectionattempted", # 48
+   "TCPIP13_TCPIPDisconnectissued", # 49
+   "TCPIP14_TCPIPDataretransmitted", # 50
+   "TCPIP15_TCPIPConnectionaccepted", # 51
+   "TCPIP16_TCPIPReconnectattempted", # 52
+   "TCPIP17_TCPIPTCPconnectionattemptfailed", # 53
+   "TCPIP18_TCPIPProtocolcopieddataonbehalfofuser", # 54
+
+   "REGISTRY32_CreateKey", # 55
+   "REGISTRY33_OpenKey", # 56
+   "REGISTRY34_DeleteKey", # 57
+   "REGISTRY35_QueryKey", # 58
+   "REGISTRY36_SetValueKey", # 59
+   "REGISTRY37_DeleteValueKey", # 60
+   "REGISTRY38_QueryValueKey", # 61
+   "REGISTRY39_EnumerateKey", # 62
+   "REGISTRY40_EnumerateValueKey", # 63
+   "REGISTRY41_QueryMultipleValueKey", # 64
+   "REGISTRY42_SetInformationKey", # 65
+   "REGISTRY43_FlushKey", # 66
+   "REGISTRY44_CloseKey", # 67
+   "REGISTRY45_QuerySecurityKey", # 68
+   "REGISTRY46_SetSecurityKey", # 69
+
+   "Else" # 70
+
+]
+
+taskname_colnames = [
     'None_or_empty', #0 (index 0) 
     'Cleanup', #1
     'Close', #2
@@ -175,51 +256,74 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
       for data in dataset:
 
          data.edge_attr = data.edge_attr[:,:-1] # drop time-scalar
-
+        
          eventdist = torch.sum(data.edge_attr, dim = 0)
 
-         result_list = [taskname_colnames[i] if value != 0.0 else value for i, value in enumerate(eventdist.tolist())]
+         #result_list = [taskname_colnames[i] if value != 0.0 else value for i, value in enumerate(eventdist.tolist())]
+
+         taskname_to_eventdist_dict = dict(zip(taskname_colnames, eventdist))
+         # { "Create": 88, .... }
+         
 
 
-         data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = result_list
+
+         data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = taskname_to_eventdist_dict
 
       return data_dict
 
 
 
 
-def eventdist(benign_data_dict,malware_data_dict):
-    from collections import Counter
-    all_events = set()
-
-    # Collect all unique events from both dictionaries
-    for events_list in benign_data_dict.values():
-        all_events.update(events_list)
-    for events_list in malware_data_dict.values():
-        all_events.update(events_list)
-
-    # Initialize counters for both dictionaries
-    counter_dict1 = Counter()
-    counter_dict2 = Counter()
-
-    # Count occurrences of each event in each dictionary
-    for events_list in benign_data_dict.values():
-        counter_dict1.update(events_list)
-    for events_list in malware_data_dict.values():
-        counter_dict2.update(events_list)
-
-    # Calculate the difference in event counts
-    difference = {event: counter_dict1[event] - counter_dict2[event] for event in all_events}
-
-    # Separate events into more frequent in benign and more frequent in malware
-    more_frequent_in_benign = {event: count for event, count in difference.items() if count > 0}
-    more_frequent_in_malware = {event: -count for event, count in difference.items() if count < 0}
-    common_events_same_count = {event: 0 for event, count in difference.items() if count == 0}
-    # Find common events
-    common_events = {event: 0 for event in difference}
 
 
-    return more_frequent_in_benign, more_frequent_in_malware , common_events_same_count, common_events 
+def get_tasknames_unique_to_class( benign_data_dict, malware_data_dict ):
+    
+    # Goal : Get the tasknames that uniquely appear in benign or malware (on the dataset level ; all benign samples vs. all malware samples)
+    benign_sample_global_set = set()
+
+    for benign_dataname, taskname_frequency_dict in benign_data_dict.items():
+       benign_sample_global_set += set(taskname_frequency_dict.keys())
+
+    malware_sample_global_set = set()
+
+    for malware_dataname, taskname_frequency_dict in malware_data_dict.items():
+       malware_sample_global_set += set(taskname_frequency_dict.keys())
+
+    tasknames_unique_to_malware = malware_sample_global_set - benign_sample_global_set
+    tasknames_unique_to_benign = benign_sample_global_set - malware_sample_global_set 
+    tasknames_appear_in_both = benign_sample_global_set.intersection(malware_sample_global_set)
+
+
+   #  from collections import Counter
+   #  all_events = set()
+
+   #  # Collect all unique events from both dictionaries
+   #  for events_list in benign_data_dict.values():
+   #      all_events.update(events_list)
+   #  for events_list in malware_data_dict.values():
+   #      all_events.update(events_list)
+
+   #  # Initialize counters for both dictionaries
+   #  counter_dict1 = Counter()
+   #  counter_dict2 = Counter()
+
+   #  # Count occurrences of each event in each dictionary
+   #  for events_list in benign_data_dict.values():
+   #      counter_dict1.update(events_list)
+   #  for events_list in malware_data_dict.values():
+   #      counter_dict2.update(events_list)
+
+   #  # Calculate the difference in event counts
+   #  difference = {event: counter_dict1[event] - counter_dict2[event] for event in all_events}
+
+   #  # Separate events into more frequent in benign and more frequent in malware
+   #  more_frequent_in_benign = {event: count for event, count in difference.items() if count > 0}
+   #  more_frequent_in_malware = {event: -count for event, count in difference.items() if count < 0}
+   #  common_events_same_count = {event: 0 for event, count in difference.items() if count == 0}
+   #  # Find common events
+   #  common_events = {event: 0 for event in difference}
+
+    return tasknames_unique_to_benign, tasknames_unique_to_malware , tasknames_appear_in_both
 #**********************************************************************************************************************************************************************
 
 #**********************************************************************************************************************************************************************
@@ -254,10 +358,12 @@ if __name__ == '__main__':
       #PW: Dataset-Case-1 
       "Dataset-Case-1": \
          "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
+
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
          "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
+    
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -276,6 +382,7 @@ if __name__ == '__main__':
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
          "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
+
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,6 +392,8 @@ if __name__ == '__main__':
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
          "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
+
+
     }
 
     _dim_node = 5 #46   # num node features ; the #feats
@@ -314,13 +423,13 @@ if __name__ == '__main__':
 
     benign_train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= benign_train_dataset )  
     malware_train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= malware_train_dataset )  
-    more_frequent_in_benign, more_frequent_in_malware,common_events_same_count, common_events = eventdist(benign_train_dataset__no_graph_structure_dict,malware_train_dataset__no_graph_structure_dict)
+    more_frequent_in_benign, more_frequent_in_malware,common_events_same_count, common_events = get_tasknames_unique_to_class(benign_train_dataset__no_graph_structure_dict,malware_train_dataset__no_graph_structure_dict)
     with open('/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Analysis_results/benign_vs_malware_train_eventdist_result_case2.json', 'w') as file:
       json.dump({'more_frequent_in_benign': more_frequent_in_benign, 'more_frequent_in_malware': more_frequent_in_malware,'common_events_same_count':common_events_same_count, 'common_events':common_events}, file)
     
     benign_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= benign_test_dataset )  
     malware_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= malware_test_dataset )  
-    more_frequent_in_benign, more_frequent_in_malware, common_events_same_count, common_events = eventdist(benign_test_dataset__no_graph_structure_dict,malware_test_dataset__no_graph_structure_dict)
+    more_frequent_in_benign, more_frequent_in_malware, common_events_same_count, common_events = get_tasknames_unique_to_class(benign_test_dataset__no_graph_structure_dict,malware_test_dataset__no_graph_structure_dict)
     with open('/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Analysis_results/benign_vs_malware_test_eventdist_result_case2.json', 'w') as file:
       json.dump({'more_frequent_in_benign': more_frequent_in_benign, 'more_frequent_in_malware': more_frequent_in_malware, 'common_events_same_count':common_events_same_count, 'common_events':common_events}, file)
     
