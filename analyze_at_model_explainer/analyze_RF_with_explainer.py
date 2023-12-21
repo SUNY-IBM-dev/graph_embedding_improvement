@@ -100,14 +100,36 @@ from sklearn.feature_extraction.text import CountVectorizer
 import shap
 import matplotlib.pyplot as plt    
 
+
+# TODO -- make sure explanations are produced by this
+EventID_to_RegEventName_dict =\
+{
+"EventID(1)":"Createkey", 
+"EventID(2)":"Openkey",
+"EventID(3)":"Deletekey", 
+"EventID(4)":"Querykey", 
+"EventID(5)":"SetValueKey", 
+"EventID(6)":"DeleteValueKey", 
+"EventID(7)":"QueryValueKey",  
+"EventID(8)":"EnumerateKey", 
+"EventID(9)":"EnumerateValuekey", 
+"EventID(10)":"QueryMultipleValuekey",
+"EventID(11)":"Setinformationkey", 
+"EventID(13)":"Closekey", 
+"EventID(14)":"QuerySecuritykey",
+"EventID(15)":"SetSecuritykey", 
+"Thisgroupofeventstrackstheperformanceofflushinghives": "RegPerfOpHiveFlushWroteLogFile",
+}
+
+
 def produce_SHAP_explanations(classification_model, 
                               Test_dataset : pd.DataFrame,
                               Train_dataset : pd.DataFrame,
                               Explanation_Results_save_dirpath : str, 
                               model_cls_name : str, 
-                              N : int = 1,
                               Test_SG_names : list,
-                              misprediction_subgraph_names : list
+                              misprediction_subgraph_names : list,
+                              N : int = 1,
                               ):
 
       # JY @ 2023-12-20: Integrate SHAP into this file based on:
@@ -122,23 +144,23 @@ def produce_SHAP_explanations(classification_model,
       # https://shap-lrjball.readthedocs.io/en/latest/generated/shap.TreeExplainer.html
       shap_explainer = shap.TreeExplainer(classification_model)
  
-      shap_values = shap_explainer.shap_values( np.array(Test_dataset.drop(columns=['label']).values), 
+      shap_values = shap_explainer.shap_values( np.array(Test_dataset.drop(columns=['data_name']).values), 
                                                 check_additivity=check_additivity) 
       f = plt.figure()
 
       if "RandomForestClassifier" in model_cls_name:
             shap.summary_plot(shap_values = shap_values[1], # class-1 (positive class ; malware)
-                              features = Test_dataset.drop(columns=['label']).values, 
-                              feature_names = list(Test_dataset.drop(columns=['label']).columns),      # pipeline[0] == our countvectorizer (n-gram)
+                              features = Test_dataset.drop(columns=['data_name']).values, 
+                              feature_names = list(Test_dataset.drop(columns=['data_name']).columns),      # pipeline[0] == our countvectorizer (n-gram)
                               plot_type = "bar")
-            model_resultX = pd.DataFrame(shap_values[1], columns = list(Test_dataset.drop(columns=['label']).columns))
+            model_resultX = pd.DataFrame(shap_values[1], columns = list(Test_dataset.drop(columns=['data_name']).columns))
 
       elif "GradientBoostingClassifier" in model_cls_name:
             shap.summary_plot(shap_values = shap_values, # class-? (positive class ; ?)
-                           features = Test_dataset.drop(columns=['label']).values, 
-                           feature_names = list(Test_dataset.drop(columns=['label']).columns),      # pipeline[0] == our countvectorizer (n-gram)
+                           features = Test_dataset.drop(columns=['data_name']).values, 
+                           feature_names = list(Test_dataset.drop(columns=['data_name']).columns),      # pipeline[0] == our countvectorizer (n-gram)
                            plot_type = "bar")                
-            model_resultX = pd.DataFrame(shap_values, columns = list(Test_dataset.drop(columns=['label']).columns))
+            model_resultX = pd.DataFrame(shap_values, columns = list(Test_dataset.drop(columns=['data_name']).columns))
 
       f.savefig( os.path.join(Explanation_Results_save_dirpath, 
                               f"{N}_gram_SHAP_Global_Interpretability_Summary_BarPlot_Push_Towards_Malware_Features.png"), 
@@ -149,7 +171,7 @@ def produce_SHAP_explanations(classification_model,
       # https://stackoverflow.com/questions/65534163/get-a-feature-importance-from-shap-values
 
       vals = np.abs(model_resultX.values).mean(0)
-      shap_importance = pd.DataFrame(list(zip(list(Test_dataset.drop(columns=['label']).columns), vals)),
+      shap_importance = pd.DataFrame(list(zip(list(Test_dataset.drop(columns=['data_name']).columns), vals)),
                                      columns=['col_name','feature_importance_vals']) # Later could make use of the "feature_importance_vals" if needed.
       shap_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
       shap_importance.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Importance.csv"))
@@ -167,10 +189,10 @@ def produce_SHAP_explanations(classification_model,
       # Global_Important_Features_Test_dataset["predict_proba"] = pd.Series(Predict_proba_dict)
       Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Test-Dataset.csv"))
 
-      # Save Global-First20Important Features "ALL dataset" (After Integrating Train and Test)
-      Global_Important_Features_All_dataset = pd.concat( [ Global_Important_Features_Train_dataset, Global_Important_Features_Test_dataset ] , axis = 0 )
-      Global_Important_Features_All_dataset.sort_values(by="subgraph", inplace= True)
-      Global_Important_Features_All_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames ALL-Dataset.csv"))
+      # # Save Global-First20Important Features "ALL dataset" (After Integrating Train and Test)
+      # Global_Important_Features_All_dataset = pd.concat( [ Global_Important_Features_Train_dataset, Global_Important_Features_Test_dataset ] , axis = 0 )
+      # Global_Important_Features_All_dataset.sort_values(by="subgraph", inplace= True)
+      # Global_Important_Features_All_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames ALL-Dataset.csv"))
 
 
 
@@ -187,6 +209,8 @@ def produce_SHAP_explanations(classification_model,
 
 
       # Iterate through all tested-subgraphs
+      Test_dataset.set_index('data_name', inplace= True) # added by JY @ 2023-12-20
+
       for Test_SG_name in Test_SG_names:
 
             shap_explainer = shap.TreeExplainer(classification_model)
@@ -224,8 +248,8 @@ def produce_SHAP_explanations(classification_model,
             # plt.figure(figsize=(300, 300), dpi=80)
             # plt.figure(layout="constrained")
             # plt.figure(layout="tight")
-            waterfallplot_out = shap.plots.waterfall(exp, max_display=15, show=False) # go inside here # https://github.com/shap/shap/issues/3213
-            # plt.tight_layout()
+            waterfallplot_out = shap.plots.waterfall(exp, max_display=20, show=False) # go inside here # https://github.com/shap/shap/issues/3213
+            plt.tight_layout()
 
             # https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/plots/waterfall.html
             # https://medium.com/dataman-in-ai/the-shap-with-more-elegant-charts-bc3e73fa1c0c
@@ -866,48 +890,90 @@ if __name__ == '__main__':
     parser.add_argument('-k', '--K', nargs = 1, type = int, default = [10])  
 
     parser.add_argument('-data', '--dataset', 
-                        choices= ['Dataset-Case-1',
-                                  'Dataset-Case-2'], 
-                        default = ["Dataset-Case-2"])
+                        choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
+                        default = ["Dataset-Case-1"])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
                      "LogisticRegression": LogisticRegression, "SVM": svm } 
     
     parser.add_argument('-mod_cls', '--trad_model_cls', nargs = 1, type = str, 
-                        default = ["XGBoost"] )
+                        default = ["RandomForest"] )
 
     parser.add_argument('-ss_opt', '--search_space_option', 
-                        choices= [ "xgboost_best_tuned_hyperparameters"
+                        choices= [ 
+                                 # defaults
+                                 "XGBoost_default_hyperparam",
+                                 "RandomForest_default_hyperparam",
+
+                                 #PW: RF and XGboost ----------------------------------------------------------
+                                 # JY: non-ahoc seems to be '5bit eventdist' + final-test
+                                 "RandomForest_best_hyperparameter_max_case1",
+                                 "RandomForest_best_hyperparameter_max_case1_nograph",
+
+                                 "RandomForest_best_hyperparameter_max_case2",
+                                 "RandomForest_best_hyperparameter_max_case2_nograph",   
+
+                                 "RandomForest_best_hyperparameter_max_case1_ahoc",   
+                                 "RandomForest_best_hyperparameter_max_case1_ahoc_nograph",  
+
+                                 "RandomForest_best_hyperparameter_max_case2_ahoc",   
+                                 "RandomForest_best_hyperparameter_max_case2_ahoc_nograph",
+
+                                 "XGBoost_best_hyperparameter_max_case1",   
+                                 "XGBoost_best_hyperparameter_max_case1_nograph",
+
+                                 "XGBoost_best_hyperparameter_max_case2",
+                                 "XGBoost_best_hyperparameter_max_case2_nograph",
+
+                                 "XGBoost_best_hyperparameter_max_case1_ahoc",
+                                 "XGBoost_best_hyperparameter_max_case1_ahoc_nograph",
+
+                                 "XGBoost_best_hyperparameter_max_case2_ahoc",
+                                 "XGBoost_best_hyperparameter_max_case2_ahoc_nograph",
+
+                                 # -----------------Mean------------------------------------
+                                 "RandomForest_best_hyperparameter_mean_case1",
+                                 "RandomForest_best_hyperparameter_mean_case1_nograph",
+
+                                 "RandomForest_best_hyperparameter_mean_case2",
+                                 "RandomForest_best_hyperparameter_mean_case2_nograph",
+
+                                 "RandomForest_best_hyperparameter_mean_case1_ahoc",
+                                 "RandomForest_best_hyperparameter_mean_case1_ahoc_nograph",
+
+                                 "RandomForest_best_hyperparameter_mean_case2_ahoc",
+                                 "RandomForest_best_hyperparameter_mean_case2_ahoc_nograph",
+                                  
                                   ], 
-                                  default = ["XGBoost_best_hyperparameter_case2_ahoc_nograph"])
+                                  default = ["RandomForest_best_hyperparameter_max_case1"])
    
     parser.add_argument('-sig_amp_opt', '--signal_amplification_option', 
+                        
                         choices= ['signal_amplified__event_1gram', #PW: this is a pair, want to see the effect of signal amplication vs no signal amplification
                                   'no_graph_structure__event_1gram', #PW: signal amplification means graph embedding
 
                                   'signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821',
+                                  
                                   'signal_amplified__event_1gram_nodetype_5bit', 
                                   'no_graph_structure__event_1gram_nodetype_5bit', 
 
                                   'signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
                                   'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
                                   ], 
-                                  #default = ["signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier"])
-                                  default = ["no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier"])
+
+                                  default = ["signal_amplified__event_1gram_nodetype_5bit"])
+    
     parser.add_argument('-readout_opt', '--readout_option', 
-                        choices= ['max',
-                                  'mean' # PW : also try
-                                  ], 
-                                  default = ["max"])
+                        choices= ['max', 'mean' ], 
+                        default = ["max"])
 
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset
                          #PW: serach on all- more robust, --> next to run
                                   
-                         #default = ["search_on_train"] )
-                         default = ["search_on_all"] )
+                         default = ["final_test"] )
 
     # cmd args
     K = parser.parse_args().K[0]
@@ -922,11 +988,20 @@ if __name__ == '__main__':
     #saved_models_dirpath = "/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_mean_Priti/saved_Traditional_ML_models"   #PW:to change
     model_cls_name = re.search(r"'(.*?)'", str(model_cls)).group(1)
 
+
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
-       experiment_results_df_fpath = f"/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_Priti/{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.csv"
+       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
+       if not os.path.exists(this_results_dirpath):
+           os.makedirs(this_results_dirpath)
+
 
     if search_on_train__or__final_test == "final_test":
-       final_test_results_df_fpath = f"/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_Priti/{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.csv"
+       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/{run_identifier}"
+       final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
+       if not os.path.exists(this_results_dirpath):
+           os.makedirs(this_results_dirpath)
 
     trace_filename = f'traces_stratkfold_double_strat_{model_cls_name}__generated@'+str(datetime.now())+".txt" 
 
@@ -1262,7 +1337,7 @@ if __name__ == '__main__':
          'random_state': 0,
          'split_shuffle_seed': 100 # not needed
          }
-         manual_space = [ Top_1]
+         manual_space = [ Top_1 ]
          return manual_space
 
     def XGBoost_best_hyperparameter_max_case1_nograph():   
@@ -1294,7 +1369,7 @@ if __name__ == '__main__':
          'random_state': 0,
          'split_shuffle_seed': 100 # not needed
          }
-         manual_space = [ Top_1]
+         manual_space = [ Top_1 ]
          return manual_space
 
     def XGBoost_best_hyperparameter_max_case1_ahoc():   
@@ -1310,7 +1385,7 @@ if __name__ == '__main__':
          'random_state': 99,
          'split_shuffle_seed': 100 # not needed
          }
-         manual_space = [ Top_1]
+         manual_space = [ Top_1 ]
          return manual_space
 
     def XGBoost_best_hyperparameter_max_case2_ahoc():   
@@ -1326,7 +1401,7 @@ if __name__ == '__main__':
          'random_state': 0,
          'split_shuffle_seed': 100 # not needed
          }
-         manual_space = [ Top_1]
+         manual_space = [ Top_1 ]
          return manual_space
 
     def XGBoost_best_hyperparameter_max_case1_ahoc_nograph():    #done
@@ -1565,7 +1640,7 @@ if __name__ == '__main__':
    # Prepare for train_dataset (or all-dataset) 
 
     if search_on_train__or__final_test == "search_on_all":  # ***** #
-      train_dataset = train_dataset + final_test_dataset
+         train_dataset = train_dataset + final_test_dataset
 
     # Now apply signal-amplification here (here least conflicts with existing code.)
     if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
@@ -2024,8 +2099,8 @@ if __name__ == '__main__':
                               classification_model = model,
                               Test_dataset = final_test_X,
                               Train_dataset = X,
-                              Explanation_Results_save_dirpath : str, 
+                              Explanation_Results_save_dirpath = this_results_dirpath, 
                               model_cls_name = model_cls_name, 
                               Test_SG_names = Test_SG_names,
                               misprediction_subgraph_names = misprediction_subgraph_names
-                              ):
+                              )
