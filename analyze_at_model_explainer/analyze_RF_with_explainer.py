@@ -104,20 +104,20 @@ import matplotlib.pyplot as plt
 # TODO -- make sure explanations are produced by this
 EventID_to_RegEventName_dict =\
 {
-"EventID(1)":"Createkey", 
-"EventID(2)":"Openkey",
-"EventID(3)":"Deletekey", 
-"EventID(4)":"Querykey", 
+"EventID(1)":"CreateKey", 
+"EventID(2)":"OpenKey",
+"EventID(3)":"DeleteKey", 
+"EventID(4)":"QueryKey", 
 "EventID(5)":"SetValueKey", 
 "EventID(6)":"DeleteValueKey", 
 "EventID(7)":"QueryValueKey",  
 "EventID(8)":"EnumerateKey", 
-"EventID(9)":"EnumerateValuekey", 
-"EventID(10)":"QueryMultipleValuekey",
-"EventID(11)":"Setinformationkey", 
-"EventID(13)":"Closekey", 
-"EventID(14)":"QuerySecuritykey",
-"EventID(15)":"SetSecuritykey", 
+"EventID(9)":"EnumerateValueKey", 
+"EventID(10)":"QueryMultipleValueKey",
+"EventID(11)":"SetinformationKey", 
+"EventID(13)":"CloseKey", 
+"EventID(14)":"QuerySecurityKey",
+"EventID(15)":"SetSecurityKey", 
 "Thisgroupofeventstrackstheperformanceofflushinghives": "RegPerfOpHiveFlushWroteLogFile",
 }
 
@@ -135,6 +135,11 @@ def produce_SHAP_explanations(classification_model,
       # JY @ 2023-12-20: Integrate SHAP into this file based on:
       #                  /data/d1/jgwak1/tabby/BASELINE_COMPARISONS/Sequential/RF+Ngrams/RFSVM_1gram_events_flattened_subgraph_only_psh.py
       #                  /data/d1/jgwak1/tabby/CXAI_2023_Experiments/Run_Explainers/SHAP_LIME__Ngram.py (*)   
+
+      # =============================================================================================================================
+      # First convert "EventID(<N>)" to its corresponding 
+      Train_dataset.rename(columns = EventID_to_RegEventName_dict, inplace = True)
+      Test_dataset.rename(columns = EventID_to_RegEventName_dict, inplace = True)
 
       # =============================================================================================================================
       # SHAP-Global 
@@ -176,16 +181,41 @@ def produce_SHAP_explanations(classification_model,
       shap_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
       shap_importance.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Importance.csv"))
 
+      # JY @ 2023-12-21: Need to get "dataname" here
+
       Global_Important_featureIndex_featureName = dict(zip(shap_importance.reset_index()['index'], shap_importance.reset_index()['col_name']))
       Global_Important_featureNames = [ v for k,v in Global_Important_featureIndex_featureName.items() ]
       # Save Global-First20Important Features "Train dataset"
       Global_Important_Features_Train_dataset = Train_dataset[ Global_Important_featureNames ]
+      
+      Train_dataset__data_name_column = Train_dataset['data_name']  # added by JY @ 2023-12-21
+      
       Global_Important_Features_Train_dataset = Global_Important_Features_Train_dataset.assign(SUM = Global_Important_Features_Train_dataset.sum(axis=1)) 
+      Global_Important_Features_Train_dataset = pd.concat([Train_dataset__data_name_column, Global_Important_Features_Train_dataset], axis = 1) # added by JY @ 2023-12-21
+
+      # added by JY @ 2023-12-21
+      def append_prefix(value, prefix): return prefix + value if not value.startswith('malware') else value      
+      Global_Important_Features_Train_dataset['data_name'] = Global_Important_Features_Train_dataset['data_name'].apply(lambda x: append_prefix(x, "benign_"))
+      Global_Important_Features_Train_dataset.sort_values(by = "data_name", inplace = True)
+      Global_Important_Features_Train_dataset.set_index("data_name", inplace = True)
+
       Global_Important_Features_Train_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Train-Dataset.csv"))
 
       # Save Global-First20Important Features "Test dataset"
-      Global_Important_Features_Test_dataset = Test_dataset[ Global_Important_featureNames ] #  여기가 문제인듯
+      Global_Important_Features_Test_dataset = Test_dataset[ Global_Important_featureNames ] 
+
+      Test_dataset__data_name_column = Test_dataset['data_name']  # added by JY @ 2023-12-21
+
       Global_Important_Features_Test_dataset = Global_Important_Features_Test_dataset.assign(SUM = Global_Important_Features_Test_dataset.sum(axis=1)) 
+
+      Global_Important_Features_Test_dataset = pd.concat([Test_dataset__data_name_column, Global_Important_Features_Test_dataset], axis = 1) # added by JY @ 2023-12-21
+
+      # added by JY @ 2023-12-21
+      def append_prefix(value, prefix): return prefix + value if not value.startswith('malware') else value      
+      Global_Important_Features_Test_dataset['data_name'] = Global_Important_Features_Test_dataset['data_name'].apply(lambda x: append_prefix(x, "benign_"))
+      Global_Important_Features_Test_dataset.sort_values(by = "data_name", inplace = True)
+      Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
+
       # Global_Important_Features_Test_dataset["predict_proba"] = pd.Series(Predict_proba_dict)
       Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Test-Dataset.csv"))
 
@@ -433,7 +463,7 @@ def get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist_dict( dataset
                target_nodes_of_outgoing_edges_from_thread_node = unique_outgoing_edges_from_thread_node[1] # edge-target is index 1
                source_nodes_of_incoming_edges_to_thread_node = unique_incoming_edges_to_thread_node[0] # edge-src is index 0
 
-               # "5bit 
+               # "5bit  -- just used for indexing into
                data__5bit = data.x[:,:5]
 
                #-- Option-1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -460,7 +490,7 @@ def get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist_dict( dataset
                # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
             thread_eventdist_adjacent_5bit_dist = torch.cat( [data_thread_node_both_direction_edges_edge_attrs, 
-                                                                  data_thread_node_all_unique_adjacent_nodes_5bit_dists], dim = 1)
+                                                              data_thread_node_all_unique_adjacent_nodes_5bit_dists], dim = 1)
             data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*?)\.pickle', data.name).group(1) ] = thread_eventdist_adjacent_5bit_dist.tolist()
 
             # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
@@ -891,12 +921,11 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        default = ["Dataset-Case-2"])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
                      "LogisticRegression": LogisticRegression, "SVM": svm } 
-    
     parser.add_argument('-mod_cls', '--trad_model_cls', nargs = 1, type = str, 
                         default = ["RandomForest"] )
 
@@ -946,26 +975,26 @@ if __name__ == '__main__':
                                  "RandomForest_best_hyperparameter_mean_case2_ahoc_nograph",
                                   
                                   ], 
-                                  default = ["RandomForest_best_hyperparameter_max_case1"])
+                                  default = ["RandomForest_best_hyperparameter_max_case2_nograph"])
    
     parser.add_argument('-sig_amp_opt', '--signal_amplification_option', 
                         
                         choices= ['signal_amplified__event_1gram', #PW: this is a pair, want to see the effect of signal amplication vs no signal amplification
                                   'no_graph_structure__event_1gram', #PW: signal amplification means graph embedding
-
-                                  'signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821',
                                   
                                   'signal_amplified__event_1gram_nodetype_5bit', 
                                   'no_graph_structure__event_1gram_nodetype_5bit', 
 
                                   'signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
                                   'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
+
+                                  'signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821',
                                   ], 
 
-                                  default = ["signal_amplified__event_1gram_nodetype_5bit"])
+                                  default = ["no_graph_structure__event_1gram_nodetype_5bit"])
     
     parser.add_argument('-readout_opt', '--readout_option', 
-                        choices= ['max', 'mean' ], 
+                        choices= ['max', 'mean' ],  # mean 도 해봐라 
                         default = ["max"])
 
     parser.add_argument("--search_on_train__or__final_test", 
@@ -991,6 +1020,7 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
        run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)
