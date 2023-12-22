@@ -129,6 +129,7 @@ def produce_SHAP_explanations(classification_model,
                               model_cls_name : str, 
                               Test_SG_names : list,
                               misprediction_subgraph_names : list,
+                              Predict_proba_dict : dict,
                               N : int = 1,
                               ):
 
@@ -209,15 +210,8 @@ def produce_SHAP_explanations(classification_model,
       Global_Important_Features_Test_dataset = Global_Important_Features_Test_dataset.assign(SUM = Global_Important_Features_Test_dataset.sum(axis=1)) 
 
       Global_Important_Features_Test_dataset = pd.concat([Test_dataset__data_name_column, Global_Important_Features_Test_dataset], axis = 1) # added by JY @ 2023-12-21
-
-      # added by JY @ 2023-12-21
-      def append_prefix(value, prefix): return prefix + value if not value.startswith('malware') else value      
-      Global_Important_Features_Test_dataset['data_name'] = Global_Important_Features_Test_dataset['data_name'].apply(lambda x: append_prefix(x, "benign_"))
-      Global_Important_Features_Test_dataset.sort_values(by = "data_name", inplace = True)
       Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
-
-      # Global_Important_Features_Test_dataset["predict_proba"] = pd.Series(Predict_proba_dict)
-      Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Test-Dataset.csv"))
+      Global_Important_Features_Test_dataset["predict_proba"] = pd.Series(Predict_proba_dict) # Added by JY @ 2023-12-21
 
       # # Save Global-First20Important Features "ALL dataset" (After Integrating Train and Test)
       # Global_Important_Features_All_dataset = pd.concat( [ Global_Important_Features_Train_dataset, Global_Important_Features_Test_dataset ] , axis = 0 )
@@ -241,8 +235,11 @@ def produce_SHAP_explanations(classification_model,
       # Iterate through all tested-subgraphs
       Test_dataset.set_index('data_name', inplace= True) # added by JY @ 2023-12-20
 
+      Global_Important_Features_Test_dataset['SHAP_sum_of_feature_shaps'] = None
+      Global_Important_Features_Test_dataset['SHAP_base_value'] = None
+      cnt = 0
       for Test_SG_name in Test_SG_names:
-
+            cnt += 1
             shap_explainer = shap.TreeExplainer(classification_model)
 
             shap_values = shap_explainer.shap_values(X = Test_dataset.loc[Test_SG_name].values, 
@@ -259,8 +256,11 @@ def produce_SHAP_explanations(classification_model,
             #                 feature_names=Test_dataset.columns)            
 
             if "RandomForestClassifier" in model_cls_name:
-               shap_values = shap_values[1]
-               base_value = shap_explainer.expected_value[1]
+               shap_values = shap_values[1]                  # extent to which a sample resembles a malware sample
+
+               base_value = shap_explainer.expected_value[1] #  base value represents the predicted probability of malware 
+                                                             #  class if we did not have any information of the feature values 
+                                                             #  of this sample
             
             elif "GradientBoostingClassifier" in model_cls_name:
                shap_values = shap_values 
@@ -296,9 +296,27 @@ def produce_SHAP_explanations(classification_model,
                waterfallplot_out.savefig( os.path.join(Correct_Predictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
 
 
+            # Added by JY @ 2023-12-21 : For local shap of sample (SUM of all feature's shap values for the sample)
+            #                                                      ^-- corresponds to "f(x)" in Waterfall plot
+            Test_SG_Local_Shap = sum(shap_values)
+            Global_Important_Features_Test_dataset.loc[Test_SG_name,'SHAP_sum_of_feature_shaps'] = Test_SG_Local_Shap
+            Global_Important_Features_Test_dataset.loc[Test_SG_name, 'SHAP_base_value'] = base_value
 
+            print(f"{cnt} / {len(Test_SG_names)} : SHAP-local done for {Test_SG_name}", flush=True)
 
+      # added by JY @ 2023-12-21
+      def append_prefix(value, prefix): return prefix + value if not value.startswith('malware') else value      
 
+      Global_Important_Features_Test_dataset.index = Global_Important_Features_Test_dataset.index.map(lambda x: append_prefix(x, "benign_"))
+      Global_Important_Features_Test_dataset.sort_index(inplace=True)
+
+      # Global_Important_Features_Test_dataset['data_name'] = Global_Important_Features_Test_dataset['data_name'].apply(lambda x: append_prefix(x, "benign_"))
+      # Global_Important_Features_Test_dataset.sort_values(by = "data_name", inplace = True)
+      # Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
+
+      Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Test-Dataset.csv"))
+
+      print("done", flush=True)
 
       return 
 
@@ -919,15 +937,18 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('-k', '--K', nargs = 1, type = int, default = [10])  
 
-    parser.add_argument('-data', '--dataset', 
-                        choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-2"])
-
-
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
                      "LogisticRegression": LogisticRegression, "SVM": svm } 
     parser.add_argument('-mod_cls', '--trad_model_cls', nargs = 1, type = str, 
                         default = ["RandomForest"] )
+
+    parser.add_argument('-data', '--dataset', 
+                        choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
+                        default = ["Dataset-Case-2"])
+
+    parser.add_argument('-readout_opt', '--readout_option', 
+                        choices= ['max', 'mean' ],  # mean 도 해봐라 
+                        default = ["mean"])
 
     parser.add_argument('-ss_opt', '--search_space_option', 
                         choices= [ 
@@ -975,7 +996,7 @@ if __name__ == '__main__':
                                  "RandomForest_best_hyperparameter_mean_case2_ahoc_nograph",
                                   
                                   ], 
-                                  default = ["RandomForest_best_hyperparameter_max_case2_nograph"])
+                                  default = ["RandomForest_best_hyperparameter_mean_case2_nograph"])
    
     parser.add_argument('-sig_amp_opt', '--signal_amplification_option', 
                         
@@ -993,15 +1014,11 @@ if __name__ == '__main__':
 
                                   default = ["no_graph_structure__event_1gram_nodetype_5bit"])
     
-    parser.add_argument('-readout_opt', '--readout_option', 
-                        choices= ['max', 'mean' ],  # mean 도 해봐라 
-                        default = ["max"])
+
 
     parser.add_argument("--search_on_train__or__final_test", 
                                  
-                         choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset
-                         #PW: serach on all- more robust, --> next to run
-                                  
+                         choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
                          default = ["final_test"] )
 
     # cmd args
@@ -2116,6 +2133,16 @@ if __name__ == '__main__':
                final_test_results_df.to_csv(path_or_buf=final_test_results_df_fpath)
 
 
+               # Added by JY @ 2023-12-21
+               Predict_proba_dict = dict()
+               final_test_X___ = final_test_X.set_index("data_name")
+               for data_name, data in list(zip(final_test_X___.index, final_test_X___.values)):
+                  # prints out "X does not have valid feature names, but RandomForestClassifier was fitted with feature names" which is FINE
+                  # correctness checked
+                  Predict_proba_dict[data_name] = model.predict_proba(data.reshape(1,-1)).tolist()
+
+
+
                # Added by JY @ 2023-12-20
                Test_SG_names = final_test_X['data_name']
                triplets = list(zip(Test_SG_names, preds, final_test_y_))
@@ -2132,5 +2159,6 @@ if __name__ == '__main__':
                               Explanation_Results_save_dirpath = this_results_dirpath, 
                               model_cls_name = model_cls_name, 
                               Test_SG_names = Test_SG_names,
-                              misprediction_subgraph_names = misprediction_subgraph_names
+                              misprediction_subgraph_names = misprediction_subgraph_names,
+                              Predict_proba_dict = Predict_proba_dict
                               )
