@@ -976,7 +976,9 @@ if __name__ == '__main__':
     featureNames = countvectorizer.get_feature_names_out()
     featureIndexName_map = dict(zip(featureIndices, featureNames))
 
-
+    Train_dataset = pd.DataFrame(Train_data_vec_normalized, columns = featureIndices ) 
+    Train_dataset["data_name"] = Train_SG_names  # to use as index 
+    Train_dataset.set_index('data_name', inplace= True)
 
    #  # Now apply signal-amplification here (here least conflicts with existing code.)
    #  if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
@@ -1062,6 +1064,12 @@ if __name__ == '__main__':
       # Normalize ( +1e-16 is to avoid zero-division )
       # > https://stackoverflow.com/questions/46160717/two-methods-to-normalise-array-to-sum-total-to-1-0
       Test_data_vec_normalized = [ sg_ft_vec/ (sum(sg_ft_vec) + 1e-16) for sg_ft_vec in Test_data_vec ]
+
+
+      # Save the N-gram Test-Dataset 
+      Test_dataset = pd.DataFrame( Test_data_vec_normalized, columns = featureIndices )
+      Test_dataset["data_name"] = Test_SG_names    # to use as index
+      Test_dataset.set_index('data_name', inplace= True)
 
 
         # Also prepare for final-test dataset, to later test the best-fitted models on test-set
