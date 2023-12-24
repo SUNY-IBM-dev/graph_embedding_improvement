@@ -421,10 +421,13 @@ def Extract_SG_list( pickle_files_dirpath : str ):
 
 ####################################################################################################################
 # Access Each Subgraph and Extract their "TaskName+Opcode" vector (sorted in Timestamp order).
-def Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list : list, target_subgraph_list : list,
+def Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list : list, target_subgraph_list : list, EventID_to_RegEventName_dict : dict
                                                          # EventTypes_to_Drop_set : set,
-                                                            ):
+                                                     ):
    
+      # Reason for having "Subgraphs_dirpath_list" and "target_subgraph_list" is because, 
+      # there were cases where target subgraphs were in multiple directories before.
+
 
       # Make sure all elements in the set are lower-cased
       # EventTypes_to_Drop_set = { x.lower() for x in EventTypes_to_Drop_set }
@@ -464,6 +467,17 @@ def Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list : l
     
                            event_TaskName = taskname_colnames[event_TaskName_bit_vector.index(1)]
 
+                           # Added by JY -- this is important for countvectorizer because "(" ")" will be used as delimiters in countervectorizer which shouldn't be.
+                           if event_TaskName in EventID_to_RegEventName_dict:
+                               event_TaskName = EventID_to_RegEventName_dict[event_TaskName]
+
+                           # Added by JY -- this is important for countvectorizer because "/" will be used as delimiters in countervectorizer which shouldn't be.
+                           #                on the other hands, countvectorizer doesn't perceive "_" as delimeter.
+                           #                confirmed by "[x for x in featureNames if "_" in x ]" which can be done in subsequent code
+                           if "/" in event_TaskName:
+                               event_TaskName = event_TaskName.replace("/", "_")
+                               
+
                            SG_TaskNameANDTimeStamp_listdict[subgraph].append( {"TaskName": event_TaskName, "TimeStamp": event_TimeStamp} )
 
                   except Exception as e:
@@ -499,7 +513,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-2"])
+                        default = ["Dataset-Case-1"])
 
 
     parser.add_argument('-ss_opt', '--search_space_option', 
@@ -511,7 +525,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_all"] )
+                         default = ["search_on_train"] )
 
     parser.add_argument('-n', '--N', nargs = 1, type = int, default = [4])  # Added by JY @ 12-23
 
@@ -557,7 +571,7 @@ if __name__ == '__main__':
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -566,7 +580,7 @@ if __name__ == '__main__':
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
     }
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -575,29 +589,29 @@ if __name__ == '__main__':
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby//SILKETW_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
     }
 
 
     # Added by JY @ 2023-12-23 : 
-    # Indices dirpath
-    Malware_All_Indices_dict = {
-        "Dataset-Case-1": "/home/pwakodi1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/Indices/Malware", # Need modificaiton
-        "Dataset-Case-2": "/home/pwakodi1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case2/Indices/Malware", 
+    # Indices dirpath list : needs to be a list for compaitiblity with subsequent functions
+    Malware_All_Indices_list_dict = {
+        "Dataset-Case-1": ["/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/Indices/Malware"], # Need modificaiton
+        "Dataset-Case-2": ["/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case2/Indices/Malware"], 
     }
 
-    Benign_All_Indices_dict = {
-        "Dataset-Case-1": "/home/pwakodi1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/Indices/Benign", # Need modificaiton
-        "Dataset-Case-2": "/home/pwakodi1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case2/Indices/Benign", 
+    Benign_All_Indices_list_dict = {
+        "Dataset-Case-1": ["/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/Indices/Benign"], # Need modificaiton
+        "Dataset-Case-2": ["/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case2/Indices/Benign"], 
     }
 
 
@@ -605,7 +619,7 @@ if __name__ == '__main__':
 
     _num_classes = 2  # number of class labels and always binary classification.
 
-   #PW: 5 and 62 (61 taskname + 1 timestamp) based on new silketw 
+    #PW: 5 and 62 (61 taskname + 1 timestamp) based on new silketw 
     _dim_node = 5 #46   # num node features ; the #feats
     _dim_edge = 62 #72    # (or edge_dim) ; num edge features
 
@@ -613,12 +627,12 @@ if __name__ == '__main__':
     Benign_Offline_Train_pickles_dirpath = projection_datapath_Benign_Train_dict[dataset_choice]
     Malware_Offline_Train_pickles_dirpath = projection_datapath_Malware_Train_dict[dataset_choice]
 
-    Malware_Offline_Subgraphs_dirpath_list = Malware_All_Indices_dict[dataset_choice]
+    Malware_Offline_Subgraphs_dirpath_list = Malware_All_Indices_list_dict[dataset_choice]
 
     Benign_Offline_Test_pickles_dirpath = projection_datapath_Benign_Test_dict[dataset_choice]
     Malware_Offline_Test_pickles_dirpath = projection_datapath_Malware_Test_dict[dataset_choice]
 
-    Benign_Offline_Subgraphs_dirpath_list = Benign_All_Indices_dict[ dataset_choice ]
+    Benign_Offline_Subgraphs_dirpath_list = Benign_All_Indices_list_dict[ dataset_choice ]
 
 
 
@@ -886,20 +900,24 @@ if __name__ == '__main__':
 
 
     Malware_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
-                                                                                                    target_subgraph_list = Malware_Train_SG_list)
+                                                                                       target_subgraph_list = Malware_Train_SG_list,
+                                                                                       EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
                                                                                                      #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
 
     Malware_Test_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
-                                                                                                    target_subgraph_list = Malware_Test_SG_list)
+                                                                                      target_subgraph_list = Malware_Test_SG_list,
+                                                                                      EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
                                                                                                      #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
 
 
     Benign_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Benign_Offline_Subgraphs_dirpath_list, 
-                                                                                                   target_subgraph_list = Benign_Train_SG_list)
+                                                                                      target_subgraph_list = Benign_Train_SG_list,
+                                                                                      EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
                                                                                                    #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
 
     Benign_Test_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Benign_Offline_Subgraphs_dirpath_list, 
-                                                                                                    target_subgraph_list = Benign_Test_SG_list)
+                                                                                     target_subgraph_list = Benign_Test_SG_list,
+                                                                                     EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
 
 
    # =================================================================================================================================================
@@ -943,42 +961,48 @@ if __name__ == '__main__':
     Benign_Train_SG_names = [ k for k,v in Benign_Train_SG_TaskName_dict.items()] # list of SG names
     Malware_Train_SG_names = [ k for k,v in Malware_Train_SG_TaskName_dict.items()]
     Train_SG_names = Benign_Train_SG_names + Malware_Train_SG_names
-#{idx name: ["create"],["image"]}
+    #{idx name: ["create"],["image"]}
     Benign_Train_data_str = [ ' '.join(v) for k,v in Benign_Train_SG_TaskName_dict.items()] # list of TaskNameOpcodes-strings (each string for each SG)
     Malware_Train_data_str = [ ' '.join(v) for k,v in Malware_Train_SG_TaskName_dict.items()]
     Train_data_str = Benign_Train_data_str + Malware_Train_data_str 
     
     # Get the Train-target (labels)
-    Train_target = [0]*len(Benign_Train_data_str) + [1]*len(Malware_Train_data_str)
+   #  Train_target = [0]*len(Benign_Train_data_str) + [1]*len(Malware_Train_data_str)
 
     # list(zip(Train_data_str, Train_data_vec, Train_target))
     
-    BenignTrain_TaskNameVector_dict = dict(zip(Benign_Train_SG_names, Benign_Train_data_str))
-    MalwareTrain_TaskNameVector_dict = dict(zip(Malware_Train_SG_names, Malware_Train_data_str))
+   #  BenignTrain_TaskNameVector_dict = dict(zip(Benign_Train_SG_names, Benign_Train_data_str))
+   #  MalwareTrain_TaskNameVector_dict = dict(zip(Malware_Train_SG_names, Malware_Train_data_str))
 
 
     # https://stackoverflow.com/questions/2161752/how-to-count-the-frequency-of-the-elements-in-an-unordered-list
-    BenignTrain_TaskNameVectorSet_Dict =  { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in BenignTrain_TaskNameVector_dict.items()}
-    MalwareTrain_TaskNameVectorSet_Dict =  { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in MalwareTrain_TaskNameVector_dict.items()}
+   #  BenignTrain_TaskName_Dist_Dict =  { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in BenignTrain_TaskNameVector_dict.items()}
+   #  MalwareTrain_TaskName_Dist_Dict =  { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in MalwareTrain_TaskNameVector_dict.items()}
 
 
     # Fit-Transform Train-data  : https://www.meherbejaoui.com/python/counting-words-in-python-with-scikit-learn%27s-countvectorizer/
     Train_data_vec = countvectorizer.fit_transform(Train_data_str).toarray() # for train-data           ( [ sum(x) for x in X_train ]  )
 
 
-    # Normalize ( +1e-16 is to avoid zero-division )
-    # > https://stackoverflow.com/questions/46160717/two-methods-to-normalise-array-to-sum-total-to-1-0
-    Train_data_vec_normalized = [ sg_ft_vec/ (sum(sg_ft_vec) + 1e-16) for sg_ft_vec in Train_data_vec ]
-
-    list(zip(Train_data_str, Train_data_vec_normalized, Train_target))
+   #  list(zip(Train_data_str, Train_data_vec_normalized, Train_target))
     # Save mapping between feature-indx and feature-name
     featureIndices = list(range(len(countvectorizer.get_feature_names_out())))
     featureNames = countvectorizer.get_feature_names_out()
     featureIndexName_map = dict(zip(featureIndices, featureNames))
 
-    Train_dataset = pd.DataFrame(Train_data_vec_normalized, columns = featureIndices ) 
+    Train_dataset = pd.DataFrame(Train_data_vec, columns = featureNames ) 
     Train_dataset["data_name"] = Train_SG_names  # to use as index 
-    Train_dataset.set_index('data_name', inplace= True)
+   #  Train_dataset.set_index('data_name', inplace= True) 
+
+
+
+
+    # Normalize ( +1e-16 is to avoid zero-division )
+    # > https://stackoverflow.com/questions/46160717/two-methods-to-normalise-array-to-sum-total-to-1-0
+   #  Train_data_vec_normalized = [ sg_ft_vec/ (sum(sg_ft_vec) + 1e-16) for sg_ft_vec in Train_data_vec ]
+   #  Train_datase_normalzed = pd.DataFrame(Train_data_vec_normalized, columns = featureIndices ) 
+   #  Train_dataset_normalzed["data_name"] = Train_SG_names  # to use as index 
+   #  Train_dataset_normalzed.set_index('data_name', inplace= True)
 
    #  # Now apply signal-amplification here (here least conflicts with existing code.)
    #  if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
@@ -1039,7 +1063,6 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test == "final_test":
         
-
       Benign_Test_SG_names = [ k for k,v in Benign_Test_SG_TaskName_dict.items()] # list of SG names
       Malware_Test_SG_names = [ k for k,v in Malware_Test_SG_TaskName_dict.items()]
       Test_SG_names = Benign_Test_SG_names + Malware_Test_SG_names
@@ -1048,28 +1071,27 @@ if __name__ == '__main__':
       Malware_Test_data_str = [ ' '.join(v) for k,v in Malware_Test_SG_TaskName_dict.items()]
       Test_data_str = Benign_Test_data_str + Malware_Test_data_str
 
-      BenignTest_TaskNameVector_dict = dict(zip(Benign_Test_SG_names, Benign_Test_data_str))
-      MalwareTest_TaskNameVector_dict = dict(zip(Malware_Test_SG_names, Malware_Test_data_str))
+      # BenignTest_TaskNameVector_dict = dict(zip(Benign_Test_SG_names, Benign_Test_data_str))
+      # MalwareTest_TaskNameVector_dict = dict(zip(Malware_Test_SG_names, Malware_Test_data_str))
 
-      BenignTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in BenignTest_TaskNameVector_dict.items()}
-      MalwareTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in MalwareTest_TaskNameVector_dict.items()}
+      # BenignTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in BenignTest_TaskNameVector_dict.items()}
+      # MalwareTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in MalwareTest_TaskNameVector_dict.items()}
 
-
-      # Get the Train-target (labels)
-      Test_target = [0]*len(Benign_Test_data_str) + [1]*len(Malware_Test_data_str)
+      # # Get the Train-target (labels)
+      # Test_target = [0]*len(Benign_Test_data_str) + [1]*len(Malware_Test_data_str)
 
       # Transform Test-data  : https://www.meherbejaoui.com/python/counting-words-in-python-with-scikit-learn%27s-countvectorizer/
       Test_data_vec = countvectorizer.transform(Test_data_str).toarray() # since test-data, transform with the fitted countvectorizer.
       
       # Normalize ( +1e-16 is to avoid zero-division )
       # > https://stackoverflow.com/questions/46160717/two-methods-to-normalise-array-to-sum-total-to-1-0
-      Test_data_vec_normalized = [ sg_ft_vec/ (sum(sg_ft_vec) + 1e-16) for sg_ft_vec in Test_data_vec ]
+      # Test_data_vec_normalized = [ sg_ft_vec/ (sum(sg_ft_vec) + 1e-16) for sg_ft_vec in Test_data_vec ]
 
 
       # Save the N-gram Test-Dataset 
-      Test_dataset = pd.DataFrame( Test_data_vec_normalized, columns = featureIndices )
+      Test_dataset = pd.DataFrame( Test_data_vec, columns = featureIndices )
       Test_dataset["data_name"] = Test_SG_names    # to use as index
-      Test_dataset.set_index('data_name', inplace= True)
+      # Test_dataset.set_index('data_name', inplace= True)
 
 
         # Also prepare for final-test dataset, to later test the best-fitted models on test-set
@@ -1139,10 +1161,7 @@ if __name__ == '__main__':
    
    # TODO  @ Resume from here at 2023-12-26 -- Also check correctness of above
    
-   if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
-
-
-
+    if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
 
             # Instantiate Experiments Results Dataframe
             colnames= list(search_space[0].keys()) + [t+"_"+m for t,m in list(product(["Avg_Val"],["Accuracy","F1","Precision","Recall"]))] +\
@@ -1208,6 +1227,10 @@ if __name__ == '__main__':
 
                X_grouplist = []
 
+
+               # Added by JY @ 2023-12-24               
+               X = Train_dataset
+               
                data_names = X['data_name']
 
                for data_name in data_names:
@@ -1417,6 +1440,9 @@ if __name__ == '__main__':
                   else: return 0
                   # else: ValueError("no benign or malware substr")
 
+               # Added by JY @ 2023-12-24
+               X = Train_dataset
+               final_test_X = Test_dataset
 
                X_ = X.drop("data_name", axis = 1)
                y_ = X['data_name'].apply(convert_to_label)
