@@ -13,11 +13,11 @@ JY @ 2023-12-23 Started combining (more accuractely, integrating (1) into (2) ):
 (2) /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/analyze_RF_with_explainer.py
 '''
 
-sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/N_gram_hyperparameter_tuning/source")
+# sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/N_gram_hyperparameter_tuning/source")
 
-from source.dataprocessor_graphs import LoadGraphs
-from source.model import GIN
-from source.trainer_meng_ver import TrainModel
+# from source.dataprocessor_graphs import LoadGraphs
+# from source.model import GIN
+# from source.trainer_meng_ver import TrainModel
 
 from itertools import product
 import pandas as pd
@@ -45,7 +45,7 @@ from sklearn.metrics import make_scorer
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 #GNN-TRAINING
-from source.dataprocessor_graphs import LoadGraphs
+# from source.dataprocessor_graphs import LoadGraphs
 #from source.model import GAT, GIN, GIN_no_edgefeat, GIN_no_edgefeat_simplified, GCN, GAT_He, GAT_mlp_fed_1gram 
 #from source.model import GNNBasic, LocalMeanPool,  SumPool, GlobalMeanPool
 
@@ -1230,7 +1230,7 @@ if __name__ == '__main__':
 
                # Added by JY @ 2023-12-24               
                X = Train_dataset
-               
+
                data_names = X['data_name']
 
                for data_name in data_names:
