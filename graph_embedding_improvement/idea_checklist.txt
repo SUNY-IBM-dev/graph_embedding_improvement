@@ -1,0 +1,28 @@
+[ Ideas to try:]
+
+[Priority-1] TRY: Prof Guanhua said to consider “concatenating” the temporal-Ngram with graph-embedding? 
+        Graph-embedding serving as additional info.  
+   — “could” write a script : Integrating the “n-gram” part with “graph-embedding” part
+      -- /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/analyze_RF_with_explainer.py
+      -- /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/N_gram_hyperparameter_tuning/n_gram_hypeparam_tuning.py
+
+
+[Priority-2] Weighted-sum
+   - Give weights on particular threads
+   --> What is the logic behind process starting threads
+   --> So if a process runs a particular application, is there a straightforward way to distinguish threads that correspond to the actual activity of that application and threads that are more for background activities ?
+      ^-- This seems like a challenging task in genenal.
+          Look at the threadstart events?
+          
+   --> TODO: Write a script that groups events by thread (take into account possibility of thread-id reuse).
+
+
+[Priority-3] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
+
+
+[Priority-4] Incorporate N-gram (temporal information) into graph-embedding?
+   -- fit_transform for all edges in training data , in parallel? , then aggregate , and transform? 
+      (this will need some good amount of effort, LESS importance ** )
+
+
+[ Priti is also running the "Signal-Amplification suggested approach suggested by Prof Guanhua way back" ]
