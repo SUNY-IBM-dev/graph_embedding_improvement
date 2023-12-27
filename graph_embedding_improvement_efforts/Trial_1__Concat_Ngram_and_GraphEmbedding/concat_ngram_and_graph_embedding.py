@@ -1034,11 +1034,14 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        default = ["Dataset-Case-2"])
+
+    parser.add_argument('-n', '--N', nargs = 1, type = int, default = [4])  # Added by JY @ 12-23
+
 
     parser.add_argument('-readout_opt', '--readout_option', 
                         choices= ['max', 'mean' ],  # mean 도 해봐라 
-                        default = ["mean"])
+                        default = ["max"])
 
     parser.add_argument('-ss_opt', '--search_space_option', 
                         choices= [ 
@@ -1072,7 +1075,6 @@ if __name__ == '__main__':
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
                          default = ["search_on_train"] )
 
-    parser.add_argument('-n', '--N', nargs = 1, type = int, default = [4])  # Added by JY @ 12-23
 
     # cmd args
     K = parser.parse_args().K[0]
