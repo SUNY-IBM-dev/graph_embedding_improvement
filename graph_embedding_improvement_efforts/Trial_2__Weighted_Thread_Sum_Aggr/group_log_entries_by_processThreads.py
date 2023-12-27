@@ -4,19 +4,11 @@ JY @ 2023-12-26 : Analyze the threads (e.g. if there are artifactual threads tha
                   so that we can perform weighted-sum aggregation for graph-embedding 
 ******************************************************************************************************************
 '''
-
-
 import sys
 sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_2__Weighted_Thread_Sum_Aggr")
 
-from helper_funcs import get_log_entries_with_entity_info,\
-                         summarize_log_entires_by_entity_and_key_info,\
-                         group_log_entries_by_entities,\
-                         get_splunkd_and_descendent_pids,\
-                         get_log_entries_of_process_of_interest_and_descendents,\
-                         find_unsorted_elements_and_indices,\
-                         check_whether_log_entries_sorted_within_same_ProcessThread,\
-                         group_log_entries_by_processThreads
+from helper_funcs import *
+                        
 
 #from status_0__97_techniques import status_0__97_techniques__list
 
@@ -119,6 +111,12 @@ if __name__ == "__main__":
                                                                          key= lambda item: item['_source']['TimeStamp'] )
 
 
+         # JY @ 2023-12-26 -- NOW convert @timestamp and TimeStamp from 'datetime' to 'str'
+         for log_entry in caldera_technique_process_and_descendents_log_entries:
+             log_entry['_source']['TimeStamp'] = str(log_entry['_source']['TimeStamp'])
+             log_entry['_source']['@timestamp'] = str(log_entry['_source']['@timestamp'])
+
+
          indices__to__log_entries_of_caldera_technique_process_and_its_descendents__dict[index] = caldera_technique_process_and_descendents_log_entries
 
 
@@ -144,7 +142,7 @@ if __name__ == "__main__":
 
    # ''' (7) Save the results '''
 
-   results_dirpath = "/data/d1/jgwak1/tabby/SUNYIBM_ExplainableAI_2nd_Year_JY/Task_1__Behavior_identification_and_intention_learning/1_0__Identify_Behavioral_Events/grouping_results"
+   results_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_2__Weighted_Thread_Sum_Aggr/GROUPING_RESULTS"
    if not os.path.exists(results_dirpath):
       raise RuntimeError(f"{results_dirpath} does not exist!")
 
@@ -152,6 +150,12 @@ if __name__ == "__main__":
    for index in indices__to__processThread_to_logentries__dict:
 
       results_fpath = os.path.join(results_dirpath, f"processThread_to_logentries__of__caldera_technique_and_descendent_procs__{index}__{datetime.now().strftime('%Y-%m-%d_%H_%M_%S')}.json")
+      
+      # json dumps indent related:
+      # https://stackoverflow.com/questions/13249415/how-to-implement-custom-indentation-when-pretty-printing-with-the-json-module
 
+      # JY @ 2023-12-26: Got Object of type datetime is not json serializable b/c of @timestamp attribute -- fix it.
+      
+      json_string = json.dumps( indices__to__processThread_to_logentries__dict[index] , indent= 2, cls = NoIndentEncoder )
       with open(results_fpath, "w") as json_fp:
-            json.dump( indices__to__processThread_to_logentries__dict[index], json_fp )
+            json_fp.write(json_string)

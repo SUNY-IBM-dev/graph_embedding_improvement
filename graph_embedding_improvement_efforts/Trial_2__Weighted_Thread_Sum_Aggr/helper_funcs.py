@@ -4,6 +4,66 @@ from datetime import datetime
 
 from collections import defaultdict
 
+#############################################################################################
+# https://stackoverflow.com/questions/13249415/how-to-implement-custom-indentation-when-pretty-printing-with-the-json-module
+# JY @ 2023-12-27: Following is probably not
+import json
+import uuid
+
+class NoIndent(object):
+    def __init__(self, value):
+        self.value = value
+
+class NoIndentEncoder(json.JSONEncoder):
+    def __init__(self, *args, **kwargs):
+        super(NoIndentEncoder, self).__init__(*args, **kwargs)
+        self.kwargs = dict(kwargs)
+        del self.kwargs['indent']
+        self._replacement_map = {}
+
+    def default(self, o):
+        if isinstance(o, NoIndent):
+            key = uuid.uuid4().hex
+            self._replacement_map[key] = json.dumps(o.value, **self.kwargs)
+            return "@@%s@@" % (key,)
+        else:
+            return super(NoIndentEncoder, self).default(o)
+
+   #  def encode(self, o):
+   #      result = super(NoIndentEncoder, self).encode(o)
+   #      for k, v in self._replacement_map.iteritems():
+   #          result = result.replace('"@@%s@@"' % (k,), v)
+   #      return result
+
+    # UPDATE: In Python 3, there is no iteritems. You can replace encode with this:
+    def encode(self, o):
+      result = super(NoIndentEncoder, self).encode(o)
+      for k, v in iter(self._replacement_map.items()):
+         result = result.replace('"@@%s@@"' % (k,), v)
+      return result        
+#############################################################################################
+
+EventID_to_RegEventName_dict =\
+{
+"EventID(1)":"CreateKey", 
+"EventID(2)":"OpenKey",
+"EventID(3)":"DeleteKey", 
+"EventID(4)":"QueryKey", 
+"EventID(5)":"SetValueKey", 
+"EventID(6)":"DeleteValueKey", 
+"EventID(7)":"QueryValueKey",  
+"EventID(8)":"EnumerateKey", 
+"EventID(9)":"EnumerateValueKey", 
+"EventID(10)":"QueryMultipleValueKey",
+"EventID(11)":"SetinformationKey", 
+"EventID(13)":"CloseKey", 
+"EventID(14)":"QuerySecurityKey",
+"EventID(15)":"SetSecurityKey", 
+"Thisgroupofeventstrackstheperformanceofflushinghives": "RegPerfOpHiveFlushWroteLogFile",
+}
+
+#############################################################################################
+
 def timestamp_conversion(logentry_timestamp_raw_str : str):
 
       decimal_places = 6 # precision to allow -- datetime.strptime can only handle upto 6
@@ -207,13 +267,50 @@ def group_log_entries_by_processThreads(log_entries : list) -> dict:
     # first group log-entries by process
     # then group log-entries by thread
 
+    ''' 
+    JY @ 2023-12-27:
+       Did not take into account cases where same process-id is re-used.
+       Did not take into account the cases where same thread-id is re-used under same process-id
+
+       Could later incorporate by processstart and threadstart
+       Not the highest priority since the goal here is to see ordered events of a thread to see if there is a pattern (identify artifactual threads?)
+       and it is more rare that a same thread-id is reused under the same re-used process-id
+    '''
+
+
 
     for log_entry in log_entries:
         
-        log_entry_pid = log_entry['_source']['ProcessID']
-        log_entry_tid = log_entry['_source']['ThreadID']
+        log_entry_pid = f"pid_{log_entry['_source']['ProcessID']}"
+        log_entry_tid = f"tid_{log_entry['_source']['ThreadID']}"
 
-        log_entry['_source']['TimeStamp'] = str(log_entry['_source']['TimeStamp']) # for pickling
+        log_entry['_source']['TimeStamp'] = str(log_entry['_source']['TimeStamp']) # for json
+        log_entry['_source']['@timestamp'] = str(log_entry['_source']['@timestamp']) # for json
+
+
+
+
+        logentry_EventName = log_entry['_source']['EventName'] 
+
+        if logentry_EventName in EventID_to_RegEventName_dict:
+           logentry_EventName = EventID_to_RegEventName_dict[logentry_EventName]
+
+
+
+        # Following can serve as key-info for log-entry:
+        #  log_entry['PROVIDER_SPECIFIC_ENTITY']
+        #  log_entry['_source']['EventName']
+        #  log_entry['_source']['TimeStamp']
+        #  log_entry['_source']['XmlEventData']
+
+        log_entry_key_info = {
+            "PROVIDER_SPECIFIC_ENTITY" : log_entry['PROVIDER_SPECIFIC_ENTITY'],
+            "EventName" : logentry_EventName,
+            "TimeStamp": log_entry['_source']['TimeStamp'],
+            # "XmlEventData": log_entry['_source']['XmlEventData']
+        }
+        log_entry_key_info_fstring = f"{log_entry_key_info}"
+        delimiter_fstring = "-"*150 # for easier reading
 
         if log_entry_pid in processThread_to_logentries_dict: # if log-entry's pid exists as a key
 
@@ -221,21 +318,40 @@ def group_log_entries_by_processThreads(log_entries : list) -> dict:
                # under this process, there exists a key for the thread,
                # so just append it 
 
-               processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(log_entry)
+               processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(log_entry_key_info_fstring)
+               processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(delimiter_fstring)
 
            else:
                # under this process, first event for this process-thread
                # so create space for it, and append the first event
                processThread_to_logentries_dict[log_entry_pid][log_entry_tid] = list()
-               processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(log_entry)
-
+               processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(log_entry_key_info_fstring)
+               processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(delimiter_fstring)
         else:
             # if log-entry's pid key is not populated yet,
             # obviously there is no corresponding space for the process-thread
             # so create the space and append the first log-entry for that process-thread             
             processThread_to_logentries_dict[log_entry_pid] = dict()
             processThread_to_logentries_dict[log_entry_pid][log_entry_tid] = list()
-            processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append( log_entry )
+            processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append( log_entry_key_info_fstring )
+            processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(delimiter_fstring)
+
+    # Added by JY @ 2023-12-27 Wrap "processThread_to_logentries_dict[log_entry_pid][log_entry_tid]" with NoIndent
+    #           --> https://stackoverflow.com/questions/13249415/how-to-implement-custom-indentation-when-pretty-printing-with-the-json-module
+               # obj = {
+               #   "layer1": {
+               #     "layer2": {
+               #       "layer3_2": "string", 
+               #       "layer3_1": NoIndent([{"y": 7, "x": 1}, {"y": 4, "x": 0}, {"y": 3, "x": 5}, {"y": 9, "x": 6}])
+               #     }
+               #   }
+               # }
+               # print json.dumps(obj, indent=2, cls=NoIndentEncoder)
+
+
+    for pid, tid_to_logentrylist_dict in processThread_to_logentries_dict.items():
+        for tid, logentrylist in tid_to_logentrylist_dict.items():
+            processThread_to_logentries_dict[pid][tid] = NoIndent(logentrylist)
 
     # returns dict of dict 
     return processThread_to_logentries_dict
@@ -408,9 +524,9 @@ def get_log_entries_with_entity_info( log_entries : list ) -> list:
          # Entity associated with a Process-Event?
          # --> Process and Thread that took action.
 
-         logentry_processname = log_entry.get('_source', {}).get('ProcessName')
+         logentry_imagename = log_entry.get('_source', {}).get('XmlEventData').get('ImageName') 
 
-         log_entry['PROVIDER_SPECIFIC_ENTITY'] = logentry_processname
+         log_entry['PROVIDER_SPECIFIC_ENTITY'] = logentry_imagename
 
          # Perhaps imagename? -- I think this mostly happens when imageload-and-unload events -- so don't use it.
          # logentry_ImageName = log_entry.get('_source_XmlEventData_ImageName', 'None')
