@@ -11,11 +11,7 @@
          -- /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/N_gram_hyperparameter_tuning/n_gram_hypeparam_tuning.py
 
 -----------------------------------------------------------------------------------------------------------------------------------
-[Priority-2] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
-   --> Refer to the neighborhood aggregation code of, say, 'pytorch GIN-conv layer' 
-
------------------------------------------------------------------------------------------------------------------------------------
-[Priority-3] Weighted-sum
+[Priority-2] Weighted-sum
    - Give lower weights on artifactual threads (~ give higher weights to more important threads )
    --> So what is the logic behind process starting threads?
    --> If a process runs a particular application, is there a straightforward way to distinguish threads that correspond to the actual activity of that application and threads that are more for background activities ?
@@ -27,7 +23,12 @@
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-[Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
+[Priority-3] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
+
+-----------------------------------------------------------------------------------------------------------------------------------
+[Priority-4] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
+   --> Refer to the neighborhood aggregation code of, say, 'pytorch GIN-conv layer' 
+
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-5] Incorporate N-gram (temporal information) directly into graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
