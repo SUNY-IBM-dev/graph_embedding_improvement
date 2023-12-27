@@ -14,7 +14,7 @@ from code.model import GIN
 from code.trainer import TrainModel
 '''
 
-sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement/source")
+sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_1__Concat_Ngram_and_GraphEmbedding/source")
 
 from source.dataprocessor_graphs import LoadGraphs
 from source.model import GIN
@@ -1725,7 +1725,7 @@ if __name__ == '__main__':
 
 
       # Save the N-gram Test-Dataset 
-      Test_dataset = pd.DataFrame( Test_data_vec, columns = featureIndices )
+      Test_dataset = pd.DataFrame( Test_data_vec, columns = featureNames )
       Test_dataset["data_name"] = Test_SG_names    # to use as index
 
     # *************************************************************************************************************************************************
@@ -1746,10 +1746,15 @@ if __name__ == '__main__':
          # [ N-GRAM TRAIN SET ]
          #  Train_dataset = pd.DataFrame(Train_data_vec, columns = featureNames ) 
          #  Train_dataset["data_name"] = Train_SG_names  # to use as index 
-
       old_X = X # just to check
-      X = pd.merge(X, Train_dataset, on='data_name', how='outer') # could do 'inner' but 'outer' for verification purposes
 
+      prefix_to_remove_for_merge = "SUBGRAPH_P3_"
+      Train_dataset['data_name'] = Train_dataset['data_name'].str.replace(prefix_to_remove_for_merge, '')
+      assert set(X.data_name) == set(Train_dataset.data_name), "mismatch in values of data_name column of X and Train_dataset"
+
+      X = pd.merge(X, Train_dataset, on='data_name', how='outer') # could do 'inner' but 'outer' for verification purposes
+      
+      # XGBoost and RF is generally not sensitive to scale of features -- so may not have to do extra feature-scaling
 
       if search_on_train__or__final_test == "final_test":
 
@@ -1764,13 +1769,17 @@ if __name__ == '__main__':
       
 
          old_final_test_X = final_test_X # just to check
+
+
+         prefix_to_remove_for_merge = "SUBGRAPH_P3_"
+         Test_dataset['data_name'] = Test_dataset['data_name'].str.replace(prefix_to_remove_for_merge, '')
+         assert set(final_test_X.data_name) == set(Test_dataset.data_name), "mismatch in values of data_name column of X and Train_dataset"
+
          final_test_X = pd.merge(final_test_X, Test_dataset, on='data_name', how='outer') # could do 'inner' but 'outer' for verification purposes
 
-
+         # XGBoost and RF is generally not sensitive to scale of features -- so may not have to do extra feature-scaling
 
       
-         pass
-
 
 
     # *************************************************************************************************************************************************
@@ -2071,7 +2080,10 @@ if __name__ == '__main__':
 
                model.fit(X = X_, y = y_)
                preds = model.predict(X = final_test_X_) # modified return-statement for trainer.train() for this.
-               
+               # JY @ 2023-12-26:
+               #      We know that there can be 'curse of dimensionality' (mainly due to large # of n-grams)
+               #      due to number-of-features is much larger than number-of-samples.
+               #      RF and XGB is known for being one of the robust ML algorithms to "curse of dim" 
 
                final_test_accuracy = sklearn.metrics.accuracy_score(y_true = final_test_y_, y_pred = preds)
                final_test_f1 = sklearn.metrics.f1_score(y_true = final_test_y_, y_pred = preds)
