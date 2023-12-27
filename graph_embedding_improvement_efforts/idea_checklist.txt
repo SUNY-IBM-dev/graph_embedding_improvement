@@ -23,7 +23,7 @@
       ^-- Priti could help on this analysis task  
 -----------------------------------------------------------------------------------------------------------------------------------
 
-[Priority-4] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
+[Priority-3] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
    
    --> Refer to the neighborhood aggregation code of, say, 'pytorch GIN-conv layer' 
 
