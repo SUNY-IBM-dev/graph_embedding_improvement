@@ -1,0 +1,8 @@
+/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/REFERENCE_FILES/stratkfold_double_strat__SignalAmp_GNN.py
+--> secure copied from "jgwak1@panther.cs.binghamton.edu:/home/jgwak1/SUNYIBM/gnn_v1_615/option_3_StratKfoldCV/stratkfold_double_strat__SignalAmp_GNN.py"
+
+/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/REFERENCE_FILES/stratkfold_double_strat__SignalAmp_GNN_cuda1.sh
+--> secure copied from "jgwak1@panther.cs.binghamton.edu:/home/jgwak1/SUNYIBM/gnn_v1_615/option_3_StratKfoldCV/stratkfold_double_strat__SignalAmp_GNN_cuda1.sh"
+
+/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/REFERENCE_FILES/source
+--> secure copied from "jgwak1@panther.cs.binghamton.edu:/home/jgwak1/SUNYIBM/gnn_v1_615/option_3_StratKfoldCV/source"
