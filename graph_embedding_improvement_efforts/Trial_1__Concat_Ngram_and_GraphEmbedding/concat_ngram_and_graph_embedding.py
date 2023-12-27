@@ -136,7 +136,8 @@ def produce_SHAP_explanations(classification_model,
                               Test_SG_names : list,
                               misprediction_subgraph_names : list,
                               Predict_proba_dict : dict,
-                              N : int = 1,
+                              # search_space_option : str, # if add both two, filename gets too long
+                              # N : int = 1,
                               ):
 
       # JY @ 2023-12-20: Integrate SHAP into this file based on:
@@ -175,7 +176,7 @@ def produce_SHAP_explanations(classification_model,
             model_resultX = pd.DataFrame(shap_values, columns = list(Test_dataset.drop(columns=['data_name']).columns))
 
       f.savefig( os.path.join(Explanation_Results_save_dirpath, 
-                              f"{N}_gram_SHAP_Global_Interpretability_Summary_BarPlot_Push_Towards_Malware_Features.png"), 
+                              f"SHAP_Global_Interpretability_Summary_BarPlot_Push_Towards_Malware_Features.png"), 
                               bbox_inches='tight', dpi=600)
 
       # TODO: Important: Get a feature-importance from shap-values
@@ -185,7 +186,7 @@ def produce_SHAP_explanations(classification_model,
       shap_importance = pd.DataFrame(list(zip(list(Test_dataset.drop(columns=['data_name']).columns), vals)),
                                      columns=['col_name','feature_importance_vals']) # Later could make use of the "feature_importance_vals" if needed.
       shap_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
-      shap_importance.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Importance.csv"))
+      shap_importance.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} Global-SHAP Importance.csv"))
 
       # JY @ 2023-12-21: Need to get "dataname" here
 
@@ -205,7 +206,7 @@ def produce_SHAP_explanations(classification_model,
       Global_Important_Features_Train_dataset.sort_values(by = "data_name", inplace = True)
       Global_Important_Features_Train_dataset.set_index("data_name", inplace = True)
 
-      Global_Important_Features_Train_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Train-Dataset.csv"))
+      Global_Important_Features_Train_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} Global-SHAP Important FeatureNames Train-Dataset.csv"))
 
       # Save Global-First20Important Features "Test dataset"
       Global_Important_Features_Test_dataset = Test_dataset[ Global_Important_featureNames ] 
@@ -228,7 +229,7 @@ def produce_SHAP_explanations(classification_model,
       # =============================================================================================================================
       # SHAP-Local (Waterfall-Plots)
 
-      WATERFALL_PLOTS_Local_Explanation_dirpath = os.path.join(Explanation_Results_save_dirpath, f"WATERFALL_PLOTS_Local-Explanation_{N}gram")
+      WATERFALL_PLOTS_Local_Explanation_dirpath = os.path.join(Explanation_Results_save_dirpath, f"WATERFALL_PLOTS_Local-Explanation")
       Correct_Predictions_WaterfallPlots_subdirpath = os.path.join(WATERFALL_PLOTS_Local_Explanation_dirpath, "Correct_Predictions")
       Mispredictions_WaterfallPlots_subdirpath = os.path.join(WATERFALL_PLOTS_Local_Explanation_dirpath, "Mispredictions")
 
@@ -296,9 +297,9 @@ def produce_SHAP_explanations(classification_model,
             # https://github.com/shap/shap/blob/2262893cf441478418abac5fd8cdd38e436a867b/shap/plots/_waterfall.py#L321C107-L321C117
 
             if Test_SG_name in misprediction_subgraph_names:
-               waterfallplot_out.savefig( os.path.join(Mispredictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+               waterfallplot_out.savefig( os.path.join(Mispredictions_WaterfallPlots_subdirpath, f"SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
             else:
-               waterfallplot_out.savefig( os.path.join(Correct_Predictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+               waterfallplot_out.savefig( os.path.join(Correct_Predictions_WaterfallPlots_subdirpath, f"SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
 
 
             # Added by JY @ 2023-12-21 : For local shap of sample (SUM of all feature's shap values for the sample)
@@ -319,13 +320,11 @@ def produce_SHAP_explanations(classification_model,
       # Global_Important_Features_Test_dataset.sort_values(by = "data_name", inplace = True)
       # Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
 
-      Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Test-Dataset.csv"))
+      Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} Global-SHAP Important FeatureNames Test-Dataset.csv"))
 
       print("done", flush=True)
 
       return 
-
-
 
 ##############################################################################################################################
 
@@ -1071,7 +1070,7 @@ if __name__ == '__main__':
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
     parser.add_argument('-n', '--N', nargs = 1, type = int, default = [4])  # Added by JY @ 12-23
 
@@ -1092,16 +1091,16 @@ if __name__ == '__main__':
 
 
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
-       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/{run_identifier}"
+       run_identifier = f"{model_cls_name}__{dataset_choice}__{N}gram__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_1__Concat_Ngram_and_GraphEmbedding/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)
 
 
     if search_on_train__or__final_test == "final_test":
-       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/{run_identifier}"
+       run_identifier = f"{model_cls_name}__{dataset_choice}__{N}gram__{search_space_option}__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_1__Concat_Ngram_and_GraphEmbedding/RESULTS/{run_identifier}"
        final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)
@@ -1699,34 +1698,34 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test == "final_test":
         
-      Benign_Test_SG_names = [ k for k,v in Benign_Test_SG_TaskName_dict.items()] # list of SG names
-      Malware_Test_SG_names = [ k for k,v in Malware_Test_SG_TaskName_dict.items()]
-      Test_SG_names = Benign_Test_SG_names + Malware_Test_SG_names
+         Benign_Test_SG_names = [ k for k,v in Benign_Test_SG_TaskName_dict.items()] # list of SG names
+         Malware_Test_SG_names = [ k for k,v in Malware_Test_SG_TaskName_dict.items()]
+         Test_SG_names = Benign_Test_SG_names + Malware_Test_SG_names
 
-      Benign_Test_data_str = [ ' '.join(v) for k,v in Benign_Test_SG_TaskName_dict.items()] # list of TaskNameOpcodes-strings (each string for each SG)
-      Malware_Test_data_str = [ ' '.join(v) for k,v in Malware_Test_SG_TaskName_dict.items()]
-      Test_data_str = Benign_Test_data_str + Malware_Test_data_str
+         Benign_Test_data_str = [ ' '.join(v) for k,v in Benign_Test_SG_TaskName_dict.items()] # list of TaskNameOpcodes-strings (each string for each SG)
+         Malware_Test_data_str = [ ' '.join(v) for k,v in Malware_Test_SG_TaskName_dict.items()]
+         Test_data_str = Benign_Test_data_str + Malware_Test_data_str
 
-      # BenignTest_TaskNameVector_dict = dict(zip(Benign_Test_SG_names, Benign_Test_data_str))
-      # MalwareTest_TaskNameVector_dict = dict(zip(Malware_Test_SG_names, Malware_Test_data_str))
+         # BenignTest_TaskNameVector_dict = dict(zip(Benign_Test_SG_names, Benign_Test_data_str))
+         # MalwareTest_TaskNameVector_dict = dict(zip(Malware_Test_SG_names, Malware_Test_data_str))
 
-      # BenignTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in BenignTest_TaskNameVector_dict.items()}
-      # MalwareTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in MalwareTest_TaskNameVector_dict.items()}
+         # BenignTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in BenignTest_TaskNameVector_dict.items()}
+         # MalwareTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in MalwareTest_TaskNameVector_dict.items()}
 
-      # # Get the Train-target (labels)
-      # Test_target = [0]*len(Benign_Test_data_str) + [1]*len(Malware_Test_data_str)
+         # # Get the Train-target (labels)
+         # Test_target = [0]*len(Benign_Test_data_str) + [1]*len(Malware_Test_data_str)
 
-      # Transform Test-data  : https://www.meherbejaoui.com/python/counting-words-in-python-with-scikit-learn%27s-countvectorizer/
-      Test_data_vec = countvectorizer.transform(Test_data_str).toarray() # since test-data, transform with the fitted countvectorizer.
-      
-      # Normalize ( +1e-16 is to avoid zero-division )
-      # > https://stackoverflow.com/questions/46160717/two-methods-to-normalise-array-to-sum-total-to-1-0
-      # Test_data_vec_normalized = [ sg_ft_vec/ (sum(sg_ft_vec) + 1e-16) for sg_ft_vec in Test_data_vec ]
+         # Transform Test-data  : https://www.meherbejaoui.com/python/counting-words-in-python-with-scikit-learn%27s-countvectorizer/
+         Test_data_vec = countvectorizer.transform(Test_data_str).toarray() # since test-data, transform with the fitted countvectorizer.
+         
+         # Normalize ( +1e-16 is to avoid zero-division )
+         # > https://stackoverflow.com/questions/46160717/two-methods-to-normalise-array-to-sum-total-to-1-0
+         # Test_data_vec_normalized = [ sg_ft_vec/ (sum(sg_ft_vec) + 1e-16) for sg_ft_vec in Test_data_vec ]
 
 
-      # Save the N-gram Test-Dataset 
-      Test_dataset = pd.DataFrame( Test_data_vec, columns = featureNames )
-      Test_dataset["data_name"] = Test_SG_names    # to use as index
+         # Save the N-gram Test-Dataset 
+         Test_dataset = pd.DataFrame( Test_data_vec, columns = featureNames )
+         Test_dataset["data_name"] = Test_SG_names    # to use as index
 
     # *************************************************************************************************************************************************
     # *************************************************************************************************************************************************         
@@ -1746,17 +1745,17 @@ if __name__ == '__main__':
          # [ N-GRAM TRAIN SET ]
          #  Train_dataset = pd.DataFrame(Train_data_vec, columns = featureNames ) 
          #  Train_dataset["data_name"] = Train_SG_names  # to use as index 
-      old_X = X # just to check
+    old_X = X # just to check
 
-      prefix_to_remove_for_merge = "SUBGRAPH_P3_"
-      Train_dataset['data_name'] = Train_dataset['data_name'].str.replace(prefix_to_remove_for_merge, '')
-      assert set(X.data_name) == set(Train_dataset.data_name), "mismatch in values of data_name column of X and Train_dataset"
+    prefix_to_remove_for_merge = "SUBGRAPH_P3_"
+    Train_dataset['data_name'] = Train_dataset['data_name'].str.replace(prefix_to_remove_for_merge, '')
+    assert set(X.data_name) == set(Train_dataset.data_name), "mismatch in values of data_name column of X and Train_dataset"
 
-      X = pd.merge(X, Train_dataset, on='data_name', how='outer') # could do 'inner' but 'outer' for verification purposes
+    X = pd.merge(X, Train_dataset, on='data_name', how='outer') # could do 'inner' but 'outer' for verification purposes
       
-      # XGBoost and RF is generally not sensitive to scale of features -- so may not have to do extra feature-scaling
+    # XGBoost and RF is generally not sensitive to scale of features -- so may not have to do extra feature-scaling
 
-      if search_on_train__or__final_test == "final_test":
+    if search_on_train__or__final_test == "final_test":
 
          # [ GRAPH-EMBEDDING FINAL-TEST SET ]
          # final_test_X.columns = feature_names
@@ -2134,9 +2133,11 @@ if __name__ == '__main__':
                misprediction_subgraph_names = [wrong_answer_incident[0] for wrong_answer_incident in wrong_answer_incidients]
 
 
-               # Added by JY @ 2023-12-20
+               # Modified by JY @ 2023-12-26
                produce_SHAP_explanations(
-                              N = 1,
+                              # N = N,    # just don't pass these two, filename gets too long
+                              # search_space_option = search_space_option,
+
                               classification_model = model,
                               Test_dataset = final_test_X,
                               Train_dataset = X,

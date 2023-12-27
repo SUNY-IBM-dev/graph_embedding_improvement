@@ -1,0 +1,2 @@
+,n_estimators,criterion,max_depth,min_samples_split,min_samples_leaf,max_features,bootstrap,random_state,split_shuffle_seed,Final_Test_Accuracy,Final_Test_F1,Final_Test_Precision,Final_Test_Recall,FN,FP,TN,TP
+0,100,gini,,2,1,sqrt,True,0,100,0.725925925925926,0.6837606837606838,0.7272727272727273,0.6451612903225806,22,15,58,40
