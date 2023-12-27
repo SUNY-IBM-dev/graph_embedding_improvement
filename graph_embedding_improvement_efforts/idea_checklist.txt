@@ -31,9 +31,16 @@
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
+    
     --> Instead of writing a script that also prints "feature value with feature shap",
         for mispredicted samples, could compare the waterfall plots of with and without graph-embedding 
         to see how their top features (w.r.t feature shap) and corresponding feature values changed
+
+    --> Question to ponder: Why does relying solely on the distribution of events as a feature (i.e. flattened-graph features) 
+                            result in decent performance? 
+                            (Are the train/test samples substantially similar, leading to such result?)
+
+    --> Understanding the data ( do this in parallel )
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-5] Incorporate N-gram (temporal information) directly into graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
