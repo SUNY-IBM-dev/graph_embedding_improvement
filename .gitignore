@@ -1,3 +1,6 @@
 *.pyc
 *.git/*
 *.vscode*
+*RESULTS/*
+*traces_stratkfold_double_strat_sklearn*
+*.csv

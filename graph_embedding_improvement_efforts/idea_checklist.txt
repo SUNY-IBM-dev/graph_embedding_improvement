@@ -13,22 +13,27 @@
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-2] Weighted-sum
    - Give lower weights on artifactual threads (~ give higher weights to more important threads )
+   
    --> So what is the logic behind process starting threads?
+   
    --> If a process runs a particular application, is there a straightforward way to distinguish threads that correspond to the actual activity of that application and threads that are more for background activities ?
-      ^-- This seems like a challenging task in genenal.
-          Looked into the Threadstart event ETW log-entries, and didn't see any interesting pattern.
-          
-   --> TODO: Write a script that groups events by thread (take into account possibility of thread-id reuse).
-             Can refer to : /data/d1/jgwak1/tabby/SUNYIBM_ExplainableAI_2nd_Year_JY/Task_1__Behavior_identification_and_intention_learning/1_0__Identify_Behavioral_Events/group_log_entries_by_processThreads.py
+      ^-- When looked directly into the Threadstart event ETW log-entries, and didn't see any interesting pattern.
 
+   --> Analyze : /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_2__Weighted_Thread_Sum_Aggr/GROUPING_RESULTS
+      ^-- Priti could help on this analysis task  
 -----------------------------------------------------------------------------------------------------------------------------------
 
-[Priority-3] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
-
------------------------------------------------------------------------------------------------------------------------------------
 [Priority-4] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
+   
    --> Refer to the neighborhood aggregation code of, say, 'pytorch GIN-conv layer' 
 
+   ---> Check how the node embeddings get generalized for basic neighborhood-aggregation(message-passing)?
+
+-----------------------------------------------------------------------------------------------------------------------------------
+[Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
+    --> Instead of writing a script that also prints "feature value with feature shap",
+        for mispredicted samples, could compare the waterfall plots of with and without graph-embedding 
+        to see how their top features (w.r.t feature shap) and corresponding feature values changed
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-5] Incorporate N-gram (temporal information) directly into graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
@@ -44,3 +49,5 @@
 -----------------------------------------------------------------------------------------------------------------------------------
 
 < Think and add more >
+
+GRNN?
