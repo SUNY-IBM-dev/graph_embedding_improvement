@@ -26,14 +26,15 @@
              Can refer to : /data/d1/jgwak1/tabby/SUNYIBM_ExplainableAI_2nd_Year_JY/Task_1__Behavior_identification_and_intention_learning/1_0__Identify_Behavioral_Events/group_log_entries_by_processThreads.py
 
 -----------------------------------------------------------------------------------------------------------------------------------
-[Priority-4] Incorporate N-gram (temporal information) directly into graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
+
+[Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
+
+-----------------------------------------------------------------------------------------------------------------------------------
+[Priority-5] Incorporate N-gram (temporal information) directly into graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
    -- This definitely will involve alot of work + considerations 
    -- May not be very scalable ; Prof Stoller once said to use explainer to figure out which n-gram features are less important
    -- fit_transform for all edges in training data , in parallel? , then aggregate , and transform? 
       (this will need some good amount of effort, LESS importance ** )
-
------------------------------------------------------------------------------------------------------------------------------------
-[Priority-5] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
