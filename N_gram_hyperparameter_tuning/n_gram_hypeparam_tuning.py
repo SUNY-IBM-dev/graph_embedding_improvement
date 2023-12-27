@@ -569,9 +569,9 @@ if __name__ == '__main__':
       "Dataset-Case-1": \
          "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      # Dataset-2 (B#662, M#628)
+      # Dataset-2 (B#662, M#628) -- JY @ 2023-12-26: According to Priti, Dataset-Case-2 is case 1 and case 2 combined
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -580,7 +580,7 @@ if __name__ == '__main__':
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
     }
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -589,7 +589,7 @@ if __name__ == '__main__':
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -598,7 +598,7 @@ if __name__ == '__main__':
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
     }
 
 

@@ -11,7 +11,11 @@
          -- /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/N_gram_hyperparameter_tuning/n_gram_hypeparam_tuning.py
 
 -----------------------------------------------------------------------------------------------------------------------------------
-[Priority-2] Weighted-sum
+[Priority-2] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
+   --> Refer to the neighborhood aggregation code of, say, 'pytorch GIN-conv layer' 
+
+-----------------------------------------------------------------------------------------------------------------------------------
+[Priority-3] Weighted-sum
    - Give lower weights on artifactual threads (~ give higher weights to more important threads )
    --> So what is the logic behind process starting threads?
    --> If a process runs a particular application, is there a straightforward way to distinguish threads that correspond to the actual activity of that application and threads that are more for background activities ?
@@ -19,18 +23,19 @@
           Looked into the Threadstart event ETW log-entries, and didn't see any interesting pattern.
           
    --> TODO: Write a script that groups events by thread (take into account possibility of thread-id reuse).
------------------------------------------------------------------------------------------------------------------------------------
-
-[Priority-3] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
-   --> Refer to the neighborhood aggregation code of, say, 'pytorch GIN-conv layer' 
+             Can refer to : /data/d1/jgwak1/tabby/SUNYIBM_ExplainableAI_2nd_Year_JY/Task_1__Behavior_identification_and_intention_learning/1_0__Identify_Behavioral_Events/group_log_entries_by_processThreads.py
 
 -----------------------------------------------------------------------------------------------------------------------------------
-[Priority-4] Incorporate N-gram (temporal information) directly into graph-embedding?
+[Priority-4] Incorporate N-gram (temporal information) directly into graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
+   -- This definitely will involve alot of work + considerations 
+   -- May not be very scalable ; Prof Stoller once said to use explainer to figure out which n-gram features are less important
    -- fit_transform for all edges in training data , in parallel? , then aggregate , and transform? 
       (this will need some good amount of effort, LESS importance ** )
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-5] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
+
+-----------------------------------------------------------------------------------------------------------------------------------
 
 [ Priti is also running the "Signal-Amplification suggested approach suggested by Prof Guanhua way back" ]
 

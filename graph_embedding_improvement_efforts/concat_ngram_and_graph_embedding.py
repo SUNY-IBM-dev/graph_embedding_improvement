@@ -100,8 +100,14 @@ from sklearn.feature_extraction.text import CountVectorizer
 import shap
 import matplotlib.pyplot as plt    
 
+# ----------------------------------------------------------------------
+# for n-gram
+from sklearn.feature_extraction.text import CountVectorizer
+import pickle
+from operator import itemgetter
+# ----------------------------------------------------------------------
 
-# TODO -- make sure explanations are produced by this
+
 EventID_to_RegEventName_dict =\
 {
 "EventID(1)":"CreateKey", 
@@ -171,7 +177,6 @@ def produce_SHAP_explanations(classification_model,
       f.savefig( os.path.join(Explanation_Results_save_dirpath, 
                               f"{N}_gram_SHAP_Global_Interpretability_Summary_BarPlot_Push_Towards_Malware_Features.png"), 
                               bbox_inches='tight', dpi=600)
-
 
       # TODO: Important: Get a feature-importance from shap-values
       # https://stackoverflow.com/questions/65534163/get-a-feature-importance-from-shap-values
@@ -926,7 +931,93 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
 
       return data_dict
 
+
 #**********************************************************************************************************************************************************************
+#**********************************************************************************************************************************************************************
+#**********************************************************************************************************************************************************************
+
+# Extract the Malware-Train and Malware-Test indices based on their offline-pickles-directories
+# i.e. Extract "malware-index" from "Processed_Malware_Sample_<malware-index>.pickle"
+def Extract_SG_list( pickle_files_dirpath : str ):
+   pickle_file_list = [file for file in os.listdir(pickle_files_dirpath) if ".pickle" in file]
+   subgraph_list = [ pickle_file.removeprefix(f"Processed_").removesuffix(".pickle") for pickle_file in pickle_file_list ]
+   return subgraph_list
+
+####################################################################################################################
+
+####################################################################################################################
+# Access Each Subgraph and Extract their "TaskName+Opcode" vector (sorted in Timestamp order).
+def Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list : list, target_subgraph_list : list, EventID_to_RegEventName_dict : dict
+                                                         # EventTypes_to_Drop_set : set,
+                                                     ):
+   
+      # Reason for having "Subgraphs_dirpath_list" and "target_subgraph_list" is because, 
+      # there were cases where target subgraphs were in multiple directories before.
+
+      # Make sure all elements in the set are lower-cased
+      # EventTypes_to_Drop_set = { x.lower() for x in EventTypes_to_Drop_set }
+
+      SG_TaskNameANDTimeStamp_listdict = defaultdict(list)    # { <Index> : [{"TaskNameOpcode": x, "TimeStamp": y},  <-- event-1
+                                                                     #              {"TaskNameOpcode": x, "TimeStamp": y},  <-- event-2
+                                                                     #                        ....                             ...
+                                                                     #             ]}
+      
+      for Subgraphs_dirpath in Subgraphs_dirpath_list:    # e.g. Subgraphs_dirpath == tabby/NEW_Projection3_Datasets_Based_On_Modified_CG_Code__20230124/Malware
+
+
+         subgraphs = [sg_dirname for sg_dirname in os.listdir(Subgraphs_dirpath) if "sample" in sg_dirname.lower() or "subgraph" in sg_dirname.lower() ]   
+
+         for subgraph in subgraphs:  # e.g. subgraph == "Malware_Sample_mal0"
+                                       #      subgraph == "Benign_Sample_P3_general_log_collection_60mins_started_20230205_20_02_31_formatted_Code.exe_PID10812_PId8468_TId14060_TS133201190295852283"
+                              
+               if subgraph in target_subgraph_list:
+
+                  print(f"{subgraph}",  flush = True)
+
+                  try:
+
+                     # file-pointer to the edge_attribute.pickle file of the subgraph
+                     edgeattr_pkl_fp = open( os.path.join(Subgraphs_dirpath, subgraph, "edge_attribute.pickle"), "rb" )
+                     SG_edgeattr = pickle.load( edgeattr_pkl_fp )
+                     
+                     for event_uid in SG_edgeattr:
+                           
+                           event_TimeStamp = SG_edgeattr[event_uid]['TimeStamp']
+                           #Added- PW
+                           
+                           event_TaskName_bit_vector = SG_edgeattr[event_uid]['Task Name']
+
+    
+                           event_TaskName = taskname_colnames[event_TaskName_bit_vector.index(1)]
+
+                           # Added by JY -- this is important for countvectorizer because "(" ")" will be used as delimiters in countervectorizer which shouldn't be.
+                           if event_TaskName in EventID_to_RegEventName_dict:
+                               event_TaskName = EventID_to_RegEventName_dict[event_TaskName]
+
+                           # Added by JY -- this is important for countvectorizer because "/" will be used as delimiters in countervectorizer which shouldn't be.
+                           #                on the other hands, countvectorizer doesn't perceive "_" as delimeter.
+                           #                confirmed by "[x for x in featureNames if "_" in x ]" which can be done in subsequent code
+                           if "/" in event_TaskName:
+                               event_TaskName = event_TaskName.replace("/", "_")
+                               
+
+                           SG_TaskNameANDTimeStamp_listdict[subgraph].append( {"TaskName": event_TaskName, "TimeStamp": event_TimeStamp} )
+
+                  except Exception as e:
+                     raise RuntimeError(f"{subgraph}: {e}")
+                  
+                  # Sort events (TaskNameOpcode) in the list-dict by TimeStamp order. 
+                  # i.e. sort the following based on TimeStamp
+                  # {subgraph: [{"TNOP": eventX_TaskNameOpcode, "TimeStamp":400}, {"TNOP": eventY_TaskNameOpcode, "TimeStamp":20},
+                  #               ... {"TNOZ": eventY_TaskNameOpcode, "TimeStamp":880}]}
+                  SG_TaskNameANDTimeStamp_listdict[subgraph] = sorted( SG_TaskNameANDTimeStamp_listdict[subgraph], key=itemgetter('TimeStamp') )
+
+      # Extract {subgraph: [firstevent_TaskNameOpcode,.. lastevent_TaskNameOpcode]} 
+      #  from   {subgraph: [{"TNOP": firstevent_TaskNameOpcode, "TimeStamp":1},... {"TNOP": lastevent_TaskNameOpcode, "TimeStamp":100}]}
+      SG_TaskName_dict = { subgraph: list( map(itemgetter('TaskName'), sorted_TNOP_TS_dict_list))\
+                                                   for subgraph, sorted_TNOP_TS_dict_list in SG_TaskNameANDTimeStamp_listdict.items() }
+
+      return SG_TaskName_dict
 
 #**********************************************************************************************************************************************************************
 #**********************************************************************************************************************************************************************
@@ -944,7 +1035,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-2"])
+                        default = ["Dataset-Case-1"])
 
     parser.add_argument('-readout_opt', '--readout_option', 
                         choices= ['max', 'mean' ],  # mean 도 해봐라 
@@ -956,47 +1047,10 @@ if __name__ == '__main__':
                                  "XGBoost_default_hyperparam",
                                  "RandomForest_default_hyperparam",
 
-                                 #PW: RF and XGboost ----------------------------------------------------------
-                                 # JY: non-ahoc seems to be '5bit eventdist' + final-test
-                                 "RandomForest_best_hyperparameter_max_case1",
-                                 "RandomForest_best_hyperparameter_max_case1_nograph",
-
-                                 "RandomForest_best_hyperparameter_max_case2",
-                                 "RandomForest_best_hyperparameter_max_case2_nograph",   
-
-                                 "RandomForest_best_hyperparameter_max_case1_ahoc",   
-                                 "RandomForest_best_hyperparameter_max_case1_ahoc_nograph",  
-
-                                 "RandomForest_best_hyperparameter_max_case2_ahoc",   
-                                 "RandomForest_best_hyperparameter_max_case2_ahoc_nograph",
-
-                                 "XGBoost_best_hyperparameter_max_case1",   
-                                 "XGBoost_best_hyperparameter_max_case1_nograph",
-
-                                 "XGBoost_best_hyperparameter_max_case2",
-                                 "XGBoost_best_hyperparameter_max_case2_nograph",
-
-                                 "XGBoost_best_hyperparameter_max_case1_ahoc",
-                                 "XGBoost_best_hyperparameter_max_case1_ahoc_nograph",
-
-                                 "XGBoost_best_hyperparameter_max_case2_ahoc",
-                                 "XGBoost_best_hyperparameter_max_case2_ahoc_nograph",
-
-                                 # -----------------Mean------------------------------------
-                                 "RandomForest_best_hyperparameter_mean_case1",
-                                 "RandomForest_best_hyperparameter_mean_case1_nograph",
-
-                                 "RandomForest_best_hyperparameter_mean_case2",
-                                 "RandomForest_best_hyperparameter_mean_case2_nograph",
-
-                                 "RandomForest_best_hyperparameter_mean_case1_ahoc",
-                                 "RandomForest_best_hyperparameter_mean_case1_ahoc_nograph",
-
-                                 "RandomForest_best_hyperparameter_mean_case2_ahoc",
-                                 "RandomForest_best_hyperparameter_mean_case2_ahoc_nograph",
-                                  
+                                 "XGBoost_searchspace_1",
+                                 "RandomForest_searchspace_1",
                                   ], 
-                                  default = ["RandomForest_best_hyperparameter_mean_case2_nograph"])
+                                  default = ["RandomForest_searchspace_1"])
    
     parser.add_argument('-sig_amp_opt', '--signal_amplification_option', 
                         
@@ -1012,17 +1066,19 @@ if __name__ == '__main__':
                                   'signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821',
                                   ], 
 
-                                  default = ["no_graph_structure__event_1gram_nodetype_5bit"])
-    
-
+                                  default = ["signal_amplified__event_1gram_nodetype_5bit"])
 
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
                          default = ["final_test"] )
 
+    parser.add_argument('-n', '--N', nargs = 1, type = int, default = [4])  # Added by JY @ 12-23
+
     # cmd args
     K = parser.parse_args().K[0]
+    N = parser.parse_args().N[0]
+
     model_cls = model_cls_map[ parser.parse_args().trad_model_cls[0] ]
     dataset_choice = parser.parse_args().dataset[0]
 
@@ -1030,8 +1086,8 @@ if __name__ == '__main__':
     readout_option = parser.parse_args().readout_option[0]
     search_space_option = parser.parse_args().search_space_option[0]
     search_on_train__or__final_test = parser.parse_args().search_on_train__or__final_test[0] 
-    # saved_models_dirpath = "/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_Priti/saved_Traditional_ML_models"   #PW:to change
-    #saved_models_dirpath = "/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_mean_Priti/saved_Traditional_ML_models"   #PW:to change
+    # saved_models_dirpath = "/data/d1/jgwak1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_Priti/saved_Traditional_ML_models"   #PW:to change
+    #saved_models_dirpath = "/data/d1/jgwak1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_mean_Priti/saved_Traditional_ML_models"   #PW:to change
     model_cls_name = re.search(r"'(.*?)'", str(model_cls)).group(1)
 
 
@@ -1060,54 +1116,77 @@ if __name__ == '__main__':
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       #PW: Dataset-Case-1 
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
     }
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby//SILKETW_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
     }
+
+
+    # Added by JY @ 2023-12-23 : 
+    # Indices dirpath list : needs to be a list for compaitiblity with subsequent functions
+    Malware_All_Indices_list_dict = {
+         "Dataset-Case-1": ["/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/Indices/Malware"], # Need modificaiton
+         # Priti says dataset-2 corresponds to case-1 + case-2  
+         "Dataset-Case-2": 
+         [
+             "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/Indices/Malware",
+             "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case2/Indices/Malware"], 
+      }
+
+    Benign_All_Indices_list_dict = {
+         "Dataset-Case-1": ["/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/Indices/Benign"], # Need modificaiton
+         # Priti says dataset-2 corresponds to case-1 + case-2           
+         "Dataset-Case-2": [
+             "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/Indices/Benign",
+             "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case2/Indices/Benign"], 
+      }
+
+
     ###############################################################################################################################################
 
     _num_classes = 2  # number of class labels and always binary classification.
 
-   #PW: 5 and 62 (61 taskname + 1 timestamp) based on new silketw 
+    #PW: 5 and 62 (61 taskname + 1 timestamp) based on new silketw 
     _dim_node = 5 #46   # num node features ; the #feats
     _dim_edge = 62 #72    # (or edge_dim) ; num edge features
 
 
+    # Following are for preparing graph-embedding vectors ----------------------------------------------
     _benign_train_data_path = projection_datapath_Benign_Train_dict[dataset_choice]
     _malware_train_data_path = projection_datapath_Malware_Train_dict[dataset_choice]
     _benign_final_test_data_path = projection_datapath_Benign_Test_dict[dataset_choice]
     _malware_final_test_data_path = projection_datapath_Malware_Test_dict[dataset_choice]
 
-
+    print(f"[FOR Graph-Embedding Vectors ] {dataset_choice}", flush=True)
     print(f"dataset_choice: {dataset_choice}", flush=True)
     print("data-paths:", flush=True)
     print(f"_benign_train_data_path: {_benign_train_data_path}", flush=True)
@@ -1116,6 +1195,44 @@ if __name__ == '__main__':
     print(f"_malware_final_test_data_path: {_malware_final_test_data_path}", flush=True)
     print(f"\n_dim_node: {_dim_node}", flush=True)
     print(f"_dim_edge: {_dim_edge}", flush=True)
+
+    print("\n", flush=True)
+    # --------------------------------------------------------------------------------------------------------
+    # Following are for preparing N-gram vectors
+    # Added by JY @ 2023-12-23
+    Benign_Offline_Train_pickles_dirpath = projection_datapath_Benign_Train_dict[dataset_choice]
+    Malware_Offline_Train_pickles_dirpath = projection_datapath_Malware_Train_dict[dataset_choice]
+
+    Malware_Offline_Subgraphs_dirpath_list = Malware_All_Indices_list_dict[dataset_choice]
+
+    Benign_Offline_Test_pickles_dirpath = projection_datapath_Benign_Test_dict[dataset_choice]
+    Malware_Offline_Test_pickles_dirpath = projection_datapath_Malware_Test_dict[dataset_choice]
+
+    Benign_Offline_Subgraphs_dirpath_list = Benign_All_Indices_list_dict[ dataset_choice ]
+
+    # Added by JY @ 2023-12-23
+    # set-datatype is faster for membership-checking
+    Malware_Train_SG_list = set( Extract_SG_list( Malware_Offline_Train_pickles_dirpath ) )
+    Malware_Test_SG_list = set( Extract_SG_list( Malware_Offline_Test_pickles_dirpath ) )
+
+    Benign_Train_SG_list = set( Extract_SG_list( Benign_Offline_Train_pickles_dirpath ) )
+    Benign_Test_SG_list = set( Extract_SG_list( Benign_Offline_Test_pickles_dirpath ) )
+
+    print(f"[FOR N-gram Vectors ] {dataset_choice}", flush=True)
+    print(f"dataset_choice: {dataset_choice}", flush=True)
+    print("data-paths:", flush=True)
+    print(f"_benign_train_data_path: {Benign_Offline_Train_pickles_dirpath}", flush=True)
+    print(f"_malware_train_data_path: {Malware_Offline_Train_pickles_dirpath}", flush=True)
+    print(f"_benign_final_test_data_path: {Benign_Offline_Test_pickles_dirpath}", flush=True)
+    print(f"_malware_final_test_data_path: {Malware_Offline_Test_pickles_dirpath}", flush=True)
+    print("\n", flush=True)
+    print(f"malware all indices dirpath(s): {Malware_Offline_Subgraphs_dirpath_list}", flush=True)
+    print(f"benign all indices dirpath(s): {Benign_Offline_Subgraphs_dirpath_list}", flush=True)
+
+
+    print(f"\n_dim_node: {_dim_node}", flush=True)
+    print(f"_dim_edge: {_dim_edge}", flush=True)
+
 
 
     ####################################################################################################################################################
@@ -1215,460 +1332,137 @@ if __name__ == '__main__':
          return manual_space
 
 
-    # PW : RF and XGboost best hyperparameter
-    def RandomForest_best_hyperparameter_max_case1():
+    def RandomForest_searchspace_1() -> dict :
+
+      # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier
+      # Following are typical ranges of RadnomForest hyperparameters
+
+      search_space = dict()
+      search_space['n_estimators'] = [ 100, 200, 300, 500 ] # The number of decision trees in the random forest. Typical range: 50 to 500 or more. More trees generally lead to better performance, but there are diminishing returns beyond a certain point.
+      search_space['criterion'] = [ 'gini' ] # The function used to measure the quality of a split. Typical options: 'gini' for Gini impurity and 'entropy' for information gain. Gini is the default and works well in most cases.
+      search_space['max_depth'] = [ None, 3,6,9,15,20 ]  # The maximum depth of each decision tree. Typical range: 3 to 20. Setting it to None allows nodes to expand until all leaves are pure or contain less than 
+      search_space['min_samples_split'] = [ 2, 5, 10, 15 ] # The minimum number of samples required to split an internal node. Typical range: 2 to 20.
+      search_space['min_samples_leaf'] = [ 1, 3, 5, 10 ]  # The minimum number of samples required to be at a leaf node. Typical range: 1 to 10.
+      search_space['max_features'] = [ 'sqrt', 'log2', None ]  # The number of features to consider when looking for the best split. Typical options: 'sqrt' (square root of the total number of features) or 'log2' (log base 2 of the total number of features).
+      search_space['bootstrap'] = [ True, False ] # Whether to use bootstrapped samples when building trees. 
+                                           # Typical options: True or False. 
+                                           # Setting it to True enables bagging, which is the "standard approach."
+
+      search_space["random_state"] = [ 0, 42, 99 ]
+      search_space["split_shuffle_seed"] = [ 100 ]
+
+      #-----------------------------------------------------------------------------------------------
       manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 100, 
-               'criterion': 'gini', 
-               'max_depth': 20, 
-               'min_samples_split': 5, 
-               'min_samples_leaf': 1, 
-               'max_features': 'sqrt',
-               'bootstrap': False,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
+      # Change order of these for-loops as the
+      for n_estimators in search_space['n_estimators']:
+         for criterion in search_space['criterion']:
+            for max_depth in search_space['max_depth']:
+               for min_samples_split in search_space['min_samples_split']:
+                   for min_samples_leaf in search_space['min_samples_leaf']:
+                        for max_features in search_space['max_features']:
+                            for bootstrap in search_space['bootstrap']:
+                                 for random_state in search_space["random_state"]:
+                                     for split_shuffle_seed in search_space["split_shuffle_seed"]:                        
+                                          print(f"appending {[n_estimators, criterion, max_depth, min_samples_split, min_samples_leaf, max_features, bootstrap, random_state, split_shuffle_seed ]}", flush = True )
+                                          
+                                          manual_space.append(
+                                                   {
+                                                   'n_estimators': n_estimators, 
+                                                   'criterion': criterion, 
+                                                   'max_depth': max_depth, 
+                                                   'min_samples_split': min_samples_split, 
+                                                   'min_samples_leaf': min_samples_leaf, 
+                                                   'max_features': max_features,
+                                                   'bootstrap': bootstrap,
+                                                   'random_state': random_state,
+                                                   'split_shuffle_seed': split_shuffle_seed
+                                                   }
+                                                   )
+
+      # random.shuffle(manual_space) # For random-gridsearch
       return manual_space
 
-    def RandomForest_best_hyperparameter_max_case2():
+    def XGBoost_searchspace_1() -> dict :
+
+      # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+
+      # Following are typical ranges of XGBoost hyperparameters
+      search_space = dict()
+      search_space['n_estimators'] = [ 100, 500, 1000 ] # The number of boosting stages (i.e., the number of weak learners or decision trees). Typical range: 50 to 2000 or more.
+      search_space['learning_rate'] = [ 0.1, 0.01, 0.001 ] # Shrinks the contribution of each tree, helping to prevent overfitting. Typical range: 0.001 to 0.1.      
+      search_space['max_depth'] = [ 3, 6, 9 ]  # The maximum depth of each decision tree. Typical range: 3 to 10. Can use None for no limit on the depth, but this can lead to overfitting
+      search_space['min_samples_split'] = [ 2, 9, 16 ] # The minimum number of samples required to split an internal node. Typical range: 2 to 20.
+      search_space['min_samples_leaf'] = [ 1, 3, 5 ]  # The minimum number of samples required to be at a leaf node. Typical range: 1 to 10.
+
+      # fully enjoy XG-Boost
+      search_space['subsample'] = [ 1.0, 0.75, 0.5 ] # The fraction of samples used for fitting the individual trees. Typical range: 0.5 to 1.0.
+      search_space['max_features'] = [ None, 'sqrt','log2' ]  # The number of features to consider when looking for the best split. Typical values: 'sqrt' (square root of the total number of features) or 'log2' (log base 2 of the total number of features).
+      search_space['loss'] = [ 'log_loss', ]  # The number of features to consider when looking for the best split. Typical values: 'sqrt' (square root of the total number of features) or 'log2' (log base 2 of the total number of features).
+
+      search_space["random_state"] = [ 0, 42, 99 ]
+      search_space["split_shuffle_seed"] = [ 100 ]
+
+      #-----------------------------------------------------------------------------------------------
       manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 100, 
-               'criterion': 'gini', 
-               'max_depth': 15, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 1, 
-               'max_features': None,
-               'bootstrap': True,
-               'random_state': 42,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
+      # Change order of these for-loops as the
+      for n_estimators in search_space['n_estimators']:
+         for learning_rate in search_space['learning_rate']:
+            for max_depth in search_space['max_depth']:
+               for min_samples_split in search_space['min_samples_split']:
+                   for min_samples_leaf in search_space['min_samples_leaf']:
+                      for loss in search_space['loss']:
+                        for subsample in search_space['subsample']:
+                           for max_features in search_space['max_features']:
+                                 
+                                 for random_state in search_space["random_state"]:
+                                     for split_shuffle_seed in search_space["split_shuffle_seed"]:                        
+                                          print(f"appending {[n_estimators, learning_rate, max_depth, min_samples_split, min_samples_leaf, loss, subsample, max_features, random_state, split_shuffle_seed ]}", flush = True )
+                                          
+                                          manual_space.append(
+                                                   {
+                                                   'n_estimators': n_estimators, 
+                                                   'learning_rate': learning_rate, 
+                                                   'max_depth': max_depth, 
+                                                   'min_samples_split': min_samples_split, 
+                                                   'min_samples_leaf': min_samples_leaf, 
+                                                   'loss': loss,
+                                                   'subsample': subsample, 
+                                                   'max_features': max_features,
+                                                   'random_state': random_state,
+                                                   'split_shuffle_seed': split_shuffle_seed
+                                                   }
+                                                   )
 
-    def RandomForest_best_hyperparameter_max_case1_nograph():
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 200, 
-               'criterion': 'gini', 
-               'max_depth': None, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 3, 
-               'max_features': None,
-               'bootstrap': True,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-
-    def RandomForest_best_hyperparameter_max_case2_nograph():
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 300, 
-               'criterion': 'gini', 
-               'max_depth': 20, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 1, 
-               'max_features': 'sqrt',
-               'bootstrap': False,
-               'random_state': 0,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-
-    def RandomForest_best_hyperparameter_max_case1_ahoc():
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 100, 
-               'criterion': 'gini', 
-               'max_depth': 20, 
-               'min_samples_split': 5, 
-               'min_samples_leaf': 1, 
-               'max_features': 'sqrt',
-               'bootstrap': False,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-
-    def RandomForest_best_hyperparameter_max_case2_ahoc():
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 200, 
-               'criterion': 'gini', 
-               'max_depth': 15, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 1, 
-               'max_features': None,
-               'bootstrap': True,
-               'random_state': 42,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-
-    def RandomForest_best_hyperparameter_max_case1_ahoc_nograph(): #done
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 200, 
-               'criterion': 'gini', 
-               'max_depth': None, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 3, 
-               'max_features': None,
-               'bootstrap': True,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-
-    def RandomForest_best_hyperparameter_max_case2_ahoc_nograph(): #done
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 300, 
-               'criterion': 'gini', 
-               'max_depth': 20, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 1, 
-               'max_features': 'sqrt',
-               'bootstrap': False,
-               'random_state': 0,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-
-    
- 
-
-    def XGBoost_best_hyperparameter_max_case1():   
-         Top_1 =  {
-                  'n_estimators': 500, 
-                  'learning_rate': 0.01, 
-                  'max_depth': 6, 
-                  'min_samples_split': 2, 
-                  'min_samples_leaf': 5, 
-                  'subsample': 1.0, 
-                  'max_features': 'sqrt',
-                  'loss': 'log_loss',
-                  'random_state': 99,
-                  'split_shuffle_seed': 100 # not needed
-                  }               
-         manual_space = [ Top_1 ]
-         return manual_space
-
-    def XGBoost_best_hyperparameter_max_case2():   
-         Top_1 =  {
-         'n_estimators': 1000, 
-         'learning_rate': 0.1, 
-         'max_depth': 3, 
-         'min_samples_split': 2, 
-         'min_samples_leaf': 1, 
-         'subsample': 1.0, 
-         'max_features': None,
-         'loss': 'log_loss',
-         'random_state': 0,
-         'split_shuffle_seed': 100 # not needed
-         }
-         manual_space = [ Top_1 ]
-         return manual_space
-
-    def XGBoost_best_hyperparameter_max_case1_nograph():   
-         Top_1 =  {
-         'n_estimators': 500, 
-         'learning_rate': 0.1, 
-         'max_depth': 6, 
-         'min_samples_split': 2, 
-         'min_samples_leaf': 5, 
-         'subsample': 0.5, 
-         'max_features': 'sqrt',
-         'loss': 'log_loss',
-         'random_state': 99,
-         'split_shuffle_seed': 100 # not needed
-         }
-         manual_space = [ Top_1 ]
-         return manual_space
-    
-    def XGBoost_best_hyperparameter_max_case2_nograph():   
-         Top_1 =  {
-         'n_estimators': 1000, 
-         'learning_rate': 0.1, 
-         'max_depth': 6, 
-         'min_samples_split': 9, 
-         'min_samples_leaf': 3, 
-         'subsample': 0.75, 
-         'max_features': None,
-         'loss': 'log_loss',
-         'random_state': 0,
-         'split_shuffle_seed': 100 # not needed
-         }
-         manual_space = [ Top_1 ]
-         return manual_space
-
-    def XGBoost_best_hyperparameter_max_case1_ahoc():   
-         Top_1 =  {
-         'n_estimators': 500, 
-         'learning_rate': 0.01, 
-         'max_depth': 6, 
-         'min_samples_split': 2, 
-         'min_samples_leaf': 5, 
-         'subsample': 1.0, 
-         'max_features': 'sqrt',
-         'loss': 'log_loss',
-         'random_state': 99,
-         'split_shuffle_seed': 100 # not needed
-         }
-         manual_space = [ Top_1 ]
-         return manual_space
-
-    def XGBoost_best_hyperparameter_max_case2_ahoc():   
-         Top_1 =  {
-         'n_estimators': 1000, 
-         'learning_rate': 0.1, 
-         'max_depth': 3, 
-         'min_samples_split': 2, 
-         'min_samples_leaf': 1, 
-         'subsample': 1.0, 
-         'max_features': None,
-         'loss': 'log_loss',
-         'random_state': 0,
-         'split_shuffle_seed': 100 # not needed
-         }
-         manual_space = [ Top_1 ]
-         return manual_space
-
-    def XGBoost_best_hyperparameter_max_case1_ahoc_nograph():    #done
-         Top_1 =  {
-         'n_estimators': 500, 
-         'learning_rate': 0.1, 
-         'max_depth': 6, 
-         'min_samples_split': 2, 
-         'min_samples_leaf': 5, 
-         'subsample': 0.5, 
-         'max_features': 'sqrt',
-         'loss': 'log_loss',
-         'random_state': 99,
-         'split_shuffle_seed': 100 # not needed
-         }
-         manual_space = [ Top_1]
-         return manual_space
-
-    def XGBoost_best_hyperparameter_max_case2_ahoc_nograph():   
-         Top_1 =  {
-         'n_estimators': 1000, 
-         'learning_rate': 0.1, 
-         'max_depth': 6, 
-         'min_samples_split': 9, 
-         'min_samples_leaf': 3, 
-         'subsample': 0.75, 
-         'max_features': None,
-         'loss': 'log_loss',
-         'random_state': 0,
-         'split_shuffle_seed': 100 # not needed
-         }
-         manual_space = [ Top_1]
-         return manual_space
-
-    #For ----------------Mean------------------------
-    def RandomForest_best_hyperparameter_mean_case1(): #done
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 300, 
-               'criterion': 'gini', 
-               'max_depth': 9, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 1, 
-               'max_features': None,
-               'bootstrap': True,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-
-    def RandomForest_best_hyperparameter_mean_case2():
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 100, 
-               'criterion': 'gini', 
-               'max_depth': 20, 
-               'min_samples_split': 5, 
-               'min_samples_leaf': 1, 
-               'max_features': 'sqrt',
-               'bootstrap': False,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-    
-    def RandomForest_best_hyperparameter_mean_case1_nograph(): #done
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 200, 
-               'criterion': 'gini', 
-               'max_depth': None, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 3, 
-               'max_features': None,
-               'bootstrap': True,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-    
-    def RandomForest_best_hyperparameter_mean_case2_nograph():
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 100, 
-               'criterion': 'gini', 
-               'max_depth': 20, 
-               'min_samples_split': 5, 
-               'min_samples_leaf': 1, 
-               'max_features': 'sqrt',
-               'bootstrap': False,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-    
-    def RandomForest_best_hyperparameter_mean_case1_ahoc(): #done
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 300, 
-               'criterion': 'gini', 
-               'max_depth': 9, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 1, 
-               'max_features': None,
-               'bootstrap': True,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-    
-    def RandomForest_best_hyperparameter_mean_case2_ahoc():
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 100, 
-               'criterion': 'gini', 
-               'max_depth': 20, 
-               'min_samples_split': 5, 
-               'min_samples_leaf': 1, 
-               'max_features': 'sqrt',
-               'bootstrap': False,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-    
-    def RandomForest_best_hyperparameter_mean_case1_ahoc_nograph(): #done
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 200, 
-               'criterion': 'gini', 
-               'max_depth': None, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 3, 
-               'max_features': None,
-               'bootstrap': True,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
-      return manual_space
-    
-    def RandomForest_best_hyperparameter_mean_case2_ahoc_nograph():
-      manual_space = []
-      manual_space.append(
-               {
-               'n_estimators': 100, 
-               'criterion': 'gini', 
-               'max_depth': 20, 
-               'min_samples_split': 5, 
-               'min_samples_leaf': 1, 
-               'max_features': 'sqrt',
-               'bootstrap': False,
-               'random_state': 99,
-               'split_shuffle_seed': 100
-               }
-               )
+      # random.shuffle(manual_space) # For random-gridsearch
       return manual_space
 
 
 
-   #TODO PW add here when found best hyperparameter set
+
 
     ####################################################################################################################################################
     # defaults
     if search_space_option == "XGBoost_default_hyperparam": search_space = XGBoost_default_hyperparam()   
-    elif search_space_option == "RandomForest_default_hyperparam": search_space = RandomForest_default_hyperparam()   
-
-   #PW: RF and XGboost ----------------------------------------------------------
-    # JY: non-ahoc seems to be '5bit eventdist'
-    elif search_space_option == "RandomForest_best_hyperparameter_max_case1": search_space = RandomForest_best_hyperparameter_max_case1()   
-    elif search_space_option == "RandomForest_best_hyperparameter_max_case2": search_space = RandomForest_best_hyperparameter_max_case2()   
-    elif search_space_option == "RandomForest_best_hyperparameter_max_case1_nograph": search_space = RandomForest_best_hyperparameter_max_case1_nograph()   
-    elif search_space_option == "RandomForest_best_hyperparameter_max_case2_nograph": search_space = RandomForest_best_hyperparameter_max_case2_nograph()   
-    elif search_space_option == "RandomForest_best_hyperparameter_max_case1_ahoc": search_space = RandomForest_best_hyperparameter_max_case1_ahoc()   
-    elif search_space_option == "RandomForest_best_hyperparameter_max_case2_ahoc": search_space = RandomForest_best_hyperparameter_max_case2_ahoc()   
-    elif search_space_option == "RandomForest_best_hyperparameter_max_case1_ahoc_nograph": search_space = RandomForest_best_hyperparameter_max_case1_ahoc_nograph()   
-    elif search_space_option == "RandomForest_best_hyperparameter_max_case2_ahoc_nograph": search_space = RandomForest_best_hyperparameter_max_case2_ahoc_nograph()   
+    elif search_space_option == "RandomForest_default_hyperparam": search_space = RandomForest_default_hyperparam()
     
-    elif search_space_option == "XGBoost_best_hyperparameter_max_case1": search_space = XGBoost_best_hyperparameter_max_case1()   
-    elif search_space_option == "XGBoost_best_hyperparameter_max_case2": search_space = XGBoost_best_hyperparameter_max_case2()   
-    elif search_space_option == "XGBoost_best_hyperparameter_max_case1_nograph": search_space = XGBoost_best_hyperparameter_max_case1_nograph()   
-    elif search_space_option == "XGBoost_best_hyperparameter_max_case2_nograph": search_space = XGBoost_best_hyperparameter_max_case2_nograph()   
-    elif search_space_option == "XGBoost_best_hyperparameter_max_case1_ahoc": search_space = XGBoost_best_hyperparameter_max_case1_ahoc()   
-    elif search_space_option == "XGBoost_best_hyperparameter_max_case2_ahoc": search_space = XGBoost_best_hyperparameter_max_case2_ahoc()   
-    elif search_space_option == "XGBoost_best_hyperparameter_max_case1_ahoc_nograph": search_space = XGBoost_best_hyperparameter_max_case1_ahoc_nograph()   
-    elif search_space_option == "XGBoost_best_hyperparameter_max_case2_ahoc_nograph": search_space = XGBoost_best_hyperparameter_max_case2_ahoc_nograph()   
-
-   # -----------------Mean------------------------------------
-    elif search_space_option == "RandomForest_best_hyperparameter_mean_case1": search_space = RandomForest_best_hyperparameter_mean_case1()   
-    elif search_space_option == "RandomForest_best_hyperparameter_mean_case2": search_space = RandomForest_best_hyperparameter_mean_case2()   
-    elif search_space_option == "RandomForest_best_hyperparameter_mean_case1_nograph": search_space = RandomForest_best_hyperparameter_mean_case1_nograph()   
-    elif search_space_option == "RandomForest_best_hyperparameter_mean_case2_nograph": search_space = RandomForest_best_hyperparameter_mean_case2_nograph()   
-    elif search_space_option == "RandomForest_best_hyperparameter_mean_case1_ahoc": search_space = RandomForest_best_hyperparameter_mean_case1_ahoc()   
-    elif search_space_option == "RandomForest_best_hyperparameter_mean_case2_ahoc": search_space = RandomForest_best_hyperparameter_mean_case2_ahoc()   
-    elif search_space_option == "RandomForest_best_hyperparameter_mean_case1_ahoc_nograph": search_space = RandomForest_best_hyperparameter_mean_case1_ahoc_nograph()   
-    elif search_space_option == "RandomForest_best_hyperparameter_mean_case2_ahoc_nograph": search_space = RandomForest_best_hyperparameter_mean_case2_ahoc_nograph()   
+    # extensive search spaces 
+    elif search_space_option == "XGBoost_searchspace_1": search_space = XGBoost_searchspace_1()   
+    elif search_space_option == "RandomForest_searchspace_1": search_space = RandomForest_searchspace_1()   
 
     else:
         ValueError("Unavailable search-space option")
 
-    ####################################################################################################################################################
-    ####################################################################################################################################################
-    ####################################################################################################################################################
+
     # trace file for preds and truth comparison for models during gridsearch
-    
     f = open( trace_filename , 'w' )
     f.close()
+
+    ####################################################################################################################################################
+    ####################################################################################################################################################
+    ############# PREPARE "GRAPH EMBEDDING VECTORS" ###########################################################################################################
+    ####################################################################################################################################################
+    ####################################################################################################################################################
+
 
     # Load both benign and malware graphs """
     dataprocessor = LoadGraphs()
@@ -1684,7 +1478,7 @@ if __name__ == '__main__':
     print('+ final-test data loaded #Malware = {} | #Benign = {}'.format(len(malware_test_dataset), len(benign_test_dataset)), flush=True)
 
    # =================================================================================================================================================
-   # Prepare for train_dataset (or all-dataset) 
+    # Prepare for train_dataset (or all-dataset) 
 
     if search_on_train__or__final_test == "search_on_all":  # ***** #
          train_dataset = train_dataset + final_test_dataset
@@ -1782,7 +1576,7 @@ if __name__ == '__main__':
                final_test_X.reset_index(inplace = True)
                final_test_X.rename(columns = {'thread_is_from':'data_name'}, inplace = True)
 
-               final_test_y = [data.y for data in final_test_dataset]
+               # final_test_y = [data.y for data in final_test_dataset]
          else:
                final_test_X = pd.DataFrame(final_test_dataset__no_graph_structure_dict).T
                if signal_amplification_option in {"signal_amplified__event_1gram_nodetype_5bit", "no_graph_structure__event_1gram_nodetype_5bit"}:
@@ -1799,13 +1593,191 @@ if __name__ == '__main__':
                final_test_X.reset_index(inplace = True)
                final_test_X.rename(columns = {'index':'data_name'}, inplace = True)
 
-               final_test_y = [data.y for data in train_dataset]
+               # final_test_y = [data.y for data in train_dataset]
+
+    ####################################################################################################################################################
+    ####################################################################################################################################################
+    ############# PREPARE "N-GRAM VECTORS" ###########################################################################################################
+    ####################################################################################################################################################
+    ####################################################################################################################################################
+
+    Malware_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
+                                                                                       target_subgraph_list = Malware_Train_SG_list,
+                                                                                       EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
+                                                                                                     #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
+
+    Malware_Test_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
+                                                                                      target_subgraph_list = Malware_Test_SG_list,
+                                                                                      EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
+                                                                                                     #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
+
+
+    Benign_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Benign_Offline_Subgraphs_dirpath_list, 
+                                                                                      target_subgraph_list = Benign_Train_SG_list,
+                                                                                      EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
+                                                                                                   #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
+
+    Benign_Test_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Benign_Offline_Subgraphs_dirpath_list, 
+                                                                                     target_subgraph_list = Benign_Test_SG_list,
+                                                                                     EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
+
+
+   # =================================================================================================================================================
+   # Prepare for train_dataset (or all-dataset) 
+    if search_on_train__or__final_test == "search_on_all":  # ***** #
+         # train_dataset = train_dataset + final_test_dataset
+         Malware_Train_SG_TaskName_dict = Malware_Train_SG_TaskName_dict | Malware_Test_SG_TaskName_dict # Added by JY @ 2023-12-23 : check correctness
+         Benign_Train_SG_TaskName_dict = Benign_Train_SG_TaskName_dict | Benign_Test_SG_TaskName_dict
+
+
+    # Get 'N-gram frequencies' feature
+    
+        # CountVectorizer params
+        # <max_feautres>  : https://stackoverflow.com/questions/61274499/reduce-dimension-of-word-vectors-from-tfidfvectorizer-countvectorizer
+        # If max_features is set to None, then the whole corpus is considered during the TF-IDF transformation. 
+        # Otherwise, if you pass, say, 5 to max_features, that would mean creating a feature matrix out of the most 5 frequent words accross text documents.   
+        
+        # <max_df> & <min_df>
+        # max_df is used for removing terms that appear too frequently, also known as "corpus-specific stop words". For example:
+
+        # max_df = 0.50 means "ignore terms that appear in more than 50% of the documents".
+        # max_df = 25 means "ignore terms that appear in more than 25 documents".
+        # The default max_df is 1.0, which means "ignore terms that appear in more than 100% of the documents". Thus, the default setting does not ignore any terms.
+
+        # min_df is used for removing terms that appear too infrequently. For example:
+
+        # min_df = 0.01 means "ignore terms that appear in less than 1% of the documents".
+        # min_df = 5 means "ignore terms that appear in less than 5 documents".
+        # The default min_df is 1, which means "ignore terms that appear in less than 1 document". Thus, the default setting does not ignore any terms.
+        # https://stackoverflow.com/questions/27697766/understanding-min-df-and-max-df-in-scikit-countvectorizer   
+        
+        # https://www.reddit.com/r/learnmachinelearning/comments/6evguc/while_building_a_tfidf_determining_a_good_balance/
+        # The corpus size is 110k+ documents
+        # The difficulty with this is that it is often a case-by-case thing. 
+        # But as a rule of thumb, I generally start with min_df to 5-10 and max_df to 30% for a corpus of that size.
+        
+    print(f"N: {N}",  flush = True)
+    countvectorizer = CountVectorizer(ngram_range=(N, N), max_df= 0.3, min_df= 10, max_features= None )  # ngram [use 4-gram or 8-gram] 
+
+    # Train Data ---------------------------------------------------------------------------------------------------------------
+    Benign_Train_SG_names = [ k for k,v in Benign_Train_SG_TaskName_dict.items()] # list of SG names
+    Malware_Train_SG_names = [ k for k,v in Malware_Train_SG_TaskName_dict.items()]
+    Train_SG_names = Benign_Train_SG_names + Malware_Train_SG_names
+    #{idx name: ["create"],["image"]}
+    Benign_Train_data_str = [ ' '.join(v) for k,v in Benign_Train_SG_TaskName_dict.items()] # list of TaskNameOpcodes-strings (each string for each SG)
+    Malware_Train_data_str = [ ' '.join(v) for k,v in Malware_Train_SG_TaskName_dict.items()]
+    Train_data_str = Benign_Train_data_str + Malware_Train_data_str 
+    
+    # Get the Train-target (labels)
+   #  Train_target = [0]*len(Benign_Train_data_str) + [1]*len(Malware_Train_data_str)
+
+    # list(zip(Train_data_str, Train_data_vec, Train_target))
+    
+   #  BenignTrain_TaskNameVector_dict = dict(zip(Benign_Train_SG_names, Benign_Train_data_str))
+   #  MalwareTrain_TaskNameVector_dict = dict(zip(Malware_Train_SG_names, Malware_Train_data_str))
+
+
+    # https://stackoverflow.com/questions/2161752/how-to-count-the-frequency-of-the-elements-in-an-unordered-list
+   #  BenignTrain_TaskName_Dist_Dict =  { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in BenignTrain_TaskNameVector_dict.items()}
+   #  MalwareTrain_TaskName_Dist_Dict =  { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in MalwareTrain_TaskNameVector_dict.items()}
+
+
+    # Fit-Transform Train-data  : https://www.meherbejaoui.com/python/counting-words-in-python-with-scikit-learn%27s-countvectorizer/
+    Train_data_vec = countvectorizer.fit_transform(Train_data_str).toarray() # for train-data           ( [ sum(x) for x in X_train ]  )
+
+
+   #  list(zip(Train_data_str, Train_data_vec_normalized, Train_target))
+    # Save mapping between feature-indx and feature-name
+    featureIndices = list(range(len(countvectorizer.get_feature_names_out())))
+    featureNames = countvectorizer.get_feature_names_out()
+    featureIndexName_map = dict(zip(featureIndices, featureNames))
+
+    Train_dataset = pd.DataFrame(Train_data_vec, columns = featureNames ) 
+    Train_dataset["data_name"] = Train_SG_names  # to use as index 
+
+    # =================================================================================================================================================
+
+    if search_on_train__or__final_test == "final_test":
+        
+      Benign_Test_SG_names = [ k for k,v in Benign_Test_SG_TaskName_dict.items()] # list of SG names
+      Malware_Test_SG_names = [ k for k,v in Malware_Test_SG_TaskName_dict.items()]
+      Test_SG_names = Benign_Test_SG_names + Malware_Test_SG_names
+
+      Benign_Test_data_str = [ ' '.join(v) for k,v in Benign_Test_SG_TaskName_dict.items()] # list of TaskNameOpcodes-strings (each string for each SG)
+      Malware_Test_data_str = [ ' '.join(v) for k,v in Malware_Test_SG_TaskName_dict.items()]
+      Test_data_str = Benign_Test_data_str + Malware_Test_data_str
+
+      # BenignTest_TaskNameVector_dict = dict(zip(Benign_Test_SG_names, Benign_Test_data_str))
+      # MalwareTest_TaskNameVector_dict = dict(zip(Malware_Test_SG_names, Malware_Test_data_str))
+
+      # BenignTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in BenignTest_TaskNameVector_dict.items()}
+      # MalwareTest_TaskNameVectorSet_Dict = { k : {taskname: freq for taskname, freq in zip( np.unique(v.split(), return_counts=True)[0], np.unique(v.split(), return_counts=True)[1] )} for k,v in MalwareTest_TaskNameVector_dict.items()}
+
+      # # Get the Train-target (labels)
+      # Test_target = [0]*len(Benign_Test_data_str) + [1]*len(Malware_Test_data_str)
+
+      # Transform Test-data  : https://www.meherbejaoui.com/python/counting-words-in-python-with-scikit-learn%27s-countvectorizer/
+      Test_data_vec = countvectorizer.transform(Test_data_str).toarray() # since test-data, transform with the fitted countvectorizer.
+      
+      # Normalize ( +1e-16 is to avoid zero-division )
+      # > https://stackoverflow.com/questions/46160717/two-methods-to-normalise-array-to-sum-total-to-1-0
+      # Test_data_vec_normalized = [ sg_ft_vec/ (sum(sg_ft_vec) + 1e-16) for sg_ft_vec in Test_data_vec ]
+
+
+      # Save the N-gram Test-Dataset 
+      Test_dataset = pd.DataFrame( Test_data_vec, columns = featureIndices )
+      Test_dataset["data_name"] = Test_SG_names    # to use as index
 
     # *************************************************************************************************************************************************
     # *************************************************************************************************************************************************         
     # *************************************************************************************************************************************************
     # *************************************************************************************************************************************************         
+    # NOW CONCATENTATE THE "N-GRAM VECTORS" WITH "GRAPH-EMBEDDING VECTORS"
     # *************************************************************************************************************************************************
+    # *************************************************************************************************************************************************
+    # *************************************************************************************************************************************************         
+    # *************************************************************************************************************************************************         
+
+         # [ GRAPH-EMBEDDING TRAIN SET ]
+         # X.columns = feature_names
+         # X.reset_index(inplace = True)
+         # X.rename(columns = {'index':'data_name'}, inplace = True)
+      
+         # [ N-GRAM TRAIN SET ]
+         #  Train_dataset = pd.DataFrame(Train_data_vec, columns = featureNames ) 
+         #  Train_dataset["data_name"] = Train_SG_names  # to use as index 
+
+      old_X = X # just to check
+      X = pd.merge(X, Train_dataset, on='data_name', how='outer') # could do 'inner' but 'outer' for verification purposes
+
+
+      if search_on_train__or__final_test == "final_test":
+
+         # [ GRAPH-EMBEDDING FINAL-TEST SET ]
+         # final_test_X.columns = feature_names
+         # final_test_X.reset_index(inplace = True)
+         # final_test_X.rename(columns = {'index':'data_name'}, inplace = True)
+
+         # [ N-GRAM FINAL-TEST SET ]
+         # Test_dataset = pd.DataFrame( Test_data_vec, columns = featureIndices )
+         # Test_dataset["data_name"] = Test_SG_names    # to use as index
+      
+
+         old_final_test_X = final_test_X # just to check
+         final_test_X = pd.merge(final_test_X, Test_dataset, on='data_name', how='outer') # could do 'inner' but 'outer' for verification purposes
+
+
+
+      
+         pass
+
+
+
+    # *************************************************************************************************************************************************
+    # *************************************************************************************************************************************************         
+    # *************************************************************************************************************************************************
+    # *************************************************************************************************************************************************         
+    # ********* TRAINING / TESTING ********************************************************************************************************************
     # *************************************************************************************************************************************************
     # *************************************************************************************************************************************************         
     # *************************************************************************************************************************************************
