@@ -351,8 +351,8 @@ def group_log_entries_by_processThreads(log_entries : list) -> dict:
     # TODO -- For each (pid, tid) make list of dict-strings into 1 string delimited by "\n" so that more readable
     for pid, tid_to_logentrylist_dict in processThread_to_logentries_dict.items():
         for tid, logentrylist in tid_to_logentrylist_dict.items():
-            processThread_to_logentries_dict[pid][tid] = NoIndent(logentrylist)
-            # processThread_to_logentries_dict[pid][tid] =  "\n" + "\n".join(logentrylist) # does not work for json prettify
+            # processThread_to_logentries_dict[pid][tid] = NoIndent(logentrylist)
+            processThread_to_logentries_dict[pid][tid] =  "\n" + "\n".join(logentrylist) # does not work for json prettify
 
     # returns dict of dict 
     return processThread_to_logentries_dict

@@ -934,7 +934,7 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
 #**********************************************************************************************************************************************************************
 
 def get__standard_message_passing_graph_embedding__dict( dataset : list, 
-                                                         n_hops : int = 1,
+                                                         n_hops : int = 3,
                                                          neighborhood_aggr : str = "sum", 
                                                          pool : str = "mean",
                                                          verbose : bool = True ):
@@ -1018,9 +1018,11 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
 
 
     data_dict = dict()
+    cnt = 0
     for graph_data in dataset: 
+         cnt += 1
          # graph_data corresponds to "torch_geometric.data.data.Data"
-
+         print(f"{cnt} / {len(dataset)}: {graph_data.name}", flush = True)
          original_graph_data = copy.deepcopy(graph_data) # just save it for just in case (debugging purpose)
          
 
@@ -1075,12 +1077,12 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                # this graph's edge-target indices vector
                edge_tar_indices = graph_data.edge_index[1]
                
-               # edge-indices of incoming-edges to this node
+               # edge-indices of incoming-edges to this node   # "torch.nonzero" returns a 2-D tensor where each row is the index for a nonzero value.
                incoming_edges_to_this_node_idx = torch.nonzero( edge_tar_indices == node_idx ).flatten()  
 
                # ---------------------------------------------------------------------------------------------
                # edge-attributes of incoming edges to this node (i.e. edge-level messages)
-               edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx]              
+               edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
 
                # ---------------------------------------------------------------------------------------------
                # Following is for handling "duplicate neighboring nodes" problem due to multi-graph
@@ -1107,7 +1109,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                node_level_messages__aggregated = neighborhood_aggr__func(node_level_messages, dim = 0)
                edge_level_messages__aggregated = neighborhood_aggr__func(edge_level_messages, dim = 0)
 
-               messages__aggregated = torch.cat([node_level_messages__aggregated, edge_level_messages__aggregated], dim = 1) # node-feat should come first
+               messages__aggregated = torch.cat([node_level_messages__aggregated, edge_level_messages__aggregated], dim = 0) # node-feat should come first
 
                ''' Update the node's embedding with the aggregated message
                    (* Most basic way for the 'update' is to just 'add' the aggregated-message as node's current embedding )
@@ -1115,6 +1117,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                '''
                # Need to update with "graph_data" since this will be the next iteration's "graph_data__from_previous_hop"
                # (i.e. "graph_data" is the graph that is mutating and the medium for information-propagation )
+               # For "SimpleConv", similar to edge-weight being considered as 1
                graph_data.x[node_idx] = graph_data.x[node_idx] + messages__aggregated
 
 
@@ -1125,9 +1128,9 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
          graph_embedding = pool__func(graph_data.x, dim = 0)
 
 
-   # eventdist = torch.sum(data.edge_attr, dim = 0)
-   # nodetype5bit_adhoc_identifier_dist = torch.sum(data.x, axis = 0)
-   # event_nodetype5bit_adhoc_identifier_dist = torch.cat(( eventdist, nodetype5bit_adhoc_identifier_dist ), dim = 0)
+    # eventdist = torch.sum(data.edge_attr, dim = 0)
+    # nodetype5bit_adhoc_identifier_dist = torch.sum(data.x, axis = 0)
+    # event_nodetype5bit_adhoc_identifier_dist = torch.cat(( eventdist, nodetype5bit_adhoc_identifier_dist ), dim = 0)
     data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = graph_embedding.tolist()
 
     return data_dict
@@ -1266,7 +1269,7 @@ if __name__ == '__main__':
 
     _num_classes = 2  # number of class labels and always binary classification.
 
-   #PW: 5 and 62 (61 taskname + 1 timestamp) based on new silketw 
+    #PW: 5 and 62 (61 taskname + 1 timestamp) based on new silketw 
     _dim_node = 5 #46   # num node features ; the #feats
     _dim_edge = 62 #72    # (or edge_dim) ; num edge features
 
@@ -1421,19 +1424,26 @@ if __name__ == '__main__':
     if search_on_train__or__final_test == "search_on_all":  # ***** #
          train_dataset = train_dataset + final_test_dataset
 
-    # Now apply signal-amplification here (here least conflicts with existing code.)
-    if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
-         train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist_dict( dataset= train_dataset )
+   #  # Now apply signal-amplification here (here least conflicts with existing code.)
+   #  if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
+   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist_dict( dataset= train_dataset )
 
-    elif signal_amplification_option == "signal_amplified__event_1gram":
-         train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_dict( dataset= train_dataset )            
+   #  elif signal_amplification_option == "signal_amplified__event_1gram":
+   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_dict( dataset= train_dataset )            
 
-    elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
-         train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_and_Adhoc_Identifier_dist_dict( dataset= train_dataset ) 
+   #  elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
+   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_and_Adhoc_Identifier_dist_dict( dataset= train_dataset ) 
 
-    elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821":
-         train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist__INCOMING_AND_OUTGOING_CONCATENATED_20230821_PROF_GUANHUA__dict( dataset= train_dataset ) 
-    # --------------------------------------------------------------------------------------
+   #  elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821":
+   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist__INCOMING_AND_OUTGOING_CONCATENATED_20230821_PROF_GUANHUA__dict( dataset= train_dataset ) 
+
+
+    # Added by JY @ 2023-12-27
+    if signal_amplification_option == "standard_message_passing_graph_embedding":
+        train_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= train_dataset )
+
+
+   #  # --------------------------------------------------------------------------------------
     elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit":
          train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_dist_dict( dataset= train_dataset )  
 
@@ -1443,8 +1453,6 @@ if __name__ == '__main__':
     elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
          train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= train_dataset ) 
 
-    elif signal_amplification_option == "standard_message_passing_graph_embedding":
-        train_dataset__no_graph_structure_dict = get__standard_message_passing_graph_embedding__dict( dataset= train_dataset )
 
 
     else:
@@ -1452,7 +1460,7 @@ if __name__ == '__main__':
     #--------------------------------------------------------------------------
     # Now apply readout to the obtained thread-level vectors
     if "signal_amplified" in signal_amplification_option:
-          train_dataset_signal_amplified_readout_df = get_readout_applied_df(data_dict = train_dataset__signal_amplified_dict, 
+          train_dataset_signal_amplified_readout_df = get_readout_applied_df(data_dict = train_dataset__standard_message_passing_dict, 
                                                                              readout_option= readout_option,
                                                                              signal_amplification_option= signal_amplification_option)
           X = train_dataset_signal_amplified_readout_df
@@ -1505,6 +1513,13 @@ if __name__ == '__main__':
          
          elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
                final_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= final_test_dataset )  
+
+
+         # Added by JY @ 2023-12-28
+         elif signal_amplification_option == "standard_message_passing_graph_embedding":
+            final_test_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= final_test_dataset )
+
+
 
          else:
                ValueError(f"Invalid signal_amplification_option ({signal_amplification_option})")                  
