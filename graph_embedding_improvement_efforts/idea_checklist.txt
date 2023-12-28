@@ -43,7 +43,7 @@
     --> Understanding the data ( do this in parallel )
 
 -----------------------------------------------------------------------------------------------------------------------------------
-[Priority-5] Incorporate N-gram (temporal information) directly into graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
+[Priority-5] Incorporate "Local N-gram (temporal information local to pair of nodes)" to graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
    -- This definitely will involve alot of work + considerations 
    -- May not be very scalable ; Prof Stoller once said to use explainer to figure out which n-gram features are less important
    -- fit_transform for all edges in training data , in parallel? , then aggregate , and transform? 

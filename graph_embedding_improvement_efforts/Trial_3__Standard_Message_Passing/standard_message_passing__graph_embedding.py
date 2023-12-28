@@ -925,8 +925,76 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
          data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = eventdist.tolist()
 
       return data_dict
+#**********************************************************************************************************************************************************************
+#**********************************************************************************************************************************************************************
+#**********************************************************************************************************************************************************************
+
+def get__standard_message_passing_graph_embedding__dict( dataset : list, 
+                                                         n_hops : int = 1,
+                                                         neighborhood_aggr : str = "sum", 
+                                                         pool : str = "mean"
+                                                       ):
+
+    '''
+    JY @ 2023-12-27
+    
+    Generate "graph embedding vectors" based on 
+    Standard Message Passing, which is similar to "torch_geometric.nn.conv.SimpleConv" 
+    which is "A simple message passing operator that performs (non-trainable) propagation."
+    
+    More specifically, 
+    "n-hop neighborhood aggregation for all nodes within a directed graph; but without trainable parameters" (JY)
+
+    Baseline against this approach is, strictly, "flattened graph 1 gram", and loosely, "flattened graph N gram (N>=1)".
+    -----------------------------------------------------------------------------------------------------------------------
+    [Pseudocode for standard message passing (with no learning; no trainable parameters)]
+      
+      1. Initialize each node's feature vector
+         ^-- node-feature dimension can be "#original node-feat + #edge-feat" 
+             (#edge-feat as zero-subvector in the beginning; think of placeholders) )
+             since we don't involve any neural-networks here
+      2. For "n_hops": 
+      3.    For each node:
+      4.        Get messages (concat of edge-feat and node-feat) from the node's neighbors (neighbor-nodes with 'incoming edges')
+                ^-- Might have to handle the "duplicate neighboring nodes" problem due to multi-graph ; could utilize approach used in signal-amplification    
+      5.        Aggregate messages from neighbors based on "neighborhood_aggr" 
+      6.        Update the node's embedding (* Change made to other nodes during this hop must not be reflected; 
+                                               So deep-copy a graph in advance that is not mutated but just used for collecting messages)
+                                            (* Most basic way for the 'update' is to just 'add' the aggregated-message as node's current embedding )
+      7. Since message-passing is done, "pool" all node's embedding, to generate the "graph embedding".
+    -----------------------------------------------------------------------------------------------------------------------                                         
+    '''
+
+    # References:
+    #      https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#convolutional-layers
+    # 
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.SimpleConv.html#torch_geometric.nn.conv.SimpleConv 
+    #      ^-- ( REFER TO ABOVE, WHICH IS:  A simple message passing operator that performs (non-trainable) propagation. )
+    #          ( COULD LOOK INTO SOURCE CODE OF THIS "SimpleConv" AND MIMIC IT HERE : https://pytorch-geometric.readthedocs.io/en/latest/_modules/torch_geometric/nn/conv/simple_conv.html#SimpleConv )
+    #        
+    #      ( Following are just for fun )
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.GINEConv.html#torch_geometric.nn.conv.GINEConv
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.SAGEConv.html#torch_geometric.nn.conv.SAGEConv
+    # 
+    #      ( References for Aggregators )
+    #      https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#aggregation-operators
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.SumAggregation.html#torch_geometric.nn.aggr.SumAggregation
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.MeanAggregation.html#torch_geometric.nn.aggr.MeanAggregation
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.MaxAggregation.html#torch_geometric.nn.aggr.MaxAggregation  
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.MinAggregation.html#torch_geometric.nn.aggr.MinAggregation
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.MulAggregation.html#torch_geometric.nn.aggr.MulAggregation
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.VarAggregation.html#torch_geometric.nn.aggr.VarAggregation
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.LSTMAggregation.html#torch_geometric.nn.aggr.LSTMAggregation
+    #
+    #      ( References for Pooling )
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.pool.global_add_pool.html#torch_geometric.nn.pool.global_add_pool
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.pool.global_mean_pool.html#torch_geometric.nn.pool.global_mean_pool
+    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.pool.global_max_pool.html#torch_geometric.nn.pool.global_max_pool
+
 
 #**********************************************************************************************************************************************************************
+# Start implement here.
+
 
 #**********************************************************************************************************************************************************************
 #**********************************************************************************************************************************************************************
