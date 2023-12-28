@@ -14,7 +14,7 @@ from code.model import GIN
 from code.trainer import TrainModel
 '''
 
-sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/source")
+sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/source")
 
 from source.dataprocessor_graphs import LoadGraphs
 from source.model import GIN
@@ -94,15 +94,11 @@ from sklearn.ensemble import GradientBoostingClassifier # XGB
 # for baseline
 from sklearn.feature_extraction.text import CountVectorizer
 
-
-import copy # Added by JY @ 2023-12-27
-
 ##############################################################################################################################
 # Explainer related (2023-12-20)
 
 import shap
 import matplotlib.pyplot as plt    
-
 
 
 # TODO -- make sure explanations are produced by this
@@ -929,213 +925,8 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
          data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = eventdist.tolist()
 
       return data_dict
+
 #**********************************************************************************************************************************************************************
-#**********************************************************************************************************************************************************************
-#**********************************************************************************************************************************************************************
-
-def get__standard_message_passing_graph_embedding__dict( dataset : list, 
-                                                         n_hops : int = 3,
-                                                         neighborhood_aggr : str = "sum", 
-                                                         pool : str = "mean",
-                                                         verbose : bool = True ):
-
-    '''
-    JY @ 2023-12-27
-    
-    Generate "graph embedding vectors" based on 
-    Standard Message Passing, which is similar to "torch_geometric.nn.conv.SimpleConv" 
-    which is "A simple message passing operator that performs (non-trainable) propagation."
-    
-    More specifically, 
-    "n-hop neighborhood aggregation for all nodes within a directed graph; but without trainable parameters" (JY)
-
-    Baseline against this approach is, strictly, "flattened graph 1 gram", and loosely, "flattened graph N gram (N>=1)".
-    -----------------------------------------------------------------------------------------------------------------------
-    [Pseudocode for standard message passing (with no learning; no trainable parameters)]
-      
-      1. Initialize each node's feature vector
-         ^-- node-feature dimension can be "#original node-feat + #edge-feat" 
-             (#edge-feat as zero-subvector in the beginning; think of placeholders) )
-             since we don't involve any neural-networks here
-      2. For "n_hops": 
-      3.    For each node:
-      4.        Get messages (concat of edge-feat and node-feat) from the node's neighbors (neighbor-nodes with 'incoming edges')
-                ^-- Might have to handle the "duplicate neighboring nodes" problem due to multi-graph ; could utilize approach used in signal-amplification    
-      5.        Aggregate messages from neighbors based on "neighborhood_aggr" 
-      6.        Update the node's embedding (* Change made to other nodes during this hop must not be reflected; 
-                                               So deep-copy a graph in advance that is not mutated but just used for collecting messages)
-                                            (* Most basic way for the 'update' is to just 'add' the aggregated-message as node's current embedding )
-      7. Since message-passing is done, "pool" all node's embedding, to generate the "graph embedding".
-    -----------------------------------------------------------------------------------------------------------------------                                         
-    '''
-
-    # References:
-    #      https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#convolutional-layers
-    # 
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.SimpleConv.html#torch_geometric.nn.conv.SimpleConv 
-    #      ^-- ( REFER TO ABOVE, WHICH IS:  A simple message passing operator that performs (non-trainable) propagation. )
-    #          ( COULD LOOK INTO SOURCE CODE OF THIS "SimpleConv" AND MIMIC IT HERE : https://pytorch-geometric.readthedocs.io/en/latest/_modules/torch_geometric/nn/conv/simple_conv.html#SimpleConv )
-    #        
-    #      ( Following are just for fun )
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.GINEConv.html#torch_geometric.nn.conv.GINEConv
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.SAGEConv.html#torch_geometric.nn.conv.SAGEConv
-    # 
-    #      ( References for Aggregators )
-    #      https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#aggregation-operators
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.SumAggregation.html#torch_geometric.nn.aggr.SumAggregation
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.MeanAggregation.html#torch_geometric.nn.aggr.MeanAggregation
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.MaxAggregation.html#torch_geometric.nn.aggr.MaxAggregation  
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.MinAggregation.html#torch_geometric.nn.aggr.MinAggregation
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.MulAggregation.html#torch_geometric.nn.aggr.MulAggregation
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.VarAggregation.html#torch_geometric.nn.aggr.VarAggregation
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.aggr.LSTMAggregation.html#torch_geometric.nn.aggr.LSTMAggregation
-    #
-    #      ( References for Pooling )
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.pool.global_add_pool.html#torch_geometric.nn.pool.global_add_pool
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.pool.global_mean_pool.html#torch_geometric.nn.pool.global_mean_pool
-    #      https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.pool.global_max_pool.html#torch_geometric.nn.pool.global_max_pool
-
-
-    #**********************************************************************************************************************************************************************
-    # Start implement here.
-
-
-    # 1. Initialize each node's feature vector
-    #    ^-- node-feature dimension can be "#original node-feat + #edge-feat" 
-    #        (#edge-feat as zero-subvector in the beginning; think of placeholders) )
-    #        since we don't involve any neural-networks here
-    #
-    # 2. For "n_hops": 
-    # 3.    For each node:
-    # 4.        Get messages (concat of edge-feat and node-feat) from the node's neighbors (neighbor-nodes with 'incoming edges')
-    #           ^-- Might have to handle the "duplicate neighboring nodes" problem due to multi-graph ; could utilize approach used in signal-amplification    
-    # 5.        Aggregate messages from neighbors based on "neighborhood_aggr" 
-    # 6.        Update the node's embedding (* Change made to other nodes during this hop must not be reflected; 
-    #                                          So deep-copy a graph in advance that is not mutated but just used for collecting messages)
-    #                                       (* Most basic way for the 'update' is to just 'add' the aggregated-message as node's current embedding )
-    #
-    # 7. Since message-passing is done, "pool" all node's embedding, to generate the "graph embedding".
-
-
-    data_dict = dict()
-    cnt = 0
-    for graph_data in dataset: 
-         cnt += 1
-         # graph_data corresponds to "torch_geometric.data.data.Data"
-         print(f"{cnt} / {len(dataset)}: {graph_data.name}\n", flush = True)
-         original_graph_data = copy.deepcopy(graph_data) # just save it for just in case (debugging purpose)
-         
-
-         # ------------------------------------------------------------------------------------------------------------------------------
-         # for just in case ; might not be needed 
-         file_node_tensor = torch.tensor([1, 0, 0, 0, 0])
-         reg_node_tensor = torch.tensor([0, 1, 0, 0, 0])
-         net_node_tensor = torch.tensor([0, 0, 1, 0, 0])
-         proc_node_tensor = torch.tensor([0, 0, 0, 1, 0])
-         thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
-
-         file_node_indices = torch.nonzero(torch.all(torch.eq( graph_data.x, file_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-         reg_node_indices = torch.nonzero(torch.all(torch.eq( graph_data.x, reg_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-         net_node_indices = torch.nonzero(torch.all(torch.eq( graph_data.x, net_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-         proc_node_indices = torch.nonzero(torch.all(torch.eq( graph_data.x, proc_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-         thread_node_indices = torch.nonzero(torch.all(torch.eq( graph_data.x, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-         # ------------------------------------------------------------------------------------------------------------------------------
-
-         ''' 1. Initialize each node's feature vector '''        
-         edge_feat_len = len(graph_data.edge_attr[0][:-1]) # drop time-scalar for now
-         edge_feat_placeholders = torch.zeros(graph_data.x.shape[0], edge_feat_len) # create a zero-tensors to concat
-         graph_data.x = torch.cat((graph_data.x, edge_feat_placeholders), dim=1) # concatenate graph_data.x with zero tensors (~edge-feature placehodler) along the second dimension
-
-         '''
-            # 2. For "n_hops": 
-            # 3.    For each node:
-            # 4.        Get messages (concat of edge-feat and node-feat) from the node's neighbors (neighbor-nodes with 'incoming edges')
-            #           ^-- Might have to handle the "duplicate neighboring nodes" problem due to multi-graph ; could utilize approach used in signal-amplification    
-            # 5.        Aggregate messages from neighbors based on "neighborhood_aggr" 
-            # 6.        Update the node's embedding (* Change made to other nodes during this hop must not be reflected; 
-            #                                          So deep-copy a graph in advance that is not mutated but just used for collecting messages)
-            #                                       (* Most basic way for the 'update' is to just 'add' the aggregated-message as node's current embedding )                   
-         '''
-
-         for n in range(n_hops):
-            
-            print(f"{n+1} hop", flush = True)
-
-            graph_data__from_previous_hop = copy.deepcopy(graph_data) # Need a graph_data that does not mutate,
-                                                                      # (for 'retrieving messages' purposes)
-                                                                      # as node's embedding should be updated by the
-                                                                      # state of the graph of previous hop,
-                                                                      # not by the graph that's being updated real-time in this hop.
-            
-            graph_data_x_first_5_bits = graph_data__from_previous_hop.x[:,:5] # corresponds to node-attributes 
-            
-            
-            for node_idx in range( graph_data.x.shape[0] ):
-               print(f"{cnt} / {len(dataset)}: {graph_data.name} | {n+1} hop | {node_idx+1} / {graph_data.x.shape[0]} : message passing for node", flush = True)
-
-               ''' Get Messages '''
-               # this graph's edge-target indices vector
-               edge_tar_indices = graph_data.edge_index[1]
-               
-               # edge-indices of incoming-edges to this node   # "torch.nonzero" returns a 2-D tensor where each row is the index for a nonzero value.
-               incoming_edges_to_this_node_idx = torch.nonzero( edge_tar_indices == node_idx ).flatten()  
-
-               # ---------------------------------------------------------------------------------------------
-               # edge-attributes of incoming edges to this node (i.e. edge-level messages)
-               edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
-
-               # ---------------------------------------------------------------------------------------------
-               # Following is for handling "duplicate neighboring nodes" problem due to multi-graph
-               # - Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
-               unique_incoming_edges_to_this_node, _ = torch.unique( graph_data.edge_index[:, incoming_edges_to_this_node_idx ], 
-                                                                      dim=1, return_inverse=True)
-
-               source_nodes_of_incoming_edges_to_this_node = unique_incoming_edges_to_this_node[0] # edge-src is index 0
-
-               unique__source_nodes_of_incoming_edges_to_this_node = torch.unique( source_nodes_of_incoming_edges_to_this_node )
-               # node-attributes of 'unique' (for handling duplicate neighboring-nodes) incoming nodes
-               # (i.e. node-level messages) # 
-               node_level_messages = graph_data_x_first_5_bits[ unique__source_nodes_of_incoming_edges_to_this_node ]
-
-               ''' First perform neighborhood aggregation for edge-feats and node-feats separately,
-                   as the latter has considered unique incoming nodes to evade "duplicate neighboring nodes"
-                   
-                   Next, combine the separately aggregated node and edge level messages 
-               '''
-
-               if neighborhood_aggr == "sum": neighborhood_aggr__func = torch.sum
-               elif neighborhood_aggr == "mean": neighborhood_aggr__func = torch.mean
-
-               node_level_messages__aggregated = neighborhood_aggr__func(node_level_messages, dim = 0)
-               edge_level_messages__aggregated = neighborhood_aggr__func(edge_level_messages, dim = 0)
-
-               messages__aggregated = torch.cat([node_level_messages__aggregated, edge_level_messages__aggregated], dim = 0) # node-feat should come first
-
-               ''' Update the node's embedding with the aggregated message
-                   (* Most basic way for the 'update' is to just 'add' the aggregated-message as node's current embedding )
-                   (  Perhaps could consider updating with some weights? ) 
-               '''
-               # Need to update with "graph_data" since this will be the next iteration's "graph_data__from_previous_hop"
-               # (i.e. "graph_data" is the graph that is mutating and the medium for information-propagation )
-               # For "SimpleConv", similar to edge-weight being considered as 1
-               graph_data.x[node_idx] = graph_data.x[node_idx] + messages__aggregated
-
-
-         ''' 7. Since message-passing is done, "pool" all node's embedding, to generate the "graph embedding". '''
-         if pool == "sum": pool__func = torch.sum
-         elif pool == "mean": pool__func = torch.mean
-
-         graph_embedding = pool__func(graph_data.x, dim = 0)
-
-
-    # eventdist = torch.sum(data.edge_attr, dim = 0)
-    # nodetype5bit_adhoc_identifier_dist = torch.sum(data.x, axis = 0)
-    # event_nodetype5bit_adhoc_identifier_dist = torch.cat(( eventdist, nodetype5bit_adhoc_identifier_dist ), dim = 0)
-    data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = graph_embedding.tolist()
-
-    return data_dict
-
-
 
 #**********************************************************************************************************************************************************************
 #**********************************************************************************************************************************************************************
@@ -1153,7 +944,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        default = ["Dataset-Case-2"])
 
     parser.add_argument('-readout_opt', '--readout_option', 
                         choices= ['max', 'mean' ],  # mean 도 해봐라 
@@ -1164,9 +955,48 @@ if __name__ == '__main__':
                                  # defaults
                                  "XGBoost_default_hyperparam",
                                  "RandomForest_default_hyperparam",
+
+                                 #PW: RF and XGboost ----------------------------------------------------------
+                                 # JY: non-ahoc seems to be '5bit eventdist' + final-test
+                                 "RandomForest_best_hyperparameter_max_case1",
+                                 "RandomForest_best_hyperparameter_max_case1_nograph",
+
+                                 "RandomForest_best_hyperparameter_max_case2",
+                                 "RandomForest_best_hyperparameter_max_case2_nograph",   
+
+                                 "RandomForest_best_hyperparameter_max_case1_ahoc",   
+                                 "RandomForest_best_hyperparameter_max_case1_ahoc_nograph",  
+
+                                 "RandomForest_best_hyperparameter_max_case2_ahoc",   
+                                 "RandomForest_best_hyperparameter_max_case2_ahoc_nograph",
+
+                                 "XGBoost_best_hyperparameter_max_case1",   
+                                 "XGBoost_best_hyperparameter_max_case1_nograph",
+
+                                 "XGBoost_best_hyperparameter_max_case2",
+                                 "XGBoost_best_hyperparameter_max_case2_nograph",
+
+                                 "XGBoost_best_hyperparameter_max_case1_ahoc",
+                                 "XGBoost_best_hyperparameter_max_case1_ahoc_nograph",
+
+                                 "XGBoost_best_hyperparameter_max_case2_ahoc",
+                                 "XGBoost_best_hyperparameter_max_case2_ahoc_nograph",
+
+                                 # -----------------Mean------------------------------------
+                                 "RandomForest_best_hyperparameter_mean_case1",
+                                 "RandomForest_best_hyperparameter_mean_case1_nograph",
+
+                                 "RandomForest_best_hyperparameter_mean_case2",
+                                 "RandomForest_best_hyperparameter_mean_case2_nograph",
+
+                                 "RandomForest_best_hyperparameter_mean_case1_ahoc",
+                                 "RandomForest_best_hyperparameter_mean_case1_ahoc_nograph",
+
+                                 "RandomForest_best_hyperparameter_mean_case2_ahoc",
+                                 "RandomForest_best_hyperparameter_mean_case2_ahoc_nograph",
                                   
                                   ], 
-                                  default = ["RandomForest_default_hyperparam"])
+                                  default = ["RandomForest_best_hyperparameter_mean_case2_nograph"])
    
     parser.add_argument('-sig_amp_opt', '--signal_amplification_option', 
                         
@@ -1180,18 +1010,16 @@ if __name__ == '__main__':
                                   'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
 
                                   'signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821',
-
-                                  'standard_message_passing_graph_embedding', # Added by JY @ 2023-12-27
                                   ], 
 
-                                  default = ["standard_message_passing_graph_embedding"])
+                                  default = ["no_graph_structure__event_1gram_nodetype_5bit"])
     
 
 
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
     # cmd args
     K = parser.parse_args().K[0]
@@ -1269,7 +1097,7 @@ if __name__ == '__main__':
 
     _num_classes = 2  # number of class labels and always binary classification.
 
-    #PW: 5 and 62 (61 taskname + 1 timestamp) based on new silketw 
+   #PW: 5 and 62 (61 taskname + 1 timestamp) based on new silketw 
     _dim_node = 5 #46   # num node features ; the #feats
     _dim_edge = 62 #72    # (or edge_dim) ; num edge features
 
@@ -1338,7 +1166,7 @@ if __name__ == '__main__':
                                                    'random_state': random_state,
                                                    'split_shuffle_seed': split_shuffle_seed
                                                    }
-                                          )
+                                                   )
       return manual_space
 
     def XGBoost_default_hyperparam() -> dict :
@@ -1387,12 +1215,449 @@ if __name__ == '__main__':
          return manual_space
 
 
+    # PW : RF and XGboost best hyperparameter
+    def RandomForest_best_hyperparameter_max_case1():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 100, 
+               'criterion': 'gini', 
+               'max_depth': 20, 
+               'min_samples_split': 5, 
+               'min_samples_leaf': 1, 
+               'max_features': 'sqrt',
+               'bootstrap': False,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+    def RandomForest_best_hyperparameter_max_case2():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 100, 
+               'criterion': 'gini', 
+               'max_depth': 15, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 1, 
+               'max_features': None,
+               'bootstrap': True,
+               'random_state': 42,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+    def RandomForest_best_hyperparameter_max_case1_nograph():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 200, 
+               'criterion': 'gini', 
+               'max_depth': None, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 3, 
+               'max_features': None,
+               'bootstrap': True,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+    def RandomForest_best_hyperparameter_max_case2_nograph():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 300, 
+               'criterion': 'gini', 
+               'max_depth': 20, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 1, 
+               'max_features': 'sqrt',
+               'bootstrap': False,
+               'random_state': 0,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+    def RandomForest_best_hyperparameter_max_case1_ahoc():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 100, 
+               'criterion': 'gini', 
+               'max_depth': 20, 
+               'min_samples_split': 5, 
+               'min_samples_leaf': 1, 
+               'max_features': 'sqrt',
+               'bootstrap': False,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+    def RandomForest_best_hyperparameter_max_case2_ahoc():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 200, 
+               'criterion': 'gini', 
+               'max_depth': 15, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 1, 
+               'max_features': None,
+               'bootstrap': True,
+               'random_state': 42,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+    def RandomForest_best_hyperparameter_max_case1_ahoc_nograph(): #done
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 200, 
+               'criterion': 'gini', 
+               'max_depth': None, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 3, 
+               'max_features': None,
+               'bootstrap': True,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+    def RandomForest_best_hyperparameter_max_case2_ahoc_nograph(): #done
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 300, 
+               'criterion': 'gini', 
+               'max_depth': 20, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 1, 
+               'max_features': 'sqrt',
+               'bootstrap': False,
+               'random_state': 0,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+    
+ 
+
+    def XGBoost_best_hyperparameter_max_case1():   
+         Top_1 =  {
+                  'n_estimators': 500, 
+                  'learning_rate': 0.01, 
+                  'max_depth': 6, 
+                  'min_samples_split': 2, 
+                  'min_samples_leaf': 5, 
+                  'subsample': 1.0, 
+                  'max_features': 'sqrt',
+                  'loss': 'log_loss',
+                  'random_state': 99,
+                  'split_shuffle_seed': 100 # not needed
+                  }               
+         manual_space = [ Top_1 ]
+         return manual_space
+
+    def XGBoost_best_hyperparameter_max_case2():   
+         Top_1 =  {
+         'n_estimators': 1000, 
+         'learning_rate': 0.1, 
+         'max_depth': 3, 
+         'min_samples_split': 2, 
+         'min_samples_leaf': 1, 
+         'subsample': 1.0, 
+         'max_features': None,
+         'loss': 'log_loss',
+         'random_state': 0,
+         'split_shuffle_seed': 100 # not needed
+         }
+         manual_space = [ Top_1 ]
+         return manual_space
+
+    def XGBoost_best_hyperparameter_max_case1_nograph():   
+         Top_1 =  {
+         'n_estimators': 500, 
+         'learning_rate': 0.1, 
+         'max_depth': 6, 
+         'min_samples_split': 2, 
+         'min_samples_leaf': 5, 
+         'subsample': 0.5, 
+         'max_features': 'sqrt',
+         'loss': 'log_loss',
+         'random_state': 99,
+         'split_shuffle_seed': 100 # not needed
+         }
+         manual_space = [ Top_1 ]
+         return manual_space
+    
+    def XGBoost_best_hyperparameter_max_case2_nograph():   
+         Top_1 =  {
+         'n_estimators': 1000, 
+         'learning_rate': 0.1, 
+         'max_depth': 6, 
+         'min_samples_split': 9, 
+         'min_samples_leaf': 3, 
+         'subsample': 0.75, 
+         'max_features': None,
+         'loss': 'log_loss',
+         'random_state': 0,
+         'split_shuffle_seed': 100 # not needed
+         }
+         manual_space = [ Top_1 ]
+         return manual_space
+
+    def XGBoost_best_hyperparameter_max_case1_ahoc():   
+         Top_1 =  {
+         'n_estimators': 500, 
+         'learning_rate': 0.01, 
+         'max_depth': 6, 
+         'min_samples_split': 2, 
+         'min_samples_leaf': 5, 
+         'subsample': 1.0, 
+         'max_features': 'sqrt',
+         'loss': 'log_loss',
+         'random_state': 99,
+         'split_shuffle_seed': 100 # not needed
+         }
+         manual_space = [ Top_1 ]
+         return manual_space
+
+    def XGBoost_best_hyperparameter_max_case2_ahoc():   
+         Top_1 =  {
+         'n_estimators': 1000, 
+         'learning_rate': 0.1, 
+         'max_depth': 3, 
+         'min_samples_split': 2, 
+         'min_samples_leaf': 1, 
+         'subsample': 1.0, 
+         'max_features': None,
+         'loss': 'log_loss',
+         'random_state': 0,
+         'split_shuffle_seed': 100 # not needed
+         }
+         manual_space = [ Top_1 ]
+         return manual_space
+
+    def XGBoost_best_hyperparameter_max_case1_ahoc_nograph():    #done
+         Top_1 =  {
+         'n_estimators': 500, 
+         'learning_rate': 0.1, 
+         'max_depth': 6, 
+         'min_samples_split': 2, 
+         'min_samples_leaf': 5, 
+         'subsample': 0.5, 
+         'max_features': 'sqrt',
+         'loss': 'log_loss',
+         'random_state': 99,
+         'split_shuffle_seed': 100 # not needed
+         }
+         manual_space = [ Top_1]
+         return manual_space
+
+    def XGBoost_best_hyperparameter_max_case2_ahoc_nograph():   
+         Top_1 =  {
+         'n_estimators': 1000, 
+         'learning_rate': 0.1, 
+         'max_depth': 6, 
+         'min_samples_split': 9, 
+         'min_samples_leaf': 3, 
+         'subsample': 0.75, 
+         'max_features': None,
+         'loss': 'log_loss',
+         'random_state': 0,
+         'split_shuffle_seed': 100 # not needed
+         }
+         manual_space = [ Top_1]
+         return manual_space
+
+    #For ----------------Mean------------------------
+    def RandomForest_best_hyperparameter_mean_case1(): #done
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 300, 
+               'criterion': 'gini', 
+               'max_depth': 9, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 1, 
+               'max_features': None,
+               'bootstrap': True,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+    def RandomForest_best_hyperparameter_mean_case2():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 100, 
+               'criterion': 'gini', 
+               'max_depth': 20, 
+               'min_samples_split': 5, 
+               'min_samples_leaf': 1, 
+               'max_features': 'sqrt',
+               'bootstrap': False,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+    
+    def RandomForest_best_hyperparameter_mean_case1_nograph(): #done
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 200, 
+               'criterion': 'gini', 
+               'max_depth': None, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 3, 
+               'max_features': None,
+               'bootstrap': True,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+    
+    def RandomForest_best_hyperparameter_mean_case2_nograph():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 100, 
+               'criterion': 'gini', 
+               'max_depth': 20, 
+               'min_samples_split': 5, 
+               'min_samples_leaf': 1, 
+               'max_features': 'sqrt',
+               'bootstrap': False,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+    
+    def RandomForest_best_hyperparameter_mean_case1_ahoc(): #done
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 300, 
+               'criterion': 'gini', 
+               'max_depth': 9, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 1, 
+               'max_features': None,
+               'bootstrap': True,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+    
+    def RandomForest_best_hyperparameter_mean_case2_ahoc():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 100, 
+               'criterion': 'gini', 
+               'max_depth': 20, 
+               'min_samples_split': 5, 
+               'min_samples_leaf': 1, 
+               'max_features': 'sqrt',
+               'bootstrap': False,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+    
+    def RandomForest_best_hyperparameter_mean_case1_ahoc_nograph(): #done
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 200, 
+               'criterion': 'gini', 
+               'max_depth': None, 
+               'min_samples_split': 2, 
+               'min_samples_leaf': 3, 
+               'max_features': None,
+               'bootstrap': True,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+    
+    def RandomForest_best_hyperparameter_mean_case2_ahoc_nograph():
+      manual_space = []
+      manual_space.append(
+               {
+               'n_estimators': 100, 
+               'criterion': 'gini', 
+               'max_depth': 20, 
+               'min_samples_split': 5, 
+               'min_samples_leaf': 1, 
+               'max_features': 'sqrt',
+               'bootstrap': False,
+               'random_state': 99,
+               'split_shuffle_seed': 100
+               }
+               )
+      return manual_space
+
+
+
    #TODO PW add here when found best hyperparameter set
 
     ####################################################################################################################################################
     # defaults
     if search_space_option == "XGBoost_default_hyperparam": search_space = XGBoost_default_hyperparam()   
     elif search_space_option == "RandomForest_default_hyperparam": search_space = RandomForest_default_hyperparam()   
+
+   #PW: RF and XGboost ----------------------------------------------------------
+    # JY: non-ahoc seems to be '5bit eventdist'
+    elif search_space_option == "RandomForest_best_hyperparameter_max_case1": search_space = RandomForest_best_hyperparameter_max_case1()   
+    elif search_space_option == "RandomForest_best_hyperparameter_max_case2": search_space = RandomForest_best_hyperparameter_max_case2()   
+    elif search_space_option == "RandomForest_best_hyperparameter_max_case1_nograph": search_space = RandomForest_best_hyperparameter_max_case1_nograph()   
+    elif search_space_option == "RandomForest_best_hyperparameter_max_case2_nograph": search_space = RandomForest_best_hyperparameter_max_case2_nograph()   
+    elif search_space_option == "RandomForest_best_hyperparameter_max_case1_ahoc": search_space = RandomForest_best_hyperparameter_max_case1_ahoc()   
+    elif search_space_option == "RandomForest_best_hyperparameter_max_case2_ahoc": search_space = RandomForest_best_hyperparameter_max_case2_ahoc()   
+    elif search_space_option == "RandomForest_best_hyperparameter_max_case1_ahoc_nograph": search_space = RandomForest_best_hyperparameter_max_case1_ahoc_nograph()   
+    elif search_space_option == "RandomForest_best_hyperparameter_max_case2_ahoc_nograph": search_space = RandomForest_best_hyperparameter_max_case2_ahoc_nograph()   
+    
+    elif search_space_option == "XGBoost_best_hyperparameter_max_case1": search_space = XGBoost_best_hyperparameter_max_case1()   
+    elif search_space_option == "XGBoost_best_hyperparameter_max_case2": search_space = XGBoost_best_hyperparameter_max_case2()   
+    elif search_space_option == "XGBoost_best_hyperparameter_max_case1_nograph": search_space = XGBoost_best_hyperparameter_max_case1_nograph()   
+    elif search_space_option == "XGBoost_best_hyperparameter_max_case2_nograph": search_space = XGBoost_best_hyperparameter_max_case2_nograph()   
+    elif search_space_option == "XGBoost_best_hyperparameter_max_case1_ahoc": search_space = XGBoost_best_hyperparameter_max_case1_ahoc()   
+    elif search_space_option == "XGBoost_best_hyperparameter_max_case2_ahoc": search_space = XGBoost_best_hyperparameter_max_case2_ahoc()   
+    elif search_space_option == "XGBoost_best_hyperparameter_max_case1_ahoc_nograph": search_space = XGBoost_best_hyperparameter_max_case1_ahoc_nograph()   
+    elif search_space_option == "XGBoost_best_hyperparameter_max_case2_ahoc_nograph": search_space = XGBoost_best_hyperparameter_max_case2_ahoc_nograph()   
+
+   # -----------------Mean------------------------------------
+    elif search_space_option == "RandomForest_best_hyperparameter_mean_case1": search_space = RandomForest_best_hyperparameter_mean_case1()   
+    elif search_space_option == "RandomForest_best_hyperparameter_mean_case2": search_space = RandomForest_best_hyperparameter_mean_case2()   
+    elif search_space_option == "RandomForest_best_hyperparameter_mean_case1_nograph": search_space = RandomForest_best_hyperparameter_mean_case1_nograph()   
+    elif search_space_option == "RandomForest_best_hyperparameter_mean_case2_nograph": search_space = RandomForest_best_hyperparameter_mean_case2_nograph()   
+    elif search_space_option == "RandomForest_best_hyperparameter_mean_case1_ahoc": search_space = RandomForest_best_hyperparameter_mean_case1_ahoc()   
+    elif search_space_option == "RandomForest_best_hyperparameter_mean_case2_ahoc": search_space = RandomForest_best_hyperparameter_mean_case2_ahoc()   
+    elif search_space_option == "RandomForest_best_hyperparameter_mean_case1_ahoc_nograph": search_space = RandomForest_best_hyperparameter_mean_case1_ahoc_nograph()   
+    elif search_space_option == "RandomForest_best_hyperparameter_mean_case2_ahoc_nograph": search_space = RandomForest_best_hyperparameter_mean_case2_ahoc_nograph()   
 
     else:
         ValueError("Unavailable search-space option")
@@ -1424,26 +1689,19 @@ if __name__ == '__main__':
     if search_on_train__or__final_test == "search_on_all":  # ***** #
          train_dataset = train_dataset + final_test_dataset
 
-   #  # Now apply signal-amplification here (here least conflicts with existing code.)
-   #  if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
-   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist_dict( dataset= train_dataset )
+    # Now apply signal-amplification here (here least conflicts with existing code.)
+    if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
+         train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist_dict( dataset= train_dataset )
 
-   #  elif signal_amplification_option == "signal_amplified__event_1gram":
-   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_dict( dataset= train_dataset )            
+    elif signal_amplification_option == "signal_amplified__event_1gram":
+         train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_dict( dataset= train_dataset )            
 
-   #  elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
-   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_and_Adhoc_Identifier_dist_dict( dataset= train_dataset ) 
+    elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
+         train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_and_Adhoc_Identifier_dist_dict( dataset= train_dataset ) 
 
-   #  elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821":
-   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist__INCOMING_AND_OUTGOING_CONCATENATED_20230821_PROF_GUANHUA__dict( dataset= train_dataset ) 
-
-
-    # Added by JY @ 2023-12-27
-    if signal_amplification_option == "standard_message_passing_graph_embedding":
-        train_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= train_dataset )
-
-
-   #  # --------------------------------------------------------------------------------------
+    elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821":
+         train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist__INCOMING_AND_OUTGOING_CONCATENATED_20230821_PROF_GUANHUA__dict( dataset= train_dataset ) 
+    # --------------------------------------------------------------------------------------
     elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit":
          train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_dist_dict( dataset= train_dataset )  
 
@@ -1453,14 +1711,12 @@ if __name__ == '__main__':
     elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
          train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= train_dataset ) 
 
-
-
     else:
          ValueError(f"Invalid signal_amplification_option ({signal_amplification_option})")                  
     #--------------------------------------------------------------------------
     # Now apply readout to the obtained thread-level vectors
     if "signal_amplified" in signal_amplification_option:
-          train_dataset_signal_amplified_readout_df = get_readout_applied_df(data_dict = train_dataset__standard_message_passing_dict, 
+          train_dataset_signal_amplified_readout_df = get_readout_applied_df(data_dict = train_dataset__signal_amplified_dict, 
                                                                              readout_option= readout_option,
                                                                              signal_amplification_option= signal_amplification_option)
           X = train_dataset_signal_amplified_readout_df
@@ -1513,13 +1769,6 @@ if __name__ == '__main__':
          
          elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
                final_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= final_test_dataset )  
-
-
-         # Added by JY @ 2023-12-28
-         elif signal_amplification_option == "standard_message_passing_graph_embedding":
-            final_test_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= final_test_dataset )
-
-
 
          else:
                ValueError(f"Invalid signal_amplification_option ({signal_amplification_option})")                  
