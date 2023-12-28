@@ -91,7 +91,6 @@ if __name__ == "__main__":
 
          indices__to__caldera_technique_process_and_its_descendents__dict[index] = caldera_technique_process_and_descendents_pids
 
-
    ''' (5) Get the log-entries of the caldera-technique-process and its descendents (if any) '''
 
    indices__to__log_entries_of_caldera_technique_process_and_its_descendents__dict = dict()

@@ -348,7 +348,7 @@ def group_log_entries_by_processThreads(log_entries : list) -> dict:
                # }
                # print json.dumps(obj, indent=2, cls=NoIndentEncoder)
 
-
+    # TODO -- For each (pid, tid) make list of dict-strings into 1 string delimited by "\n" so that more readable
     for pid, tid_to_logentrylist_dict in processThread_to_logentries_dict.items():
         for tid, logentrylist in tid_to_logentrylist_dict.items():
             processThread_to_logentries_dict[pid][tid] = NoIndent(logentrylist)

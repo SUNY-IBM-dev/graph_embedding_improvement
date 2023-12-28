@@ -21,6 +21,11 @@
 
    --> Analyze : /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_2__Weighted_Thread_Sum_Aggr/GROUPING_RESULTS
       ^-- Priti could help on this analysis task  
+
+    # TODO (****) -- For each (pid, tid) make list of dict-strings into 1 string delimited by "\n" so that more readable
+
+
+
 -----------------------------------------------------------------------------------------------------------------------------------
 
 [Priority-3] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
@@ -28,6 +33,15 @@
    -->  Refer to the neighborhood aggregation code of, say, 'pytorch GIN-conv layer' 
 
    ---> Check how the node embeddings get generalized for basic neighborhood-aggregation(message-passing)?
+
+    # TO RESEARCH: How does the conventional GNN deal with duplicate nodes being used in message passing when the graph is a multi-graph?
+    #              e.g. In multi-graph setting, node X can have multiple incoming edges from the node Y.
+    #                   Then, node Y will send multiple messages to node X, 
+    #                   where each message may vary by 'information from edge' but be exactly same by 'information from node',
+    #                   since the latter is all based on node-feature of node Y.
+
+    #          ---> Seems like what I've done in singal-amplification is the conventional approach
+    #               (i.e., don't repeat for node-message; combine edge-feature, share common node-feature once, put it together)
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
