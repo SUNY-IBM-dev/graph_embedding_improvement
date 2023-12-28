@@ -310,7 +310,7 @@ def group_log_entries_by_processThreads(log_entries : list) -> dict:
             # "XmlEventData": log_entry['_source']['XmlEventData']
         }
         log_entry_key_info_fstring = f"{log_entry_key_info}"
-        delimiter_fstring = "-"*150 # for easier reading
+      #   delimiter_fstring = "-"*150 # for easier reading
 
         if log_entry_pid in processThread_to_logentries_dict: # if log-entry's pid exists as a key
 
@@ -319,14 +319,14 @@ def group_log_entries_by_processThreads(log_entries : list) -> dict:
                # so just append it 
 
                processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(log_entry_key_info_fstring)
-               processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(delimiter_fstring)
+               # processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(delimiter_fstring)
 
            else:
                # under this process, first event for this process-thread
                # so create space for it, and append the first event
                processThread_to_logentries_dict[log_entry_pid][log_entry_tid] = list()
                processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(log_entry_key_info_fstring)
-               processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(delimiter_fstring)
+               # processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(delimiter_fstring)
         else:
             # if log-entry's pid key is not populated yet,
             # obviously there is no corresponding space for the process-thread
@@ -334,7 +334,7 @@ def group_log_entries_by_processThreads(log_entries : list) -> dict:
             processThread_to_logentries_dict[log_entry_pid] = dict()
             processThread_to_logentries_dict[log_entry_pid][log_entry_tid] = list()
             processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append( log_entry_key_info_fstring )
-            processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(delimiter_fstring)
+            # processThread_to_logentries_dict[log_entry_pid][log_entry_tid].append(delimiter_fstring)
 
     # Added by JY @ 2023-12-27 Wrap "processThread_to_logentries_dict[log_entry_pid][log_entry_tid]" with NoIndent
     #           --> https://stackoverflow.com/questions/13249415/how-to-implement-custom-indentation-when-pretty-printing-with-the-json-module
@@ -352,6 +352,7 @@ def group_log_entries_by_processThreads(log_entries : list) -> dict:
     for pid, tid_to_logentrylist_dict in processThread_to_logentries_dict.items():
         for tid, logentrylist in tid_to_logentrylist_dict.items():
             processThread_to_logentries_dict[pid][tid] = NoIndent(logentrylist)
+            # processThread_to_logentries_dict[pid][tid] =  "\n" + "\n".join(logentrylist) # does not work for json prettify
 
     # returns dict of dict 
     return processThread_to_logentries_dict
