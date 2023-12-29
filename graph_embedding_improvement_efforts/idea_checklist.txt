@@ -46,6 +46,10 @@
     #          ---> Seems like what I've done in singal-amplification is the conventional approach
     #               (i.e., don't repeat for node-message; combine edge-feature, share common node-feature once, put it together)
 
+
+   TODO: Debug rest of "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/standard_message_passing__graph_embedding.py"
+         and start tuning.
+
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
     
@@ -63,6 +67,8 @@
     --> distribution signal (sum pool 했을때 vector dist, mean/max pool 했을때 vector dist ; distribution histogram?)
                             ( data sample 별로 비교 (train/test) )
 
+     TODO: "/analyze_at_model_explainer/explanation_comparisons.py" KIND OF WORKING BUT NEEDS DEBUGGING
+
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-5] Incorporate "Local N-gram (temporal information local to pair of nodes)" to graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
@@ -70,6 +76,7 @@
    -- May not be very scalable ; Prof Stoller once said to use explainer to figure out which n-gram features are less important
    -- fit_transform for all edges in training data , in parallel? , then aggregate , and transform? 
       (this will need some good amount of effort, LESS importance ** )
+
 
 
 -----------------------------------------------------------------------------------------------------------------------------------

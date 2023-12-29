@@ -5,7 +5,7 @@ import shutil
 
 '''
 
-TODO: More Modularize the code as it is quite messy making it error-prone
+TODO: explanation_comparisons.py KIND OF WORKING BUT NEEDS DEBUGGING
 
 '''
 
