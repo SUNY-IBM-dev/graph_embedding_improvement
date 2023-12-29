@@ -3,6 +3,11 @@ import pandas as pd
 from datetime import datetime
 import shutil
 
+import warnings
+warnings.filterwarnings("ignore")
+
+import matplotlib.pyplot as plt
+
 '''
 
 TODO: explanation_comparisons.py KIND OF WORKING BUT NEEDS DEBUGGING
@@ -119,7 +124,7 @@ def get_materials_for_explanation_comparison(graph_embedding__mispredictions__di
       no_graph__final_test_results_df = pd.read_csv(no_graph__final_test_results_csv__fpath)
 
       return {
-         # dataframes that might be useful
+         # dataframes that might be useful -- write these out to the trail-subdir 
          "graph_embedding__GlobalSHAP_TestDataset_df": graph_embedding__GlobalSHAP_TestDataset_df,
          "no_graph__GlobalSHAP_TestDataset_csv__df": no_graph__GlobalSHAP_TestDataset_csv__df,
          
@@ -164,11 +169,11 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
       os.makedirs(explanation_comparison_trial_dirpath)   
 
       # 2. Add a explanantion-comparison description file
-      with open( os.path.join(explanation_comparison_trial_dirpath, "explanation_comparison_description.txt"), "w" ) as f:
+      with open( os.path.join(explanation_comparison_trial_dirpath, "description_of_explanation_comparison.txt"), "w" ) as f:
          f.write("explanation comparisons between:\n\n")
-         f.write(f"  {materials_for_explanation_comparison__dict['graph_embedding__results__dirpath']}\n")
+         f.write(f"  { os.path.split(materials_for_explanation_comparison__dict['graph_embedding__results__dirpath'])[1] }\n")
          f.write("    vs.\n")
-         f.write(f"  {materials_for_explanation_comparison__dict['no_graph__results__dirpath']}\n")
+         f.write(f"  { os.path.split(materials_for_explanation_comparison__dict['no_graph__results__dirpath'])[1] }\n")
 
       # 3. Create 'explanation comparison' sub-directories for the following 4 categories:
       #      category-1: samples which both graph-embedding and no-graph mis-predicted
@@ -187,54 +192,99 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
       os.makedirs( os.path.join( explanation_comparison_trial_dirpath , category_4__dirpath) )
 
       # ==============================================================================================================
-      # 4. Write out to roduce explanations for each cateogry
+      # 4. Save out these, to refer to, as can be needed when analyzing the explanation comparisons.
+      materials_for_explanation_comparison__dict["graph_embedding__GlobalSHAP_TestDataset_df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"graph_embedding__GlobalSHAP_TestDataset_df.csv"))
+      materials_for_explanation_comparison__dict["no_graph__GlobalSHAP_TestDataset_csv__df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"no_graph__GlobalSHAP_TestDataset_csv__df.csv"))
+
+      materials_for_explanation_comparison__dict["graph_embedding__GlobalSHAP_df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"graph_embedding__GlobalSHAP_df.csv"))
+      materials_for_explanation_comparison__dict["no_graph__GlobalSHAP_df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"no_graph__GlobalSHAP_df.csv"))      
+
+      materials_for_explanation_comparison__dict["graph_embedding__final_test_results_df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"graph_embedding__final_test_results_df.csv"))
+      materials_for_explanation_comparison__dict["no_graph__final_test_results_df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"no_graph__final_test_results_df.csv"))
+      # ==============================================================================================================
+      # 5. Write out to produce explanations for each cateogry
 
       # prep variables and helper func
       graph_embedding__GlobalSHAP_TestDataset_df = materials_for_explanation_comparison__dict["graph_embedding__GlobalSHAP_TestDataset_df"]
       no_graph__GlobalSHAP_TestDataset_csv__df = materials_for_explanation_comparison__dict["no_graph__GlobalSHAP_TestDataset_csv__df"]
       
       
-      def get_sumShap_basevalue_predictprobas(sample : str):
+      def get_sumShap_basevalue_predictprobas__and_saveout(sample : str,
+                                                           explanation_comparision_savedir : str,
+                                                           ):
       
          # Extract from GlobalSHAP-TestDataset for comparison
          graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest = \
             graph_embedding__GlobalSHAP_TestDataset_df[ graph_embedding__GlobalSHAP_TestDataset_df['data_name'].str.contains(sample) ]
-
-         graph_embedding__sum_of_feature_shaps = graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest['SHAP_sum_of_feature_shaps']
-         graph_embedding__base_value = graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest['SHAP_base_value']
-         graph_embedding__predict_proba = graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest['predict_proba']
+         
+         graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest["ROW_IDENTIFIER"] = "Graph Embedding"
 
 
          no_graph__GlobalSHAP_TestDataset_df__row_of_interest = \
             no_graph__GlobalSHAP_TestDataset_csv__df[ no_graph__GlobalSHAP_TestDataset_csv__df['data_name'].str.contains(sample) ]
+         no_graph__GlobalSHAP_TestDataset_df__row_of_interest["ROW_IDENTIFIER"] = "No Graph"
 
-         no_graph__sum_of_feature_shaps = no_graph__GlobalSHAP_TestDataset_df__row_of_interest['SHAP_sum_of_feature_shaps']
-         no_graph__base_value = no_graph__GlobalSHAP_TestDataset_df__row_of_interest['SHAP_base_value']
-         no_graph__predict_proba =no_graph__GlobalSHAP_TestDataset_df__row_of_interest['predict_proba']
 
-         return {"graph_embedding__sum_of_feature_shaps": graph_embedding__sum_of_feature_shaps,
-                 "graph_embedding__base_value": graph_embedding__base_value,
-                 "graph_embedding__predict_proba": graph_embedding__predict_proba,
-                 "no_graph__sum_of_feature_shaps": no_graph__sum_of_feature_shaps,
-                 "no_graph__base_value": no_graph__base_value,
-                 "no_graph__predict_proba": no_graph__predict_proba}
+         # save out
+         GlobalSHAP_TestDataset_df__rows_of_interest__comparison = \
+            pd.concat([no_graph__GlobalSHAP_TestDataset_df__row_of_interest, graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest])
+         
+         index_columns = ["data_name", "ROW_IDENTIFIER", "SHAP_sum_of_feature_shaps", "SHAP_base_value", "predict_proba"]
+         GlobalSHAP_TestDataset_df__rows_of_interest__comparison.set_index( index_columns, inplace = True)
+
+         GlobalSHAP_TestDataset_df__rows_of_interest__comparison.to_csv(os.path.join(explanation_comparision_savedir, "GlobalSHAP_TestDataset_dfs__Row__Comparison.csv"))
+
+         # TODO: histogram comparison w.r.t feature-values as well? -----------------------------------------------------------------------------
+
+         feature_columns = [ col for col in graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest.columns if col not in index_columns + ["SUM"] ]
+
+         plt.figure(figsize=(20, 10)) 
+         plt.bar(no_graph__GlobalSHAP_TestDataset_df__row_of_interest[feature_columns].columns.tolist(), 
+                 no_graph__GlobalSHAP_TestDataset_df__row_of_interest[feature_columns].values.tolist()[0])
+         plt.xticks(rotation=90, fontsize='xx-small')
+         plt.title("No Graph -- Feature-value Distribution")
+         plt.savefig( os.path.join( explanation_comparision_savedir,
+                                   'No_Graph__Feature-value_Distribution.png') )
+         plt.close()
+
+         plt.figure(figsize=(20, 10))
+         plt.bar(graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest[feature_columns].columns.tolist(), 
+                 graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest[feature_columns].values.tolist()[0])
+         plt.xticks(rotation=90, fontsize='xx-small')
+         plt.title("Graph Embedding -- Feature-value Distribution")
+         plt.savefig( os.path.join( explanation_comparision_savedir,
+                                   'Graph_Embedding__Feature-value_Distribution.png') )
+         plt.close()
+
+
+         return 
       
 
-      def get_waterfallplots_and_copy(sample : str, explanation_comparision_savedir : str):
+      def get_waterfallplots_and_copy(
+                                      sample : str, 
+                                      graph_embedding__waterfall_plots__dirpath : str,
+                                      no_graph__waterfall_plots__dirpath : str,
 
-         graph_embedding__intersecting_mispred_sample__fname =  [f for f in os.listdir(graph_embedding__mispredictions__dirpath) \
-                                                                 if sample in f ][0] 
-         graph_embedding__intersecting_mispred_sample__fpath = os.path.join(graph_embedding__mispredictions__dirpath, 
-                                                                            graph_embedding__intersecting_mispred_sample__fname)
-         shutil.copy(graph_embedding__intersecting_mispred_sample__fpath, 
-                     os.path.join(explanation_comparision_savedir, graph_embedding__intersecting_mispred_sample__fname))
+                                      explanation_comparision_savedir : str,
+                                      ):
 
-         no_graph__intersecting_mispred_sample__fname = [f for f in os.listdir(no_graph__mispredictions__dirpath) \
-                                                               if sample in f ][0] 
-         no_graph__intersecting_mispred_sample__fpath = os.path.join(no_graph__mispredictions__dirpath, 
-                                                                     no_graph__intersecting_mispred_sample__fname)
-         shutil.copy(no_graph__intersecting_mispred_sample__fpath, 
-                     os.path.join(explanation_comparision_savedir, no_graph__intersecting_mispred_sample__fname))          
+            graph_embedding__waterfall_plot_sample__fname =  [f for f in os.listdir(graph_embedding__waterfall_plots__dirpath) \
+                                                              if sample in f ][0] 
+            graph_embedding__waterfall_plot_sample__fpath = os.path.join(graph_embedding__waterfall_plots__dirpath, 
+                                                                        graph_embedding__waterfall_plot_sample__fname)
+            shutil.copy(graph_embedding__waterfall_plot_sample__fpath, 
+                        os.path.join(explanation_comparision_savedir, 
+                                     f"graph_embedding__{graph_embedding__waterfall_plot_sample__fname}"))
+
+
+            no_graph__waterfall_plot_sample__fname = [f for f in os.listdir(no_graph__waterfall_plots__dirpath) \
+                                                      if sample in f ][0] 
+            no_graph__waterfall_plot_sample__fpath = os.path.join(no_graph__waterfall_plots__dirpath, 
+                                                                  no_graph__waterfall_plot_sample__fname)
+            shutil.copy(no_graph__waterfall_plot_sample__fpath, 
+                        os.path.join(explanation_comparision_savedir, 
+                                     f"no_graph__{no_graph__waterfall_plot_sample__fname}"))     
+     
 
 
       # ---------------------------------------------------------------------------------------------------
@@ -245,18 +295,17 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
          os.makedirs(explanation_comparision_savedir)
 
          # JY @ 2023-12-28: TODO : could also saveout outputs in results_dict to explanation_comparision_savedir
-         results_dict = get_sumShap_basevalue_predictprobas(sample)
-
-         get_waterfallplots_and_copy(sample, explanation_comparision_savedir)
+         results_dict = get_sumShap_basevalue_predictprobas__and_saveout(sample, explanation_comparision_savedir )
 
 
-         # waterfall plots
+         get_waterfallplots_and_copy(sample = sample, 
+                                     graph_embedding__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['graph_embedding__mispredictions__dirpath'],
+                                     no_graph__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['no_graph__mispredictions__dirpath'],
+                                     explanation_comparision_savedir= explanation_comparision_savedir)
+
 
          # (do this?) get manually feature values, and feature shaps
          
-         # could wrap this into a 
-
-
          # TODO: WRITE EVERYTHING TO COMPARISON_RESULTS DIR FOR SMOOTH ANALYSIS
 
 
@@ -268,9 +317,12 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
          explanation_comparision_savedir = os.path.join(category_2__dirpath, sample)
          os.makedirs(explanation_comparision_savedir)
 
-         results_dict = get_sumShap_basevalue_predictprobas(sample)
-         get_waterfallplots_and_copy(sample, explanation_comparision_savedir)
+         results_dict = get_sumShap_basevalue_predictprobas__and_saveout(sample, explanation_comparision_savedir )
 
+         get_waterfallplots_and_copy(sample = sample, 
+                                     graph_embedding__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['graph_embedding__correctpredictions__dirpath'],
+                                     no_graph__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['no_graph__correctpredictions__dirpath'],
+                                     explanation_comparision_savedir= explanation_comparision_savedir)
 
       # ---------------------------------------------------------------------------------------------------
       # ---- category-3 -- only_graph_embedding_mispredicted
@@ -279,9 +331,12 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
          explanation_comparision_savedir = os.path.join(category_3__dirpath, sample)
          os.makedirs(explanation_comparision_savedir)
 
-         results_dict = get_sumShap_basevalue_predictprobas(sample)
-         get_waterfallplots_and_copy(sample, explanation_comparision_savedir)
+         results_dict = get_sumShap_basevalue_predictprobas__and_saveout(sample, explanation_comparision_savedir )
 
+         get_waterfallplots_and_copy(sample = sample, 
+                                     graph_embedding__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['graph_embedding__mispredictions__dirpath'],
+                                     no_graph__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['no_graph__correctpredictions__dirpath'],
+                                     explanation_comparision_savedir= explanation_comparision_savedir)
 
       # ---------------------------------------------------------------------------------------------------
       # ---- category-4 -- only_no_graph_mispredicted
@@ -290,9 +345,12 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
          explanation_comparision_savedir = os.path.join(category_4__dirpath, sample)
          os.makedirs(explanation_comparision_savedir)
 
-         results_dict = get_sumShap_basevalue_predictprobas(sample)
-         get_waterfallplots_and_copy(sample, explanation_comparision_savedir)
+         results_dict = get_sumShap_basevalue_predictprobas__and_saveout(sample, explanation_comparision_savedir )
 
+         get_waterfallplots_and_copy(sample = sample, 
+                                     graph_embedding__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['graph_embedding__correctpredictions__dirpath'],
+                                     no_graph__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['no_graph__mispredictions__dirpath'],
+                                     explanation_comparision_savedir= explanation_comparision_savedir)
 
 
       # ---------------------------------------------------------------------------------------------------
