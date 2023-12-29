@@ -1056,7 +1056,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
             #                                          So deep-copy a graph in advance that is not mutated but just used for collecting messages)
             #                                       (* Most basic way for the 'update' is to just 'add' the aggregated-message as node's current embedding )                   
          '''
-
+         # JY @ 2023-12-28: Quite slow because doing 1 node by each, unlike in pytorch where parallel tensor operations are performed 
          for n in range(n_hops):
             
             print(f"{n+1} hop", flush = True)

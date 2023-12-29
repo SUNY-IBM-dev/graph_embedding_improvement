@@ -116,12 +116,50 @@ if __name__ == "__main__":
 
    ''' Compare local explanations in various aspects (feature-value, feature-shap, predict-proba, waterfall plot etc)
        for the mispredicted samples (later could do this for correct-predicted samples, but start from here)
+
+       Save the comparison-results to some dir(**)  -- /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/COMPARISON_RESULTS
+       Give all details 
    '''
+   COMPARISON_RESULTS_DIRPATH = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/COMPARISON_RESULTS"
+   if not os.path.exists(COMPARISON_RESULTS_DIRPATH):
+      os.makedirs(COMPARISON_RESULTS_DIRPATH)
+
+
+
    # intersecting mispredictions ----------------------------------------
    for intersecting_mispred_sample in mispredictions__intersecting:
 
-      # Get the "*Global-SHAP Important*Test-Dataset.csv"
-      os.listdir()
+      ### JY @ 2023-12-28: maybe wrap following into a function to be reused
+
+      # Extract from GlobalSHAP-TestDataset for comparison
+      graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest = \
+         graph_embedding__GlobalSHAP_TestDataset_df[ graph_embedding__GlobalSHAP_TestDataset_df['data_name'].str.contains(intersecting_mispred_sample) ]
+
+      graph_embedding__sum_of_feature_shaps = graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest['SHAP_sum_of_feature_shaps']
+      graph_embedding__base_value = graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest['SHAP_base_value']
+      graph_embedding__predict_proba = graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest['predict_proba']
+
+
+      no_graph__GlobalSHAP_TestDataset_df__row_of_interest = \
+         no_graph__GlobalSHAP_TestDataset_csv__df[ no_graph__GlobalSHAP_TestDataset_csv__df['data_name'].str.contains(intersecting_mispred_sample) ]
+
+      no_graph__sum_of_feature_shaps = no_graph__GlobalSHAP_TestDataset_df__row_of_interest['SHAP_sum_of_feature_shaps']
+      no_graph__base_value = no_graph__GlobalSHAP_TestDataset_df__row_of_interest['SHAP_base_value']
+      no_graph__predict_proba =no_graph__GlobalSHAP_TestDataset_df__row_of_interest['predict_proba']
+
+      # waterfall plots
+
+      # (do this?) get manually feature values, and feature shaps
+      
+      graph_embedding__intersecting_mispred_sample__fpath =  [f for f in os.listdir(graph_embedding__mispredictions__dirpath) \
+                                                              if intersecting_mispred_sample in f ][0] 
+
+
+      no_graph__intersecting_mispred_sample__fpath = [f for f in os.listdir(no_graph__mispredictions__dirpath) \
+                                                              if intersecting_mispred_sample in f ][0] 
+
+
+      # TODO: WRITE EVERYTHING TO COMPARISON_RESULTS DIR FOR SMOOTH ANALYSIS
 
 
       pass
