@@ -408,463 +408,46 @@ taskname_colnames = [
 ]
 
 
-##########################################################################################################################################################
-##########################################################################################################################################################
-# Signal-Amplification Function (Thread-level Event-Dist. 1gram + Adjacent Node's Node-Type 5Bit)
-#PW: Thread node embedding by aggregating one hop neighbour nodes
-def get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist_dict( dataset : list ):
-      
-      # A little different from "get_thread_level_eventdist_adjacentFRNpatterndist_dict"
-      # Differencce is that "get_thread_level_eventdist_adjacentFRNpatterndist_dict" only considers adjacent-nodes Adhoc-pattern-node-attr
-      # While this considers the 5Bit+Adhoc-pattern-node-attr
 
-      file_node_tensor = torch.tensor([1, 0, 0, 0, 0])
-      reg_node_tensor = torch.tensor([0, 1, 0, 0, 0])
-      net_node_tensor = torch.tensor([0, 0, 1, 0, 0])
-      proc_node_tensor = torch.tensor([0, 0, 0, 1, 0])
-      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
 
-      data_dict = dict()
-
-      cnt = 1
-      for data in dataset:
-            
-            print(f"signal-amplifying: {data.name} ||  {cnt}/{len(dataset)}", flush=True)
-
-            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
-            # if data.x.shape[1] != 5:
-            data_x_first5 = data.x[:,:5]
-
-            file_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, file_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            reg_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, reg_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            net_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, net_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            proc_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, proc_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-
-            # which this node is a source-node (outgoing-edge w.r.t this node)
-            
-            data_thread_node_incoming_edges_edge_attrs = torch.tensor([])
-            data_thread_node_outgoing_edges_edge_attrs = torch.tensor([])
-            data_thread_node_both_direction_edges_edge_attrs = torch.tensor([])
-            data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.tensor([]) # Added by JY @ 2023-07-19
-
-            for thread_node_idx in thread_node_indices:
-
-               edge_src_indices = data.edge_index[0]
-               edge_tar_indices = data.edge_index[1]
-
-               # which this node is a target-node (outgoing-edge w.r.t this node)
-               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
-               # which this node is a target-node (incoming-edge w.r.t this node)
-               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
-
-               # Following is to deal with edge-attr (event-dist & time-scalar) -------------------------------------------------------------------------------------
-               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
-               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
-
-               edge_attr_of_incoming_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_incoming_edges_from_thread_node_idx[:,:-1], dim = 0)
-               edge_attr_of_outgoing_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_outgoing_edges_from_thread_node_idx[:,:-1], dim = 0)
-               edge_attr_of_both_direction_edges_from_thread_node_idx_sum = torch.add(edge_attr_of_incoming_edges_from_thread_node_idx_sum, 
-                                                                                      edge_attr_of_outgoing_edges_from_thread_node_idx_sum)
-               
-               data_thread_node_both_direction_edges_edge_attrs = torch.cat(( data_thread_node_both_direction_edges_edge_attrs,
-                                                                              edge_attr_of_both_direction_edges_from_thread_node_idx_sum.unsqueeze(0) ), dim = 0)
-               # -------------------------------------------------------------------------------------------------------------------------------------------------------
-
-               # JY @ 2023-07-18: Now get all Adhoc identifier-pattern distributions of adjacent F/R/N t
-
-               # But also need to consider the multi-graph aspect here. 
-               # So here, do not count twice for duplicate adjacent nodes due to multigraph.
-               # Just need to get the distribution.
-               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
-               unique_outgoing_edges_from_thread_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_thread_node_idx ], dim=1, return_inverse=True)
-
-               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
-               unique_incoming_edges_to_thread_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_thread_node_idx ], dim=1, return_inverse=True)
-
-               target_nodes_of_outgoing_edges_from_thread_node = unique_outgoing_edges_from_thread_node[1] # edge-target is index 1
-               source_nodes_of_incoming_edges_to_thread_node = unique_incoming_edges_to_thread_node[0] # edge-src is index 0
-
-               # "5bit  -- just used for indexing into
-               data__5bit = data.x[:,:5]
-
-               #-- Option-1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
-               # # Already handled multi-graph case, but how about the bi-directional edge case?
-               # # For, T-->F and T<--F, information of F will be recorded twice."Dont Let it happen"
-               unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
-                                                                                                         source_nodes_of_incoming_edges_to_thread_node ] ) )
-               integrated_5bit_of_all_unique_adjacent_nodes_to_thread = torch.sum( data__5bit[unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
-               
-               data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
-                                                                                          integrated_5bit_of_all_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
-               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-               #-- Option-2 --------------------------------------------------------------------------------------------------------------------------------------------------------------
-               # # # Already handled multi-graph case, but how about the bi-directional edge case?
-               # # # For, T-->F and T<--F, information of F will be recorded twice. "Let it happen"
-               # non_unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
-               #                                                                                 source_nodes_of_incoming_edges_to_thread_node ] )
-               # integrated_5bit_of_all_non_unique_adjacent_nodes_to_thread = torch.sum( data__5bit[non_unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
-               
-               # data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
-               #                                                                      integrated_5bit_of_all_non_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
-
-               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-            thread_eventdist_adjacent_5bit_dist = torch.cat( [data_thread_node_both_direction_edges_edge_attrs, 
-                                                              data_thread_node_all_unique_adjacent_nodes_5bit_dists], dim = 1)
-            data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*?)\.pickle', data.name).group(1) ] = thread_eventdist_adjacent_5bit_dist.tolist()
-
-            # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
-            cnt+=1
-      return data_dict
-##########################################################################################################################################################
-##########################################################################################################################################################
-#PW: just experiments
-def get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist__INCOMING_AND_OUTGOING_CONCATENATED_20230821_PROF_GUANHUA__dict( dataset : list ):
-      
-      # A little different from "get_thread_level_eventdist_adjacentFRNpatterndist_dict"
-      # Differencce is that "get_thread_level_eventdist_adjacentFRNpatterndist_dict" only considers adjacent-nodes Adhoc-pattern-node-attr
-      # While this considers the 5Bit+Adhoc-pattern-node-attr
-
-      file_node_tensor = torch.tensor([1, 0, 0, 0, 0])
-      reg_node_tensor = torch.tensor([0, 1, 0, 0, 0])
-      net_node_tensor = torch.tensor([0, 0, 1, 0, 0])
-      proc_node_tensor = torch.tensor([0, 0, 0, 1, 0])
-      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
-
-      data_dict = dict()
-
-      cnt = 1
-      for data in dataset:
-            
-            print(f"signal-amplifying: {data.name} ||  {cnt}/{len(dataset)}", flush=True)
-
-            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
-            if data.x.shape[1] != 5:
-               data_x_first5 = data.x[:,:5]
-
-            file_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, file_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            reg_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, reg_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            net_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, net_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            proc_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, proc_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-
-            # which this node is a source-node (outgoing-edge w.r.t this node)
-            
-
-            prof_guanhua__suggested_features = torch.tensor([]) # Added by JY @ 2023-07-19
-
-            for thread_node_idx in thread_node_indices:
-
-               edge_src_indices = data.edge_index[0]
-               edge_tar_indices = data.edge_index[1]
-
-               # which this node is a target-node (outgoing-edge w.r.t this node)
-               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
-               # which this node is a target-node (incoming-edge w.r.t this node)
-               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
-
-               # Following is to deal with edge-attr (event-dist & time-scalar) -------------------------------------------------------------------------------------
-               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
-               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
-
-               edge_attr_of_incoming_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_incoming_edges_from_thread_node_idx[:,:-1], dim = 0)
-               edge_attr_of_outgoing_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_outgoing_edges_from_thread_node_idx[:,:-1], dim = 0)
-               # edge_attr_of_both_direction_edges_from_thread_node_idx_sum = torch.add(edge_attr_of_incoming_edges_from_thread_node_idx_sum, 
-               #                                                                        edge_attr_of_outgoing_edges_from_thread_node_idx_sum)
-               
-               # data_thread_node_both_direction_edges_edge_attrs = torch.cat(( data_thread_node_both_direction_edges_edge_attrs,
-               #                                                                edge_attr_of_both_direction_edges_from_thread_node_idx_cat.unsqueeze(0) ), dim = 0)
-               # -------------------------------------------------------------------------------------------------------------------------------------------------------
-
-               # JY @ 2023-08-21: Do as Prof. Guanhua advised
-
-               # But also need to consider the multi-graph aspect here. 
-               # So here, do not count twice for duplicate adjacent nodes due to multigraph.
-               # Just need to get the distribution.
-               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
-               unique_outgoing_edges_from_thread_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_thread_node_idx ], dim=1, return_inverse=True)
-
-               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
-               unique_incoming_edges_to_thread_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_thread_node_idx ], dim=1, return_inverse=True)
-
-               target_nodes_of_outgoing_edges_from_thread_node = unique_outgoing_edges_from_thread_node[1] # edge-target is index 1
-               source_nodes_of_incoming_edges_to_thread_node = unique_incoming_edges_to_thread_node[0] # edge-src is index 0
-
-               # "5bit 
-               data__5bit = data.x[:,:5]
-
-               #-- Option-1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
-               # # Already handled multi-graph case, but how about the bi-directional edge case?
-               # # For, T-->F and T<--F, information of F will be recorded twice."Dont Let it happen"
-               # unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
-               #                                                                                           source_nodes_of_incoming_edges_to_thread_node ] ) )
-
-               unique_adjacent_nodes_of_outgoing_edges_of_thread_node = torch.unique( target_nodes_of_outgoing_edges_from_thread_node ) 
-               unique_adjacent_nodes_of_incoming_edges_of_thread_node = torch.unique( source_nodes_of_incoming_edges_to_thread_node ) 
-
-
-
-               distribution_of_unique_outgoing_edge_adjacent_nodes_of_thread = torch.sum( data__5bit[unique_adjacent_nodes_of_outgoing_edges_of_thread_node], dim = 0 )
-               distribution_of_unique_incoming_edge_adjacent_nodes_of_thread = torch.sum( data__5bit[unique_adjacent_nodes_of_incoming_edges_of_thread_node], dim = 0 )               
-
-
-
-
-
-               # JY @ 20230821
-               prof_guanhua__suggested_feature = torch.cat([edge_attr_of_incoming_edges_from_thread_node_idx_sum,
-                                                             distribution_of_unique_incoming_edge_adjacent_nodes_of_thread,
-
-                                                             edge_attr_of_outgoing_edges_from_thread_node_idx_sum,
-                                                             distribution_of_unique_outgoing_edge_adjacent_nodes_of_thread])
-
-
-               prof_guanhua__suggested_features = torch.cat(( prof_guanhua__suggested_features,
-                                                                              prof_guanhua__suggested_feature.unsqueeze(0) ), dim = 0)
-
-
-               # data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
-               #                                                                            integrated_5bit_of_all_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
-
-
-
-
-               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-               #-- Option-2 --------------------------------------------------------------------------------------------------------------------------------------------------------------
-               # # # Already handled multi-graph case, but how about the bi-directional edge case?
-               # # # For, T-->F and T<--F, information of F will be recorded twice. "Let it happen"
-               # non_unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
-               #                                                                                 source_nodes_of_incoming_edges_to_thread_node ] )
-               # integrated_5bit_of_all_non_unique_adjacent_nodes_to_thread = torch.sum( data__5bit[non_unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
-               
-               # data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
-               #                                                                      integrated_5bit_of_all_non_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
-
-
-
-               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-            data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*?)\.pickle', data.name).group(1) ] = prof_guanhua__suggested_features.tolist()
-
-            # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
-            cnt+=1
-      return data_dict
-
-
-##########################################################################################################################################################
-##########################################################################################################################################################
-# Signal-Amplification Function (Thread-level Event-Dist. 1gram + Adjacent Node's adhoc_identifier)
-#PW: just experiments
-def get_signal_amplified_thread_level_eventdist_adjacent_5bit_and_Adhoc_Identifier_dist_dict( dataset : list ):
-      
-      # A little different from "get_thread_level_eventdist_adjacentFRNpatterndist_dict"
-      # Differencce is that "get_thread_level_eventdist_adjacentFRNpatterndist_dict" only considers adjacent-nodes Adhoc-pattern-node-attr
-      # While this considers the 5Bit+Adhoc-pattern-node-attr
-
-      file_node_tensor = torch.tensor([1, 0, 0, 0, 0])
-      reg_node_tensor = torch.tensor([0, 1, 0, 0, 0])
-      net_node_tensor = torch.tensor([0, 0, 1, 0, 0])
-      proc_node_tensor = torch.tensor([0, 0, 0, 1, 0])
-      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
-
-      data_dict = dict()
-
-      cnt = 1
-      for data in dataset:
-            
-            print(f"signal-amplifying: {data.name} ||  {cnt}/{len(dataset)}", flush=True)
-
-            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
-            #if data.x.shape[1] != 5:
-            data_x_first5 = data.x[:,:5]
-
-            file_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, file_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            reg_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, reg_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            net_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, net_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            proc_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, proc_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-
-            # which this node is a source-node (outgoing-edge w.r.t this node)
-            
-            data_thread_node_incoming_edges_edge_attrs = torch.tensor([])
-            data_thread_node_outgoing_edges_edge_attrs = torch.tensor([])
-            data_thread_node_both_direction_edges_edge_attrs = torch.tensor([])
-            data_thread_node_all_unique_adjacent_nodes_5bit_and_Adhoc_Identifier_dists = torch.tensor([]) # Added by JY @ 2023-07-19
-
-            for thread_node_idx in thread_node_indices:
-
-               edge_src_indices = data.edge_index[0]
-               edge_tar_indices = data.edge_index[1]
-
-               # which this node is a target-node (outgoing-edge w.r.t this node)
-               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
-               # which this node is a target-node (incoming-edge w.r.t this node)
-               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
-
-               # Following is to deal with edge-attr (event-dist & time-scalar) -------------------------------------------------------------------------------------
-               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
-               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
-
-               edge_attr_of_incoming_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_incoming_edges_from_thread_node_idx[:,:-1], dim = 0)
-               edge_attr_of_outgoing_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_outgoing_edges_from_thread_node_idx[:,:-1], dim = 0)
-               edge_attr_of_both_direction_edges_from_thread_node_idx_sum = torch.add(edge_attr_of_incoming_edges_from_thread_node_idx_sum, 
-                                                                                      edge_attr_of_outgoing_edges_from_thread_node_idx_sum)
-               
-               data_thread_node_both_direction_edges_edge_attrs = torch.cat(( data_thread_node_both_direction_edges_edge_attrs,
-                                                                              edge_attr_of_both_direction_edges_from_thread_node_idx_sum.unsqueeze(0) ), dim = 0)
-               # -------------------------------------------------------------------------------------------------------------------------------------------------------
-
-               # JY @ 2023-07-18: Now get all Adhoc identifier-pattern distributions of adjacent F/R/N t
-
-               # But also need to consider the multi-graph aspect here. 
-               # So here, do not count twice for duplicate adjacent nodes due to multigraph.
-               # Just need to get the distribution.
-               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
-               unique_outgoing_edges_from_thread_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_thread_node_idx ], dim=1, return_inverse=True)
-
-               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
-               unique_incoming_edges_to_thread_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_thread_node_idx ], dim=1, return_inverse=True)
-
-               target_nodes_of_outgoing_edges_from_thread_node = unique_outgoing_edges_from_thread_node[1] # edge-target is index 1
-               source_nodes_of_incoming_edges_to_thread_node = unique_incoming_edges_to_thread_node[0] # edge-src is index 0
-
-
-               #-- Option-1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
-               # # Already handled multi-graph case, but how about the bi-directional edge case?
-               # # For, T-->F and T<--F, information of F will be recorded twice."Dont Let it happen"
-               unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
-                                                                                                         source_nodes_of_incoming_edges_to_thread_node ] ) )
-               integrated_adjacent_5bit_and_Adhoc_Identifier_of_all_unique_adjacent_nodes_to_thread = torch.sum( data.x[unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
-
-               data_thread_node_all_unique_adjacent_nodes_5bit_and_Adhoc_Identifier_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_and_Adhoc_Identifier_dists,
-                                                                                                         integrated_adjacent_5bit_and_Adhoc_Identifier_of_all_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
-               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-               #-- Option-2 --------------------------------------------------------------------------------------------------------------------------------------------------------------
-               # # # Already handled multi-graph case, but how about the bi-directional edge case?
-               # # # For, T-->F and T<--F, information of F will be recorded twice. "Let it happen"
-               # non_unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
-               #                                                                                 source_nodes_of_incoming_edges_to_thread_node ] )
-               # integrated_5bit_of_all_non_unique_adjacent_nodes_to_thread = torch.sum( data__5bit[non_unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
-               
-               # data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
-               #                                                                      integrated_5bit_of_all_non_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
-
-
-
-               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-            thread_eventdist_adjacent_5bit_and_Adhoc_Identifier_dist = torch.cat( [data_thread_node_both_direction_edges_edge_attrs, 
-                                                                                   data_thread_node_all_unique_adjacent_nodes_5bit_and_Adhoc_Identifier_dists], dim = 1)
-            data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*?)\.pickle', data.name).group(1) ] = thread_eventdist_adjacent_5bit_and_Adhoc_Identifier_dist.tolist()
-
-            # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
-            cnt+=1
-      return data_dict
-
-
-
-
-
-
-
-
-#**********************************************************************************************************************************************************************
-# Signal-Amplification Function (Thread-level Event-Dist. 1gram)
-def get_signal_amplified_thread_level_eventdist_dict( dataset : list ):
-      
-      file_node_tensor = torch.tensor([1, 0, 0, 0, 0])
-      reg_node_tensor = torch.tensor([0, 1, 0, 0, 0])
-      net_node_tensor = torch.tensor([0, 0, 1, 0, 0])
-      proc_node_tensor = torch.tensor([0, 0, 0, 1, 0])
-      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
-
-      data_dict = dict()
-
-      for data in dataset:
-            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
-            if data.x.shape[1] != 5:
-               data.x = data.x[:,:5]
-
-            file_node_indices = torch.nonzero(torch.all(torch.eq( data.x, file_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            reg_node_indices = torch.nonzero(torch.all(torch.eq( data.x, reg_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            net_node_indices = torch.nonzero(torch.all(torch.eq( data.x, net_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            proc_node_indices = torch.nonzero(torch.all(torch.eq( data.x, proc_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            thread_node_indices = torch.nonzero(torch.all(torch.eq( data.x, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-
-            # which this node is a source-node (outgoing-edge w.r.t this node)
-            
-            data_thread_node_incoming_edges_edge_attrs = torch.tensor([])
-            data_thread_node_outgoing_edges_edge_attrs = torch.tensor([])
-            data_thread_node_both_direction_edges_edge_attrs = torch.tensor([])
-
-            for thread_node_idx in thread_node_indices:
-
-               edge_src_indices = data.edge_index[0]
-               edge_tar_indices = data.edge_index[1]
-
-               # which this node is a target-node (outgoing-edge w.r.t this node)
-               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
-               # which this node is a target-node (incoming-edge w.r.t this node)
-               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
-
-               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
-               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
-
-
-               edge_attr_of_incoming_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_incoming_edges_from_thread_node_idx[:,:-1], dim = 0)
-               edge_attr_of_outgoing_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_outgoing_edges_from_thread_node_idx[:,:-1], dim = 0)
-               edge_attr_of_both_direction_edges_from_thread_node_idx_sum = torch.add(edge_attr_of_incoming_edges_from_thread_node_idx_sum, 
-                                                                                      edge_attr_of_outgoing_edges_from_thread_node_idx_sum)
-
-               data_thread_node_both_direction_edges_edge_attrs = torch.cat(( data_thread_node_both_direction_edges_edge_attrs,
-                                                                              edge_attr_of_both_direction_edges_from_thread_node_idx_sum.unsqueeze(0) ), dim = 0)
-
-            data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
-
-      return data_dict
-
-def get_readout_applied_df( data_dict : dict,
-                            readout_option : str, 
-                            signal_amplification_option: str):    
+# def get_readout_applied_df( data_dict : dict,
+#                             readout_option : str, 
+#                             signal_amplification_option: str):    
    
-   if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
-      nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
-      feature_names = taskname_colnames + nodetype_names
+#    if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
+#       nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
+#       feature_names = taskname_colnames + nodetype_names
    
-   elif signal_amplification_option == "signal_amplified__event_1gram":
-      feature_names = taskname_colnames
+#    elif signal_amplification_option == "signal_amplified__event_1gram":
+#       feature_names = taskname_colnames
 
-   elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
-      nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
-      feature_names = taskname_colnames + nodetype_names + \
-                      [f"adhoc_pattern_{i}" for i in range(len(data_dict[list(data_dict.keys())[0]][0]) -\
-                                                               len(taskname_colnames) - len(nodetype_names))]
+#    elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
+#       nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
+#       feature_names = taskname_colnames + nodetype_names + \
+#                       [f"adhoc_pattern_{i}" for i in range(len(data_dict[list(data_dict.keys())[0]][0]) -\
+#                                                                len(taskname_colnames) - len(nodetype_names))]
 
-   elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821":
-      nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
-      feature_names = [ f"{x}___incoming_edge" for x in taskname_colnames] +  [ f"{x}___incoming_edge" for x in nodetype_names] +\
-                      [ f"{x}___outgoing_edge" for x in taskname_colnames] +  [ f"{x}___outgoing_edge" for x in nodetype_names]
-   else:
-      ValueError(f"Invalid signal_amplification_option ({signal_amplification_option})")  
+#    elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821":
+#       nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
+#       feature_names = [ f"{x}___incoming_edge" for x in taskname_colnames] +  [ f"{x}___incoming_edge" for x in nodetype_names] +\
+#                       [ f"{x}___outgoing_edge" for x in taskname_colnames] +  [ f"{x}___outgoing_edge" for x in nodetype_names]
+#    else:
+#       ValueError(f"Invalid signal_amplification_option ({signal_amplification_option})")  
 
-   entire_data_df = pd.DataFrame( columns = ["thread_is_from"] + feature_names )
-   for data_name in data_dict:
-      data_name_df = pd.DataFrame( data_dict[data_name], columns = feature_names )
-      data_name_df['thread_is_from'] = data_name
-      entire_data_df = pd.concat([entire_data_df, data_name_df], axis=0, ignore_index=True)
+#    entire_data_df = pd.DataFrame( columns = ["thread_is_from"] + feature_names )
+#    for data_name in data_dict:
+#       data_name_df = pd.DataFrame( data_dict[data_name], columns = feature_names )
+#       data_name_df['thread_is_from'] = data_name
+#       entire_data_df = pd.concat([entire_data_df, data_name_df], axis=0, ignore_index=True)
    
-   if readout_option == "max":
-       sample_grouby_df = entire_data_df.groupby("thread_is_from").max()
-   elif readout_option == "mean":
-       sample_grouby_df = entire_data_df.groupby("thread_is_from").mean()
+#    if readout_option == "max":
+#        sample_grouby_df = entire_data_df.groupby("thread_is_from").max()
+#    elif readout_option == "mean":
+#        sample_grouby_df = entire_data_df.groupby("thread_is_from").mean()
 
 
-   # entire_data_df.to_csv("concat_separate_incoming_outgoing_node_edge_featvectors__prof_guanhua.csv")
-   return sample_grouby_df
+#    # entire_data_df.to_csv("concat_separate_incoming_outgoing_node_edge_featvectors__prof_guanhua.csv")
+#    return sample_grouby_df
 
 #**********************************************************************************************************************************************************************
 #PW: baseline similar to RF flatten code
@@ -934,12 +517,12 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
 #**********************************************************************************************************************************************************************
 
 def get__standard_message_passing_graph_embedding__dict( dataset : list, 
-                                                         n_hops : int = 3,
+                                                         n_hops : int = 1,
                                                          neighborhood_aggr : str = "sum", 
-                                                         pool : str = "mean",
+                                                         pool : str = "sum",
                                                          verbose : bool = True ):
 
-    '''
+   '''
     JY @ 2023-12-27
     
     Generate "graph embedding vectors" based on 
@@ -1017,9 +600,9 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
     # 7. Since message-passing is done, "pool" all node's embedding, to generate the "graph embedding".
 
 
-    data_dict = dict()
-    cnt = 0
-    for graph_data in dataset: 
+   data_dict = dict()
+   cnt = 0
+   for graph_data in dataset: 
          cnt += 1
          # graph_data corresponds to "torch_geometric.data.data.Data"
          print(f"{cnt} / {len(dataset)}: {graph_data.name}\n", flush = True)
@@ -1127,13 +710,9 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
 
          graph_embedding = pool__func(graph_data.x, dim = 0)
 
+         data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', graph_data.name).group(1) ] = graph_embedding.tolist()
 
-    # eventdist = torch.sum(data.edge_attr, dim = 0)
-    # nodetype5bit_adhoc_identifier_dist = torch.sum(data.x, axis = 0)
-    # event_nodetype5bit_adhoc_identifier_dist = torch.cat(( eventdist, nodetype5bit_adhoc_identifier_dist ), dim = 0)
-    data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', data.name).group(1) ] = graph_embedding.tolist()
-
-    return data_dict
+   return data_dict
 
 
 
@@ -1143,7 +722,10 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
 
 if __name__ == '__main__':
 
+
     parser = ArgumentParser()
+   
+    # ==================================================================================================================================
     parser.add_argument('-k', '--K', nargs = 1, type = int, default = [10])  
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1155,69 +737,87 @@ if __name__ == '__main__':
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
                         default = ["Dataset-Case-1"])
 
-    parser.add_argument('-readout_opt', '--readout_option', 
-                        choices= ['max', 'mean' ],  # mean 도 해봐라 
-                        default = ["mean"])
+    # --------- specific to standard-message-passing 
+    parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
+                        default = [1])
+
+    parser.add_argument('-aggr', '--neighborhood_aggregation', 
+                        choices= ['sum', 'mean' ],  # mean 도 해봐라 
+                        default = ["sum"])
+
+    parser.add_argument('-pool_opt', '--pool_option', 
+                        choices= ['sum', 'mean' ],  # mean 도 해봐라 
+                        default = ["sum"])
+    # --------------------------------------------------
+   
+    parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
+                        
+                        choices= [
+                                  'standard_message_passing_graph_embedding', # Added by JY @ 2023-12-27
+                                  # vs. (for now)
+                                  'no_graph_structure__event_1gram_nodetype_5bit', 
+                                  'no_graph_structure__event_1gram',
+                                  'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
+                                  ], 
+
+                                  default = ["standard_message_passing_graph_embedding"])
 
     parser.add_argument('-ss_opt', '--search_space_option', 
                         choices= [ 
                                  # defaults
                                  "XGBoost_default_hyperparam",
-                                 "RandomForest_default_hyperparam",
-                                  
+                                 "RandomForest_default_hyperparam",                                  
+
+                                 "XGBoost_searchspace_1",
+                                 "RandomForest_searchspace_1",
+
                                   ], 
                                   default = ["RandomForest_default_hyperparam"])
+
    
-    parser.add_argument('-sig_amp_opt', '--signal_amplification_option', 
-                        
-                        choices= ['signal_amplified__event_1gram', #PW: this is a pair, want to see the effect of signal amplication vs no signal amplification
-                                  'no_graph_structure__event_1gram', #PW: signal amplification means graph embedding
-                                  
-                                  'signal_amplified__event_1gram_nodetype_5bit', 
-                                  'no_graph_structure__event_1gram_nodetype_5bit', 
-
-                                  'signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
-                                  'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
-
-                                  'signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821',
-
-                                  'standard_message_passing_graph_embedding', # Added by JY @ 2023-12-27
-                                  ], 
-
-                                  default = ["standard_message_passing_graph_embedding"])
-    
-
-
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
                          default = ["search_on_train"] )
+   # ==================================================================================================================================
 
     # cmd args
     K = parser.parse_args().K[0]
     model_cls = model_cls_map[ parser.parse_args().trad_model_cls[0] ]
     dataset_choice = parser.parse_args().dataset[0]
 
-    signal_amplification_option = parser.parse_args().signal_amplification_option[0]
-    readout_option = parser.parse_args().readout_option[0]
+    n_hops = parser.parse_args().n_hops[0]
+    neighborhood_aggregation = parser.parse_args().neighborhood_aggregation[0]
+    pool_option = parser.parse_args().pool_option[0]
+
+    graph_embedding_option = parser.parse_args().graph_embedding_option[0]
     search_space_option = parser.parse_args().search_space_option[0]
     search_on_train__or__final_test = parser.parse_args().search_on_train__or__final_test[0] 
-    # saved_models_dirpath = "/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_Priti/saved_Traditional_ML_models"   #PW:to change
-    #saved_models_dirpath = "/home/pwakodi1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_mean_Priti/saved_Traditional_ML_models"   #PW:to change
+
+    # -----------------------------------------------------------------------------------------------------------------------------------
     model_cls_name = re.search(r"'(.*?)'", str(model_cls)).group(1)
 
 
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
-       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/{run_identifier}"
+
+       if graph_embedding_option == "standard_message_passing_graph_embedding":
+         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       else:
+         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
+       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)
 
 
     if search_on_train__or__final_test == "final_test":
-       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{signal_amplification_option}__{readout_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/{run_identifier}"
+       if graph_embedding_option == "standard_message_passing_graph_embedding":
+         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       else:
+         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
+
+
+       this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/{run_identifier}"
        final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)
@@ -1387,12 +987,122 @@ if __name__ == '__main__':
          return manual_space
 
 
+
+    def RandomForest_searchspace_1() -> dict :
+
+      # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier
+      # Following are typical ranges of RadnomForest hyperparameters
+
+      search_space = dict()
+      search_space['n_estimators'] = [ 100, 200, 300, 500 ] # The number of decision trees in the random forest. Typical range: 50 to 500 or more. More trees generally lead to better performance, but there are diminishing returns beyond a certain point.
+      search_space['criterion'] = [ 'gini' ] # The function used to measure the quality of a split. Typical options: 'gini' for Gini impurity and 'entropy' for information gain. Gini is the default and works well in most cases.
+      search_space['max_depth'] = [ None, 3,6,9,15,20 ]  # The maximum depth of each decision tree. Typical range: 3 to 20. Setting it to None allows nodes to expand until all leaves are pure or contain less than 
+      search_space['min_samples_split'] = [ 2, 5, 10, 15 ] # The minimum number of samples required to split an internal node. Typical range: 2 to 20.
+      search_space['min_samples_leaf'] = [ 1, 3, 5, 10 ]  # The minimum number of samples required to be at a leaf node. Typical range: 1 to 10.
+      search_space['max_features'] = [ 'sqrt', 'log2', None ]  # The number of features to consider when looking for the best split. Typical options: 'sqrt' (square root of the total number of features) or 'log2' (log base 2 of the total number of features).
+      search_space['bootstrap'] = [ True, False ] # Whether to use bootstrapped samples when building trees. 
+                                           # Typical options: True or False. 
+                                           # Setting it to True enables bagging, which is the "standard approach."
+
+      search_space["random_state"] = [ 0, 42, 99 ]
+      search_space["split_shuffle_seed"] = [ 100 ]
+
+      #-----------------------------------------------------------------------------------------------
+      manual_space = []
+      # Change order of these for-loops as the
+      for n_estimators in search_space['n_estimators']:
+         for criterion in search_space['criterion']:
+            for max_depth in search_space['max_depth']:
+               for min_samples_split in search_space['min_samples_split']:
+                   for min_samples_leaf in search_space['min_samples_leaf']:
+                        for max_features in search_space['max_features']:
+                            for bootstrap in search_space['bootstrap']:
+                                 for random_state in search_space["random_state"]:
+                                     for split_shuffle_seed in search_space["split_shuffle_seed"]:                        
+                                          print(f"appending {[n_estimators, criterion, max_depth, min_samples_split, min_samples_leaf, max_features, bootstrap, random_state, split_shuffle_seed ]}", flush = True )
+                                          
+                                          manual_space.append(
+                                                   {
+                                                   'n_estimators': n_estimators, 
+                                                   'criterion': criterion, 
+                                                   'max_depth': max_depth, 
+                                                   'min_samples_split': min_samples_split, 
+                                                   'min_samples_leaf': min_samples_leaf, 
+                                                   'max_features': max_features,
+                                                   'bootstrap': bootstrap,
+                                                   'random_state': random_state,
+                                                   'split_shuffle_seed': split_shuffle_seed
+                                                   }
+                                                   )
+
+      # random.shuffle(manual_space) # For random-gridsearch
+      return manual_space
+
+    def XGBoost_searchspace_1() -> dict :
+
+      # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+
+      # Following are typical ranges of XGBoost hyperparameters
+      search_space = dict()
+      search_space['n_estimators'] = [ 100, 500, 1000 ] # The number of boosting stages (i.e., the number of weak learners or decision trees). Typical range: 50 to 2000 or more.
+      search_space['learning_rate'] = [ 0.1, 0.01, 0.001 ] # Shrinks the contribution of each tree, helping to prevent overfitting. Typical range: 0.001 to 0.1.      
+      search_space['max_depth'] = [ 3, 6, 9 ]  # The maximum depth of each decision tree. Typical range: 3 to 10. Can use None for no limit on the depth, but this can lead to overfitting
+      search_space['min_samples_split'] = [ 2, 9, 16 ] # The minimum number of samples required to split an internal node. Typical range: 2 to 20.
+      search_space['min_samples_leaf'] = [ 1, 3, 5 ]  # The minimum number of samples required to be at a leaf node. Typical range: 1 to 10.
+
+      # fully enjoy XG-Boost
+      search_space['subsample'] = [ 1.0, 0.75, 0.5 ] # The fraction of samples used for fitting the individual trees. Typical range: 0.5 to 1.0.
+      search_space['max_features'] = [ None, 'sqrt','log2' ]  # The number of features to consider when looking for the best split. Typical values: 'sqrt' (square root of the total number of features) or 'log2' (log base 2 of the total number of features).
+      search_space['loss'] = [ 'log_loss', ]  # The number of features to consider when looking for the best split. Typical values: 'sqrt' (square root of the total number of features) or 'log2' (log base 2 of the total number of features).
+
+      search_space["random_state"] = [ 0, 42, 99 ]
+      search_space["split_shuffle_seed"] = [ 100 ]
+
+      #-----------------------------------------------------------------------------------------------
+      manual_space = []
+      # Change order of these for-loops as the
+      for n_estimators in search_space['n_estimators']:
+         for learning_rate in search_space['learning_rate']:
+            for max_depth in search_space['max_depth']:
+               for min_samples_split in search_space['min_samples_split']:
+                   for min_samples_leaf in search_space['min_samples_leaf']:
+                      for loss in search_space['loss']:
+                        for subsample in search_space['subsample']:
+                           for max_features in search_space['max_features']:
+                                 
+                                 for random_state in search_space["random_state"]:
+                                     for split_shuffle_seed in search_space["split_shuffle_seed"]:                        
+                                          print(f"appending {[n_estimators, learning_rate, max_depth, min_samples_split, min_samples_leaf, loss, subsample, max_features, random_state, split_shuffle_seed ]}", flush = True )
+                                          
+                                          manual_space.append(
+                                                   {
+                                                   'n_estimators': n_estimators, 
+                                                   'learning_rate': learning_rate, 
+                                                   'max_depth': max_depth, 
+                                                   'min_samples_split': min_samples_split, 
+                                                   'min_samples_leaf': min_samples_leaf, 
+                                                   'loss': loss,
+                                                   'subsample': subsample, 
+                                                   'max_features': max_features,
+                                                   'random_state': random_state,
+                                                   'split_shuffle_seed': split_shuffle_seed
+                                                   }
+                                                   )
+
+      # random.shuffle(manual_space) # For random-gridsearch
+      return manual_space
+
+
    #TODO PW add here when found best hyperparameter set
 
     ####################################################################################################################################################
     # defaults
     if search_space_option == "XGBoost_default_hyperparam": search_space = XGBoost_default_hyperparam()   
     elif search_space_option == "RandomForest_default_hyperparam": search_space = RandomForest_default_hyperparam()   
+
+    # extensive search spaces 
+    elif search_space_option == "XGBoost_searchspace_1": search_space = XGBoost_searchspace_1()   
+    elif search_space_option == "RandomForest_searchspace_1": search_space = RandomForest_searchspace_1()   
 
     else:
         ValueError("Unavailable search-space option")
@@ -1424,133 +1134,94 @@ if __name__ == '__main__':
     if search_on_train__or__final_test == "search_on_all":  # ***** #
          train_dataset = train_dataset + final_test_dataset
 
-   #  # Now apply signal-amplification here (here least conflicts with existing code.)
-   #  if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
-   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist_dict( dataset= train_dataset )
-
-   #  elif signal_amplification_option == "signal_amplified__event_1gram":
-   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_dict( dataset= train_dataset )            
-
-   #  elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
-   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_and_Adhoc_Identifier_dist_dict( dataset= train_dataset ) 
-
-   #  elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821":
-   #       train_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist__INCOMING_AND_OUTGOING_CONCATENATED_20230821_PROF_GUANHUA__dict( dataset= train_dataset ) 
-
-
+   
     # Added by JY @ 2023-12-27
-    if signal_amplification_option == "standard_message_passing_graph_embedding":
-        train_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= train_dataset )
-
-
-   #  # --------------------------------------------------------------------------------------
-    elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit":
-         train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_dist_dict( dataset= train_dataset )  
-
-    elif signal_amplification_option == "no_graph_structure__event_1gram":
-         train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= train_dataset )  
-
-    elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
-         train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= train_dataset ) 
-
-
-
+    if graph_embedding_option == "standard_message_passing_graph_embedding":
+        train_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= train_dataset,
+                                                                                                            n_hops= n_hops,
+                                                                                                            neighborhood_aggr= neighborhood_aggregation,
+                                                                                                            pool= pool_option )
+        nodetype_names = ["file", "registry", "network", "process", "thread"] 
+        feature_names = nodetype_names + taskname_colnames # yes this order is correct
+        X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
     else:
-         ValueError(f"Invalid signal_amplification_option ({signal_amplification_option})")                  
-    #--------------------------------------------------------------------------
-    # Now apply readout to the obtained thread-level vectors
-    if "signal_amplified" in signal_amplification_option:
-          train_dataset_signal_amplified_readout_df = get_readout_applied_df(data_dict = train_dataset__standard_message_passing_dict, 
-                                                                             readout_option= readout_option,
-                                                                             signal_amplification_option= signal_amplification_option)
-          X = train_dataset_signal_amplified_readout_df
-          X.reset_index(inplace = True)
-          X.rename(columns = {'thread_is_from':'data_name'}, inplace = True)
-          y = [data.y for data in train_dataset]
-    else:
-         X = pd.DataFrame(train_dataset__no_graph_structure_dict).T
-         
-         if signal_amplification_option in {"signal_amplified__event_1gram_nodetype_5bit", "no_graph_structure__event_1gram_nodetype_5bit"}:
+
+         if graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit":
+               train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_dist_dict( dataset= train_dataset )  
                nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
                feature_names = taskname_colnames + nodetype_names
 
-         if signal_amplification_option in {"signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier", 
-                                            "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier"}:
+         elif graph_embedding_option == "no_graph_structure__event_1gram":
+               train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= train_dataset )  
+               feature_names = taskname_colnames
+
+         elif graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
+               train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= train_dataset ) 
                nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
                feature_names = taskname_colnames + nodetype_names + [f"adhoc_pattern_{i}" for i in range(len(X.columns) - len(taskname_colnames) - len(nodetype_names))]
-         
-         if signal_amplification_option in {"signal_amplified__event_1gram", "no_graph_structure__event_1gram"} :
-               feature_names = taskname_colnames
-         
-         X.columns = feature_names
-         X.reset_index(inplace = True)
-         X.rename(columns = {'index':'data_name'}, inplace = True)
 
-         y = [data.y for data in train_dataset]
+         else:
+               ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")                  
+
+         X = pd.DataFrame(train_dataset__no_graph_structure_dict).T
+
+
+    X.columns = feature_names
+    X.reset_index(inplace = True)
+    X.rename(columns = {'index':'data_name'}, inplace = True)
+
+    y = [data.y for data in train_dataset]
+
+    #--------------------------------------------------------------------------
+   #  # Now apply readout to the obtained thread-level vectors
+   #  if "signal_amplified" in signal_amplification_option:
+   #        train_dataset_signal_amplified_readout_df = get_readout_applied_df(data_dict = train_dataset__standard_message_passing_dict, 
+   #                                                                           readout_option= readout_option,
+   #                                                                           signal_amplification_option= signal_amplification_option)
+   #        X = train_dataset_signal_amplified_readout_df
+   #        X.reset_index(inplace = True)
+   #        X.rename(columns = {'thread_is_from':'data_name'}, inplace = True)
+   #        y = [data.y for data in train_dataset]
+    
     # =================================================================================================================================================
     # =================================================================================================================================================
 
     if search_on_train__or__final_test == "final_test":
         # Also prepare for final-test dataset, to later test the best-fitted models on test-set
          # Now apply signal-amplification here (here least conflicts with existing code.)
-         if signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit":
-               final_test_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist_dict( dataset= final_test_dataset )
 
-         elif signal_amplification_option == "signal_amplified__event_1gram":
-               final_test_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_dict( dataset= final_test_dataset )            
+         if graph_embedding_option == "standard_message_passing_graph_embedding":
+            final_test_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= final_test_dataset,
+                                                                                                                  n_hops= n_hops,
+                                                                                                                  neighborhood_aggr= neighborhood_aggregation,
+                                                                                                                  pool= pool_option )
+            nodetype_names = ["file", "registry", "network", "process", "thread"] 
+            feature_names = nodetype_names + taskname_colnames # yes this order is correct
+            final_test_X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
 
-         elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
-               final_test_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_and_Adhoc_Identifier_dist_dict( dataset= final_test_dataset )            
 
-         elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_INCOMING_OUTGOING_CONCATENATED_PROFGUANHUA_20230821":
-               final_test_dataset__signal_amplified_dict = get_signal_amplified_thread_level_eventdist_adjacent_5bit_dist__INCOMING_AND_OUTGOING_CONCATENATED_20230821_PROF_GUANHUA__dict( dataset= final_test_dataset ) 
-
-         elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit":
+         elif graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit":
                final_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_dist_dict( dataset= final_test_dataset )  
+               nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
+               feature_names = taskname_colnames + nodetype_names
 
-         elif signal_amplification_option == "no_graph_structure__event_1gram":
+         elif graph_embedding_option == "no_graph_structure__event_1gram":
                final_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= final_test_dataset )  
-         
-         elif signal_amplification_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
-               final_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= final_test_dataset )  
+               feature_names = taskname_colnames
 
-
-         # Added by JY @ 2023-12-28
-         elif signal_amplification_option == "standard_message_passing_graph_embedding":
-            final_test_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= final_test_dataset )
-
-
+         elif graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
+               final_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= final_test_dataset ) 
+               nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
+               feature_names = taskname_colnames + nodetype_names + [f"adhoc_pattern_{i}" for i in range(len(X.columns) - len(taskname_colnames) - len(nodetype_names))]
 
          else:
-               ValueError(f"Invalid signal_amplification_option ({signal_amplification_option})")                  
-         #--------------------------------------------------------------------------
-         # Now apply readout to the obtained thread-level vectors
-         if "signal_amplified" in signal_amplification_option:
-               final_test_dataset_signal_amplified_readout_df = get_readout_applied_df(data_dict = final_test_dataset__signal_amplified_dict, 
-                                                                                       readout_option= readout_option,
-                                                                                       signal_amplification_option= signal_amplification_option)
-               final_test_X = final_test_dataset_signal_amplified_readout_df
-               final_test_X.reset_index(inplace = True)
-               final_test_X.rename(columns = {'thread_is_from':'data_name'}, inplace = True)
+               ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")                  
 
-               final_test_y = [data.y for data in final_test_dataset]
-         else:
-               final_test_X = pd.DataFrame(final_test_dataset__no_graph_structure_dict).T
-               if signal_amplification_option in {"signal_amplified__event_1gram_nodetype_5bit", "no_graph_structure__event_1gram_nodetype_5bit"}:
-                     nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
-                     feature_names = taskname_colnames + nodetype_names
+         final_test_X.columns = feature_names
+         final_test_X.reset_index(inplace = True)
+         final_test_X.rename(columns = {'index':'data_name'}, inplace = True)
 
-               if signal_amplification_option in {"signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier", 
-                                                  "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier"}:
-                     nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
-                     feature_names = taskname_colnames + nodetype_names + [f"adhoc_pattern_{i}" for i in range(len(X.columns) - len(taskname_colnames) - len(nodetype_names))]
-               if signal_amplification_option in {"signal_amplified__event_1gram", "no_graph_structure__event_1gram"} :
-                     feature_names = taskname_colnames
-               final_test_X.columns = feature_names
-               final_test_X.reset_index(inplace = True)
-               final_test_X.rename(columns = {'index':'data_name'}, inplace = True)
-
-               final_test_y = [data.y for data in train_dataset]
+         final_test_y = [data.y for data in train_dataset]
 
     # *************************************************************************************************************************************************
     # *************************************************************************************************************************************************         
