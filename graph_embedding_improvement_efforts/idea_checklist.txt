@@ -47,8 +47,8 @@
     #               (i.e., don't repeat for node-message; combine edge-feature, share common node-feature once, put it together)
 
 
-   TODO: Debug rest of "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/standard_message_passing__graph_embedding.py"
-         and start tuning.
+   TODO: /Trial_3__Standard_Message_Passing/standard_message_passing__graph_embedding.py" seems to work.
+         Do alittle sanity-checking and start tuning.
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
@@ -103,9 +103,6 @@ Dissect all procedures , revisit and question all assumptions that we made
 - e.g. How are we so sure that graph-structure will help for classification?
 -      Is our
 
-
-If we can't get positive results after a long time, 
-are we simply screwed or do we have or open to discuss a Plan B?
 
 Emma -- will manage tuning during the winter
 

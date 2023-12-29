@@ -735,11 +735,11 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        default = ["Dataset-Case-2"])
 
     # --------- specific to standard-message-passing 
     parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
-                        default = [1])
+                        default = [3])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
@@ -772,7 +772,7 @@ if __name__ == '__main__':
                                  "RandomForest_searchspace_1",
 
                                   ], 
-                                  default = ["RandomForest_default_hyperparam"])
+                                  default = ["RandomForest_searchspace_1"])
 
    
     parser.add_argument("--search_on_train__or__final_test", 
