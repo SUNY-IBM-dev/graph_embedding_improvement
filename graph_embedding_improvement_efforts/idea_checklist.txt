@@ -26,7 +26,7 @@
       
     # X does not work for json prettify --> For each (pid, tid) make list of dict-strings into 1 string delimited by "\n" so that more readable
     
-    # TODO : [ JY @ 2023-12-28: Could write out to a txt file for more readability. ]
+    # TODO with lesser priority : [ JY @ 2023-12-28: Could write out to a txt file for more readability. ]
 
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -69,6 +69,10 @@
 
      TODO: "/analyze_at_model_explainer/explanation_comparisons.py" KIND OF WORKING BUT NEEDS DEBUGGING
 
+     *
+     Flattened vs. Max 비교해봐
+     그리고 Predict-proba 높은 benign 과 malware sample들 위주 -- distribution 위주
+
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-5] Incorporate "Local N-gram (temporal information local to pair of nodes)" to graph-embedding (i.e. 'N>1'gram between thread node and f/r/n/p node)
@@ -77,6 +81,23 @@
    -- fit_transform for all edges in training data , in parallel? , then aggregate , and transform? 
       (this will need some good amount of effort, LESS importance ** )
 
+   ^-- Current blueprint for implementation (2024-1-1) -- as scalable as possible   
+       
+       1. get simple graph subgraphs (multiple events on edge) 
+          --- TODO--> /data/d1/jgwak1/tabby/STREAMLINED_DATA_GENERATION_SimpleGraph_silketw_version (TODO)
+                      In 'firststep' file, use "get_graph" instead of "get_multigraph",
+                      Don't use "Edgedirection" file that is tailored for "multigraph" ; use the one comptabile with "simplegraph"
+                      Check secondstep and etc.
+
+                      Simple graph setting 에서 event 와 timestamp 간 1 to 1 mapping 있었었나? simple graph 의 second step 확인
+                      만약 1 to 1 mapping이 없었다면 그냥 multigraph 에서 하는 방법도? ** <-- 고려 
+
+
+       2. for each edge, get strings that correspond to events sorted in timestamp order (getting strings b/c compatiblity with countvectorizer)
+                         so for each graph, the number of strings we get is equivalent to number of edges
+       3. fit the countvectorizer with strings from all graphs based on specified N.
+       4. preprocessed graph can result in grpahs with edges with ordered-event-strings.
+       5. use the fitted countvectorizer to perform local-N-gram standard message passing.
 
 
 -----------------------------------------------------------------------------------------------------------------------------------

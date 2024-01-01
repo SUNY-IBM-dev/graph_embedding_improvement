@@ -1325,9 +1325,9 @@ if __name__ == '__main__':
 
          if graph_embedding_option == "standard_message_passing_graph_embedding":
             final_test_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= final_test_dataset,
-                                                                                                                  n_hops= n_hops,
-                                                                                                                  neighborhood_aggr= neighborhood_aggregation,
-                                                                                                                  pool= pool_option )
+                                                                                                                     n_hops= n_hops,
+                                                                                                                     neighborhood_aggr= neighborhood_aggregation,
+                                                                                                                     pool= pool_option )
             nodetype_names = ["file", "registry", "network", "process", "thread"] 
             feature_names = nodetype_names + taskname_colnames # yes this order is correct
             final_test_X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
@@ -1385,7 +1385,7 @@ if __name__ == '__main__':
 
                # ---------------------------------------------------------------------------------------
                if model_cls_name == 'sklearn.ensemble._gb.GradientBoostingClassifier'and\
-                  'xgboost' in search_space_option.lower():
+                  'xgboost' in model_cls_name.lower():
 
                   model = model_cls(
                                     n_estimators= hyperparam_set['n_estimators'], 
@@ -1401,7 +1401,7 @@ if __name__ == '__main__':
 
 
                elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier'and\
-                  'randomforest' in search_space_option.lower():
+                  'randomforest' in model_cls_name.lower():
                   model = model_cls(
                                     n_estimators= hyperparam_set['n_estimators'],
                                     criterion= hyperparam_set['criterion'], 
@@ -1415,15 +1415,16 @@ if __name__ == '__main__':
 
 
                elif model_cls_name == 'sklearn.linear_model._logistic.LogisticRegression'and\
-                  'logistic' in search_space_option.lower():
+                  'logistic' in model_cls_name.lower():
                   model = model_cls()
 
                elif model_cls_name == 'sklearn.svm' and\
-                  'svm' in search_space_option:
+                  'svm' in model_cls_name:
                   model = model_cls()
 
                else:
-                  ValueError(f"{model_cls_name} is not supported", flush = True)
+                  print(model_cls_name, flush = True)
+                  ValueError(f"{model_cls_name} is not supported")
 
 
 
@@ -1594,8 +1595,8 @@ if __name__ == '__main__':
             for hyperparam_set in search_space:
 
                # ---------------------------------------------------------------------------------------
-               if model_cls_name == 'sklearn.ensemble._gb.GradientBoostingClassifier'and\
-                  'xgboost' in search_space_option.lower():
+               if model_cls_name == 'sklearn.ensemble._gb.GradientBoostingClassifier' or\
+                  'xgboost' in model_cls_name.lower():
 
                   model = model_cls(
                                     n_estimators= hyperparam_set['n_estimators'], 
@@ -1610,9 +1611,10 @@ if __name__ == '__main__':
                                     )
 
 
-               elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier'and\
-                  'randomforest' in search_space_option.lower():
-                  model = model_cls(
+               elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier' or\
+                    'randomforest' in model_cls_name.lower():
+                    
+                     model = model_cls(
                                     n_estimators= hyperparam_set['n_estimators'],
                                     criterion= hyperparam_set['criterion'], 
                                     max_depth= hyperparam_set['max_depth'],
@@ -1624,15 +1626,16 @@ if __name__ == '__main__':
                                     )
 
 
-               elif model_cls_name == 'sklearn.linear_model._logistic.LogisticRegression'and\
-                  'logistic' in search_space_option.lower():
+               elif model_cls_name == 'sklearn.linear_model._logistic.LogisticRegression' or\
+                  'logistic' in model_cls_name.lower():
                   model = model_cls()
 
-               elif model_cls_name == 'sklearn.svm' and\
-                  'svm' in search_space_option:
+               elif model_cls_name == 'sklearn.svm' or\
+                  'svm' in model_cls_name.lower():
                   model = model_cls()
 
                else:
+                  print(model_cls_name, flush = True)
                   ValueError(f"{model_cls_name} is not supported", flush = True)
 
                def convert_to_label(value):
