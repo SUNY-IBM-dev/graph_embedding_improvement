@@ -9,7 +9,7 @@ if __name__ == "__main__":
       raise ValueError("'up_to_row' should only either be integer or None")
 
     dataset_csvpath =\
-    "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060125/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060125.csv"
+      "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225047/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225047.csv"
     # -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     tuning_df = pd.read_csv(dataset_csvpath)
@@ -32,6 +32,8 @@ if __name__ == "__main__":
     # datas
     print(f"tuning_df: {tuning_df}", flush=True)
     print("", flush = True)
+    print(f"dataset_csvpath:\n{dataset_csvpath}", flush=True)
+    print("", flush = True)
     print(f"tuning_df.loc[best_F1_row_idx][F1_colname]: {tuning_df.loc[best_F1_row_idx][F1_colname]}", flush=True)    
     print(f"tuning_df['{F1_colname}'].mean(): {tuning_df[F1_colname].mean()}", flush=True)    
     print("", flush = True)
@@ -42,8 +44,7 @@ if __name__ == "__main__":
     # Get hyperparameters that correspond to Best-Avg-F1.
 
     if F1_colname == "Avg_Val_F1":
-      print("\n", flush = True)
-      print("Best Avg_Val_F1 Hyperparamters:\n", flush = True)
+      print("\nBest Avg_Val_F1 Hyperparamters:\n", flush = True)
 
       # get names of hyperparameters 
       hyperparameter_names = [x for x in tuning_df.columns if not ("Unnamed" in x) and not ("Val" in x) ]

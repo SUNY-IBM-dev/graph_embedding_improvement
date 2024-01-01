@@ -735,21 +735,9 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        default = ["Dataset-Case-2"])
 
-    # --------- specific to standard-message-passing 
-    parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
-                        default = [4])
 
-    parser.add_argument('-aggr', '--neighborhood_aggregation', 
-                        choices= ['sum', 'mean' ],  # mean 도 해봐라 
-                        default = ["sum"])
-
-    parser.add_argument('-pool_opt', '--pool_option', 
-                        choices= ['sum', 'mean' ],  # mean 도 해봐라 
-                        default = ["sum"])
-    # --------------------------------------------------
-   
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
                         
                         choices= [
@@ -762,6 +750,8 @@ if __name__ == '__main__':
 
                                   default = ["standard_message_passing_graph_embedding"])
 
+    # ---------------------------------------------------------------------------------------------------
+
     parser.add_argument('-ss_opt', '--search_space_option', 
                         choices= [ 
                                  # defaults
@@ -771,14 +761,36 @@ if __name__ == '__main__':
                                  "XGBoost_searchspace_1",
                                  "RandomForest_searchspace_1",
 
-                                  ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                 # Best tuned of following -------------------------------------------
+                                 "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125", # running
+                                 "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515", # running
+                                 "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029", # running
 
+                                 "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149", # running
+                                 "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539", # running
+                                 "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047", # running
+                                  ], 
+                                  default = ["Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047"])
    
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
+
+
+    # --------- specific to standard-message-passing 
+    parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
+                        default = [3])
+
+    parser.add_argument('-aggr', '--neighborhood_aggregation', 
+                        choices= ['sum', 'mean' ],  # mean 도 해봐라 
+                        default = ["sum"])
+
+    parser.add_argument('-pool_opt', '--pool_option', 
+                        choices= ['sum', 'mean' ],  # mean 도 해봐라 
+                        default = ["sum"])
+    # --------------------------------------------------
+   
    # ==================================================================================================================================
 
     # cmd args
@@ -1093,7 +1105,109 @@ if __name__ == '__main__':
       return manual_space
 
 
-   #TODO PW add here when found best hyperparameter set
+    # Best found hyperparameter sets ===================================================================================================================================================
+
+    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060125",
+    def Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125():
+         manual_space = []
+         manual_space.append(
+               {'bootstrap': False,
+               'criterion': 'gini',
+               'max_depth': 15.0,
+               'max_features': 'log2',
+               'min_samples_leaf': 1,
+               'min_samples_split': 2,
+               'n_estimators': 300,
+               'random_state': 42,
+               'split_shuffle_seed': 100}
+         )
+         return manual_space      
+
+    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__2023-12-29_055515",
+    def Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515():
+         manual_space = []
+         manual_space.append(
+               {'bootstrap': False,
+               'criterion': 'gini',
+               'max_depth': 15.0,
+               'max_features': 'sqrt',
+               'min_samples_leaf': 1,
+               'min_samples_split': 5,
+               'n_estimators': 100,
+               'random_state': 0,
+               'split_shuffle_seed': 100}         
+         )
+         return manual_space      
+                                 
+    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225029",
+    def Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029():
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': 15.0,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 200,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space      
+
+    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060149",
+    def Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149():
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 300,
+            'random_state': 99,
+            'split_shuffle_seed': 100}         
+         )
+         return manual_space      
+
+    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__2023-12-29_055539",
+    def Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539():
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': None,
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 200,
+            'random_state': 0,
+            'split_shuffle_seed': 100}         
+         )
+         return manual_space      
+
+
+    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225047",
+    def Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047():
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': 15.0,
+            'max_features': None,
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 100,
+            'random_state': 0,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space      
+
+    # ====================================================================================================================================================================================
+
+
+
 
     ####################################################################################################################################################
     # defaults
@@ -1103,6 +1217,25 @@ if __name__ == '__main__':
     # extensive search spaces 
     elif search_space_option == "XGBoost_searchspace_1": search_space = XGBoost_searchspace_1()   
     elif search_space_option == "RandomForest_searchspace_1": search_space = RandomForest_searchspace_1()   
+
+    # best found
+    elif search_space_option == "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125":
+         search_space = Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125()
+
+    elif search_space_option == "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515":
+         search_space = Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515()
+    
+    elif search_space_option == "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029":
+         search_space = Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029()
+
+    elif search_space_option == "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149":
+         search_space = Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149()
+
+    elif search_space_option == "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539":
+         search_space = Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539()
+
+    elif search_space_option == "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047":
+         search_space = Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047()
 
     else:
         ValueError("Unavailable search-space option")
