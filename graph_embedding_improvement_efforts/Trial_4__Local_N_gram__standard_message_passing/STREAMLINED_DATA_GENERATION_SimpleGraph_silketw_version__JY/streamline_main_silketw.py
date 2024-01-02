@@ -1710,13 +1710,13 @@ case2_benign_logs = {
 
 # SET
 subgraphs_savedirpath = \
-"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/Subgraphs_for_Developing/Silketw_malware_train_test_data_case1/Indices"
+"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case2/Indices"
 #"/home/pwakodi1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case2/Indices"
 # "/data/d1/jgwak1/tabby/OFFLINE_TRAINTEST_DATA/all_malware_psh_samples_asof_20230520_MULTI_GRAPH"
 
-es_indices_and_ProcessIDs = case1_malware_logs__sample
+es_indices_and_ProcessIDs = case2_benign_logs
 
-# dir_start_pattern doesn't have to be exact.
+# dir_start_pattern doesn't have to be exact. -- JY @ 2024-1-2 : just leave it as is, even when benign, handled
 dir_start_pattern = "malware" 
 
 # SET
@@ -1732,7 +1732,7 @@ main_offline_test_data_main_dirpath=\
 # SET non_target and/or target
 # non_target = False
 target = True # typically malware
-label = "Malware" # change based on the indices 
+label = "Benign" # change based on the indices 
 if label not in ["Benign", "Malware"]:
    raise ValueError("label must be either 'Benign' or 'Malware' ; case-matters b/c of compatibiltiy with existing code")
 
@@ -1750,7 +1750,7 @@ Test_ratio = 1 - Train_ratio
 
 
 # SET steps
-target__step_1 = False # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
+target__step_1 = True # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
 target__step_2 = True
 target__step_3 = False
 
@@ -1759,7 +1759,7 @@ target__step_3 = False
 
 # SET Number of processes to run in parallel for benign_step_1 & benign_step_2
 # IMPORTANT: IF N_parallel is TOO HIGH (SAY OVER 5), IT IS POSSIBLE THAT ELASTIC-SEARCH dies
-N_parallel = 1 # (JUST FIX IT TO 5, since we don't want to end up having issue)
+N_parallel = 3 # (JUST FIX IT TO 5, since we don't want to end up having issue)
 if N_parallel > 5:
    raise ValueError(f"N_parallel ({N_parallel}) > 5 has risk to server-down of Elastic-Search")
 

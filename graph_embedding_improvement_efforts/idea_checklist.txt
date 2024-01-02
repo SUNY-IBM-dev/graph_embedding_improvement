@@ -53,6 +53,11 @@
    TODO: Maybe write an option to read in the csv file,
          if there is a corresponding saved "X" and "final_test_X" for faster debugging?
 
+   COULD-TRY: While message-passing happens between all types of nodes, readout only thread nodes? (not sure)
+
+   COULD-TRY: Global temporal + standard message passing
+
+
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
     
@@ -113,6 +118,7 @@
        so could consider Local-1+Local-2+Local-3+Local-4 gram.? 
 
 
+      TODO: Check correctness of code
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
@@ -142,3 +148,6 @@ Dissect all procedures , revisit and question all assumptions that we made
 Emma -- will manage tuning during the winter
 
 Lalji 
+
+
+Inject "standard-message-passing" into GNN <-- Prof Guanhua talked about this before.

@@ -1,0 +1,4 @@
+JY @ 2024-1-2:
+
+   copy and pasted results and files from "/data/d1/jgwak1/tabby/BASELINE_COMPARISONS_Priti"
+   so that I can run it on my end
