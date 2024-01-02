@@ -4,29 +4,29 @@ import shutil
 
 #if __name__ == "__main__":
 
-def organize_and_rename_subgraphs_into_Benign_dir(main_dirpath):
+# def organize_and_rename_subgraphs_into_Benign_dir(main_dirpath):
 
-   benign_dirnames = [ d for d in os.listdir(main_dirpath) if d.startswith("general_log_collection") or d.startswith("etw") ] 
+#    benign_dirnames = [ d for d in os.listdir(main_dirpath) if d.startswith("general_log_collection") or d.startswith("etw") ] 
 
-   Path_which_datapreprocessor_looks_for = os.path.join(main_dirpath, "Benign")
-   if os.path.exists( Path_which_datapreprocessor_looks_for ):
-      shutil.rmtree( Path_which_datapreprocessor_looks_for )
-   os.mkdir( Path_which_datapreprocessor_looks_for )
+#    Path_which_datapreprocessor_looks_for = os.path.join(main_dirpath, "Benign")
+#    if os.path.exists( Path_which_datapreprocessor_looks_for ):
+#       shutil.rmtree( Path_which_datapreprocessor_looks_for )
+#    os.mkdir( Path_which_datapreprocessor_looks_for )
 
-   for benign_dirname in benign_dirnames:
+#    for benign_dirname in benign_dirnames:
 
-      Benign_Sample_P3_dirnames = [d for d in os.listdir(os.path.join(main_dirpath,benign_dirname)) if d.startswith("Benign_Sample_P3") or d.startswith("SUBGRAPH_P3")]
+#       Benign_Sample_P3_dirnames = [d for d in os.listdir(os.path.join(main_dirpath,benign_dirname)) if d.startswith("Benign_Sample_P3") or d.startswith("SUBGRAPH_P3")]
 
-      for Benign_Sample_P3_dirname in Benign_Sample_P3_dirnames:
+#       for Benign_Sample_P3_dirname in Benign_Sample_P3_dirnames:
 
-         shutil.copytree( src= os.path.join( main_dirpath , benign_dirname, Benign_Sample_P3_dirname ),
-                          dst= os.path.join( Path_which_datapreprocessor_looks_for, Benign_Sample_P3_dirname) )
-         print(f"copied {Benign_Sample_P3_dirname} from\n{os.path.join( main_dirpath , benign_dirname, Benign_Sample_P3_dirname)} to\n{os.path.join( Path_which_datapreprocessor_looks_for, Benign_Sample_P3_dirname)}")      
-
-
+#          shutil.copytree( src= os.path.join( main_dirpath , benign_dirname, Benign_Sample_P3_dirname ),
+#                           dst= os.path.join( Path_which_datapreprocessor_looks_for, Benign_Sample_P3_dirname) )
+#          print(f"copied {Benign_Sample_P3_dirname} from\n{os.path.join( main_dirpath , benign_dirname, Benign_Sample_P3_dirname)} to\n{os.path.join( Path_which_datapreprocessor_looks_for, Benign_Sample_P3_dirname)}")      
 
 
-def organize_and_rename_subgraphs_into_Malware_dir(main_dirpath, dir_start_pattern, label):
+
+
+def organize_and_rename_subgraphs_into_LABEL_dir(main_dirpath, dir_start_pattern, label):
 
    if label.lower() == "malware":
       dirnames = [ d for d in os.listdir(main_dirpath) if d.startswith(dir_start_pattern)]

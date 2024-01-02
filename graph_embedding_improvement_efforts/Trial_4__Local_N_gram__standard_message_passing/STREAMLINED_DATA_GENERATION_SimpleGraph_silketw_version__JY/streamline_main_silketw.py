@@ -43,7 +43,7 @@ sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_
 
 from STEP_2_TARGETTED_SUBGRAPH_GENERATION.main import run_Targetted_Subgraph_Generation
 
-from STEP_3_processdata_traintestsplit.make_data_processable import organize_and_rename_subgraphs_into_Benign_dir, organize_and_rename_subgraphs_into_Malware_dir
+from STEP_3_processdata_traintestsplit.make_data_processable import organize_and_rename_subgraphs_into_LABEL_dir
 sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/STREAMLINED_DATA_GENERATION_SimpleGraph_silketw_version__JY/STEP_3_processdata_traintestsplit/data_preprocessing")
 # print(sys.path)
 from STEP_3_processdata_traintestsplit.data_preprocessing.dp_v2_EDGE_ATTR_COMP_WITH_TASKNAME_NGRAM_SCHEME.run_data_processor_SimpleGraph_5BitNodeAttr_TasknameNgramCompEdgeAttr import run_data_processor as run_data_processor_SimpleGraph_5BitNodeAttr_TasknameNgramCompEdgeAttr
@@ -1730,7 +1730,7 @@ main_offline_test_data_main_dirpath=\
 #"/data/d1/jgwak1/tabby/OFFLINE_TRAINTEST_DATA/MAIN_OFFLINE_TEST_DATA_PSH__PREPROCESSED_METHOD_1_DROPPED_QUERYEA"
 
 # SET non_target and/or target
-non_target = False
+# non_target = False
 target = True # typically malware
 label = "Malware" # change based on the indices 
 if label not in ["Benign", "Malware"]:
@@ -1750,8 +1750,8 @@ Test_ratio = 1 - Train_ratio
 
 
 # SET steps
-target__step_1 = True # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
-target__step_2 = False
+target__step_1 = False # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
+target__step_2 = True
 target__step_3 = False
 
 
@@ -1820,11 +1820,11 @@ if __name__ == "__main__":
          # 3-1: organize and rename subgraphs for compatibility with the data-processor code
          #      > Referring to /data/d1/jgwak1/tabby/GENERAL_LOG_COLLECTION_SUBGRAPHS_20230203/make_data_processable_for_general_log_collection.py
 
-         # organize_and_rename_subgraphs_into_Malware_dir( main_dirpath = subgraphs_savedirpath, 
-                                                         # dir_start_pattern= dir_start_pattern, 
-                                                         # label = label) 
-         # print(f"\nOrganized/Renamed and copied subgraphs to: {subgraphs_savedirpath}/{label}", flush=True)
-         # print(f"\nOrganized/Renamed and copied subgraphs to: {subgraphs_savedirpath}/{label}", flush=True)
+         organize_and_rename_subgraphs_into_LABEL_dir( main_dirpath = subgraphs_savedirpath, 
+                                                         dir_start_pattern= dir_start_pattern, 
+                                                         label = label) 
+         print(f"\nOrganized/Renamed and copied subgraphs to: {subgraphs_savedirpath}/{label}", flush=True)
+         print(f"\nOrganized/Renamed and copied subgraphs to: {subgraphs_savedirpath}/{label}", flush=True)
 
          # # 3-2: run the data-processor which will generate + save processed-pickle-files to 
          # #      "subgraphs_savedirpath/Processed_Benign" directory.       
