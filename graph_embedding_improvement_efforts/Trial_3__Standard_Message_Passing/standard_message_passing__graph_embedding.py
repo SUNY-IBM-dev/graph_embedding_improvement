@@ -1302,8 +1302,9 @@ if __name__ == '__main__':
     X.columns = feature_names
     X.reset_index(inplace = True)
     X.rename(columns = {'index':'data_name'}, inplace = True)
+    X.to_csv(os.path.join(this_results_dirpath,"X.csv"))
 
-    y = [data.y for data in train_dataset]
+   #  y = [data.y for data in train_dataset]
 
     #--------------------------------------------------------------------------
    #  # Now apply readout to the obtained thread-level vectors
@@ -1330,7 +1331,7 @@ if __name__ == '__main__':
                                                                                                                      pool= pool_option )
             nodetype_names = ["file", "registry", "network", "process", "thread"] 
             feature_names = nodetype_names + taskname_colnames # yes this order is correct
-            final_test_X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
+            final_test_X = pd.DataFrame(final_test_dataset__standard_message_passing_dict).T
 
 
          elif graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit":
@@ -1354,7 +1355,8 @@ if __name__ == '__main__':
          final_test_X.reset_index(inplace = True)
          final_test_X.rename(columns = {'index':'data_name'}, inplace = True)
 
-         final_test_y = [data.y for data in train_dataset]
+         final_test_X.to_csv(os.path.join(this_results_dirpath,"final_test_X.csv"))
+         # final_test_y = [data.y for data in train_dataset]
 
     # *************************************************************************************************************************************************
     # *************************************************************************************************************************************************         
