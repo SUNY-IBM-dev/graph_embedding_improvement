@@ -99,6 +99,9 @@
        4. preprocessed graph can result in grpahs with edges with ordered-event-strings.
        5. use the fitted countvectorizer to perform local-N-gram standard message passing.
 
+       In simple-graph (non-mltigraph) setting , there are many single-event edges.
+       In this case, directly doing Local-4-gram may not be best Ideas
+       so could consider Local-1+Local-2+Local-3+Local-4 gram.? 
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
