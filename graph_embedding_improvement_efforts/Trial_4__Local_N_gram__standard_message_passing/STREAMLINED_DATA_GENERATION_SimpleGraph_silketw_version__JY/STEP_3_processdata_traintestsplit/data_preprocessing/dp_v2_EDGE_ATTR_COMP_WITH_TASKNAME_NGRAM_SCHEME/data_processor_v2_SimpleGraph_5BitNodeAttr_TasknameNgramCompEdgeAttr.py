@@ -6,6 +6,125 @@ import pickle
 import numpy as np
 from sklearn import preprocessing
 
+
+#PW: based on SilkETW EventName
+#Registry: EventID(1)-(Opcode:32 Opcodename:Createkey), EventID(2)-(Opcode:33 Opcodename:Openkey),
+# EventID(3)-(Opcode:34 Opcodename:Deletekey), EventID(4)-(Opcode:35 Opcodename:Querykey), 
+# EventID(5)( Opcode:36, OpcodeName: SetValueKey), EventID(6)( Opcode:37, Opcodename: DeleteValueKey), 
+# EventID(7)-(Opcode:38 Opcodename:QueryValueKey),  EventID(8)-(Opcode:39, Opcodename:EnumerateKey), 
+# EventID(9)-(Opcode:40 Opcodename: EnumerateValuekey), EventID(10)-(Opcode:41 Opcodename: QueryMultipleValuekey),
+# EventID(11)-(Opcode:42 Opcodename: Setinformationkey), EventID(13)-(Opcode:44 Opcodename:Closekey), 
+# EventID(14)-(Opcode:45 Opcodename: QuerySecuritykey),EventID(15)-(Opcode:46 Opcodename: SetSecuritykey),
+#  Thisgroupofeventstrackstheperformanceofflushinghives - (opcode 13,OpcodeName:RegPerfOpHiveFlushWroteLogFile) 
+
+#KERNEL_NETWORK_TASK_TCPIP/Datasent (Opcode 10), KERNEL_NETWORK_TASK_TCPIP/Datareceived (Opcode:11),
+# KERNEL_NETWORK_TASK_TCPIP/connectionattempted(Opcode:12),  KERNEL_NETWORK_TASK_TCPIP/Disconnectissued (Opcode:13), 
+# KERNEL_NETWORK_TASK_TCPIP/Dataretransmitted (Opcode: 14), KERNEL_NETWORK_TASK_TCPIP/connectionaccepted (Opcode:15), 
+# KERNEL_NETWORK_TASK_TCPIP/Protocolcopieddataonbehalfofuser (Opcode: 18), KERNEL_NETWORK_TASK_TCPIP/DatareceivedoverUDPprotocol (Opcode:43),
+# KERNEL_NETWORK_TASK_TCPIP/DatasentoverUDPprotocol (Opcode:42)
+
+EventID_to_RegEventName_dict =\
+{
+"EventID(1)":"CreateKey", 
+"EventID(2)":"OpenKey",
+"EventID(3)":"DeleteKey", 
+"EventID(4)":"QueryKey", 
+"EventID(5)":"SetValueKey", 
+"EventID(6)":"DeleteValueKey", 
+"EventID(7)":"QueryValueKey",  
+"EventID(8)":"EnumerateKey", 
+"EventID(9)":"EnumerateValueKey", 
+"EventID(10)":"QueryMultipleValueKey",
+"EventID(11)":"SetinformationKey", 
+"EventID(13)":"CloseKey", 
+"EventID(14)":"QuerySecurityKey",
+"EventID(15)":"SetSecurityKey", 
+"Thisgroupofeventstrackstheperformanceofflushinghives": "RegPerfOpHiveFlushWroteLogFile",
+}
+
+
+taskname_colnames = [
+    'None_or_empty', #0 (index 0) 
+    'Cleanup', #1
+    'Close', #2
+    'Create', #3
+    'CreateNewFile', #4
+    'DeletePath',#5
+    'DirEnum',#6
+    'DirNotify',#7
+    'Flush',#8
+    'FSCTL',#9
+    'NameCreate',#10
+    'NameDelete',#11
+    'OperationEnd',#12
+    #'QueINFO',#13
+    'QueryInformation',#13
+    'QueryEA',#14
+    'QuerySecurity',#15
+    'Read',#16
+    'Write',#17
+    'SetDelete',#18
+    'SetInformation', #19
+    'PagePriorityChange',#20
+    'IoPriorityChange',#21
+    'CpuBasePriorityChange',#22
+    #'IMAGEPriorityChange',#24
+    'CpuPriorityChange',#23
+    'ImageLoad',#24
+    'ImageUnload',#25
+    'ProcessStop/Stop',#26
+    'ProcessStart/Start',#27
+    'ProcessFreeze/Start',#28--------
+    #'PSDISKIOATTRIBUTE',#31
+    #'PSIORATECONTROL',#32 
+    'ThreadStart/Start',#29
+    'ThreadStop/Stop',#30
+    'ThreadWorkOnBehalfUpdate', #31
+    'JobStart/Start',#32--------
+    'JobTerminate/Stop',#33--------
+    #'LOSTEVENT',#38
+    #'PSDISKIOATTRIBUTION',#39
+    'Rename',#34
+    'Renamepath',#35
+    'RegPerfOpHiveFlushWroteLogFile',#36------- # Thisgroupofeventstrackstheperformanceofflushinghives
+    'CreateKey',#37  # EventID(1)
+    'OpenKey',#38  # EventID(2)
+    'DeleteKey',#39  # EventID(3)
+    'QueryKey',#40  # EventID(4)
+    'SetValueKey',#41  # EventID(5)
+    'DeleteValueKey',#42  # EventID(6)
+    'QueryValueKey',#43  # EventID(7)
+    'EnumerateKey',#44  # EventID(8)
+    'EnumerateValueKey',#45  # EventID(9)
+    'QueryMultipleValueKey',#46  # EventID(10)
+    'SetinformationKey',#47  # EventID(11)
+    'CloseKey',#48  # EventID(13)
+    'QuerySecurityKey',#49  # EventID(14)
+    'SetSecurityKey',#50  # EventID(15)
+    'KERNEL_NETWORK_TASK_TCPIP/Datasent.', #51
+    'KERNEL_NETWORK_TASK_TCPIP/Datareceived.',#52
+    'KERNEL_NETWORK_TASK_TCPIP/Connectionattempted.',#53
+    'KERNEL_NETWORK_TASK_TCPIP/Disconnectissued.', #54
+    'KERNEL_NETWORK_TASK_TCPIP/Dataretransmitted.',#55
+    'KERNEL_NETWORK_TASK_TCPIP/connectionaccepted.' , #56----
+    'KERNEL_NETWORK_TASK_TCPIP/Protocolcopieddataonbehalfofuser.', #57
+    'KERNEL_NETWORK_TASK_UDPIP/DatareceivedoverUDPprotocol.',#58
+    'KERNEL_NETWORK_TASK_UDPIP/DatasentoverUDPprotocol.', #59
+    # 'NULL', #remove this entry once second step updations used for subgra
+    'Unseen', # 60
+    #PW: below events are now different in silketw
+    # all below 3 task are combined with opcode and having index 43 onwards for all of them in the function TN2int()
+    # 'KERNEL_NETWORK_TASK_UDPIP'#index 43 # 42(opcode value) 43,49(https://github.com/repnz/etw-providers-docs/blob/master/Manifests-Win7-7600/Microsoft-Windows-Kernel-Network.xml)
+    # 'KERNEL_NETWORK_TASK_TCPIP', # 10-18 (https://github.com/repnz/etw-providers-docs/blob/master/Manifests-Win7-7600/Microsoft-Windows-Kernel-Network.xml)
+    # 'MICROSOFT-WINDOWS-KERNEL-REGISTRY', # 32- 46 (https://github.com/repnz/etw-providers-docs/blob/master/Manifests-Win7-7600/Microsoft-Windows-Kernel-Registry.xml)
+
+]
+
+
+
+
+
+
 class DataProcessor:
 
     """
@@ -65,7 +184,7 @@ class DataProcessor:
         # 1.1. get order
         events_order = None
         if compute_order:
-            events_order = self.get_events_order(edge_dict)  # 2023-05-20 check here.
+            events_order = self.get_events_order(edge_dict)  # 2023-05-20 check here. # 2024-1-2: sems fine
 
 
         #-------------------------------------------------------------------------------------------------------------------
@@ -74,14 +193,15 @@ class DataProcessor:
         # current scheme in *_v2= 1-gram model (frequency of events seen for consecutive events across the same two nodes)
         edge_list = None
         edge_names = None
-        # if concat_events:
-            
-        #     # JY @ 2023-05-20:
-        #     #   Note that this *_v3 is almost same as dinal's *_v2. 
-        #     #   Only change I remember that I made is some network-x or graph library compatibility related issue. 
 
-        #     edge_list, edge_names, freq_vector = self.extract_edge_list_v3(graph, edge_dict)  # new version (edge = concat.events)
-        #     # edge_names are now the first event seen
+        if concat_events:
+            
+            # JY @ 2023-05-20:
+            #   Note that this *_v3 is almost same as dinal's *_v2. 
+            #   Only change I remember that I made is some network-x or graph library compatibility related issue. 
+
+            edge_list, edge_names, freq_vector = self.extract_edge_list_v3(graph, edge_dict)  # new version (edge = concat.events)
+            # edge_names are now the first event seen
 
         # else:
 
@@ -93,8 +213,7 @@ class DataProcessor:
 
         # JY @ 2023-05-20: Even if we don't concatenate events, try using "extract_edge_list_v3",
         #                  since we still want the freq_vector which is no longer freq_vector but just one-hot-encoding
-
-        edge_list, edge_names, task_onehot_vectors_dict = self.extract_edge_list_MultiEdge_Graph(graph, edge_dict)
+        # edge_list, edge_names, task_onehot_vectors_dict = self.extract_edge_list_MultiEdge_Graph(graph, edge_dict)
 
 
 
@@ -103,6 +222,7 @@ class DataProcessor:
 
         #-------------------------------------------------------------------------------------------------------------------
 
+        # JY @ 2024-1-2 : Can stay as it is
 
         # 2. get node feats (doesnt change)
         x = []  # will store node feats
@@ -116,14 +236,15 @@ class DataProcessor:
         #-------------------------------------------------------------------------------------------------------------------
         # 3. get edge feats
         edge_attr = None
-        # if concat_events and compute_order:
 
-        #     # JY @ 2023-05-20:
-        #     #   Note that this *_v3 is almost same as dinal's *_v2. 
-        #     #   Only change I remember that I made is some network-x or graph library compatibility related issue. 
+        if concat_events and compute_order:
 
-        #     # the only edge attributes = frequency count of tasks + the order-value for the first event seen
-        #     edge_attr = self.extract_edge_attr_v3(edge_names, freq_vector, events_order )
+            # JY @ 2023-05-20:
+            #   Note that this *_v3 is almost same as dinal's *_v2. 
+            #   Only change I remember that I made is some network-x or graph library compatibility related issue. 
+
+            # the only edge attributes = frequency count of tasks + the order-value for the first event seen
+            edge_attr = self.extract_edge_attr_v3(edge_names, freq_vector, events_order )
         # else:
         #     # JY @ 2023-05-20: 
         #     #   This is not what is needed for MultiEdge graph.
@@ -132,7 +253,7 @@ class DataProcessor:
         #     edge_attr = self.extract_edge_attr(edge_names, edge_dict)
 
 
-        edge_attr = self.extract_edge_attr_MultiEdge_Graph(edge_names, task_onehot_vectors_dict, events_order )
+        # edge_attr = self.extract_edge_attr_MultiEdge_Graph(edge_names, task_onehot_vectors_dict, events_order )
 
 
 
@@ -298,79 +419,80 @@ class DataProcessor:
         # print(_order[list(_order.keys())[0]])
         return _order
 
-    def extract_edge_list_v2(self, graph, edge_dict):
-        """
-        constructs edge_list in pytorch-geometric format
-        concatonates consecutive events into a single edge
+    # def extract_edge_list_v2(self, graph, edge_dict):
+    #     """
+    #     constructs edge_list in pytorch-geometric format
+    #     concatonates consecutive events into a single edge
 
-        Args:
-           graph (nx.Graph)
-           edge_dict (dict): attribute dictionary
+    #     Args:
+    #        graph (nx.Graph)
+    #        edge_dict (dict): attribute dictionary
         
-        Returns
-           edge_list (list): the edge list from the graph
-           edge_names (list): the names for all edges, used to get attributes
-           task_freqs (list): frequency count computed
-        """
-        u, v = [], []  # will hold u,v nodes for all u->v edges
-        edge_list, edge_names = [], []  # will hold edge_list = [u, v] and edge_names
-        task_freqs = []
+    #     Returns
+    #        edge_list (list): the edge list from the graph
+    #        edge_names (list): the names for all edges, used to get attributes
+    #        task_freqs (list): frequency count computed
+    #     """
+    #     u, v = [], []  # will hold u,v nodes for all u->v edges
+    #     edge_list, edge_names = [], []  # will hold edge_list = [u, v] and edge_names
+    #     task_freqs = []
 
-        # loop through and extract edges
-        # a given edge can hold many edges (I think events) inside it (i.e., > 1 #names)
-        for edge in graph.edges(data=True):
-            _u, _v, edge_data = edge
+    #     # loop through and extract edges
+    #     # a given edge can hold many edges (I think events) inside it (i.e., > 1 #names)
+    #     for edge in graph.edges(data=True):
+    #         _u, _v, edge_data = edge
 
-            # get u->v node id's, must be int. cannot be n0, n1... for models
-            _u = int(_u.strip('n'))
-            _v = int(_v.strip('n'))
+    #         # get u->v node id's, must be int. cannot be n0, n1... for models
+    #         _u = int(_u.strip('n'))
+    #         _v = int(_v.strip('n'))
 
-            # append the edge u->v
-            u.append(_u)
-            v.append(_v)
+    #         # append the edge u->v
+    #         u.append(_u)
+    #         v.append(_v)
             
-            # extracting all event names
-            _names = edge_data['name']
-            _names = ast.literal_eval(_names)  # the names are a str from a list
+    #         # extracting all event names
+    #         _names = edge_data['name']
+    #         _names = ast.literal_eval(_names)  # the names are a str from a list
 
-            # obtain-first event name and first task freq. value
-            _temp = [[_names[0], edge_dict[_names[0]]["TimeStamp"]]]  # stores [[name-1,time-1],[name-2,time-2],...,]
-            # print(edge_dict[_names[0]]["Task Name"])
-            _task_freqs = edge_dict[_names[0]]["Task Name"].copy()
+    #         # obtain-first event name and first task freq. value
+    #         _temp = [[_names[0], edge_dict[_names[0]]["TimeStamp"]]]  # stores [[name-1,time-1],[name-2,time-2],...,]
+    #         # print(edge_dict[_names[0]]["Task Name"])
+    #         _task_freqs = edge_dict[_names[0]]["Task Name"].copy()
 
-            # add the rest of the timestamps, update the frequency count
-            for i in range(len(_names) - 1):
-                _temp.append([_names[i + 1], edge_dict[_names[i + 1]]["TimeStamp"]])
+    #         # add the rest of the timestamps, update the frequency count
+    #         for i in range(len(_names) - 1):
+    #             _temp.append([_names[i + 1], edge_dict[_names[i + 1]]["TimeStamp"]])
 
-                # update frequency count (sum() operation)
-                _temp_task = edge_dict[_names[i + 1]]["Task Name"]
-                for j in range(len(_task_freqs)):
-                    _task_freqs[j] += _temp_task[j]
+    #             # update frequency count (sum() operation)
+    #             _temp_task = edge_dict[_names[i + 1]]["Task Name"]
+    #             for j in range(len(_task_freqs)):
+    #                 _task_freqs[j] += _temp_task[j]
 
-            # sort and get the first event that occurs w.r.t timstamp
-            _temp.sort(key=lambda x: x[1])
-            edge_names.append(_temp[0][0])  # appends the event that occured first based on timestamp
+    #         # sort and get the first event that occurs w.r.t timstamp
+    #         _temp.sort(key=lambda x: x[1])
+    #         edge_names.append(_temp[0][0])  # appends the event that occured first based on timestamp
 
-            # append task frequencies for current edge
-            task_freqs.append(_task_freqs)
+    #         # append task frequencies for current edge
+    #         task_freqs.append(_task_freqs)
 
-        # construct final edge_list
-        edge_list.append(u)
-        edge_list.append(v)
+    #     # construct final edge_list
+    #     edge_list.append(u)
+    #     edge_list.append(v)
 
-        return edge_list, edge_names, task_freqs
+    #     return edge_list, edge_names, task_freqs
 
-    def extract_edge_attr_v2(self, edge_names, task_freqs, events_order):
-        """
-        combines task_freqs with events_order
-        """
-        edge_attr = []
+    # def extract_edge_attr_v2(self, edge_names, task_freqs, events_order):
+    #     """
+    #     combines task_freqs with events_order
+    #     """
+    #     edge_attr = []
 
-        for i in range(len(edge_names)):
-            # for each edge combines frequency_count with order
-            _temp = task_freqs[i] + [events_order[edge_names[i]]]
-            edge_attr.append(_temp)
-        return edge_attr
+    #     for i in range(len(edge_names)):
+    #         # for each edge combines frequency_count with order
+    #         _temp = task_freqs[i] + [events_order[edge_names[i]]]
+    #         edge_attr.append(_temp)
+    #     return edge_attr
+
 
     def extract_edge_list_v3(self, graph, edge_dict):
         """
@@ -520,84 +642,87 @@ class DataProcessor:
     # unused functions from Version-1
     # -------------------------------------------------------------------------------------
 
-    def extract_edge_attr(self, edge_names, edge_dict):
-        """
-        extracts edge attributes
-        NOTE: current logic skips attributes with keys not in self.edge_attribute_list
+    # def extract_edge_attr(self, edge_names, edge_dict):
+    #     """
+    #     extracts edge attributes
+    #     NOTE: current logic skips attributes with keys not in self.edge_attribute_list
         
-        Args:
-           edge_names (list): list of names for all edges with same order as edge_list
-           edge_dict (dict): dictionary of edge attributes
+    #     Args:
+    #        edge_names (list): list of names for all edges with same order as edge_list
+    #        edge_dict (dict): dictionary of edge attributes
         
-        Returns
-           edge_attr (list): list of edge attributes
-        """
-        edge_attr = []  # stores the attribute values
+    #     Returns
+    #        edge_attr (list): list of edge attributes
+    #     """
+    #     edge_attr = []  # stores the attribute values
 
-        for _name in edge_names:
-            # loop through each edge
-            if _name in edge_dict:
-                _data = edge_dict[_name]
-                _values = []  # stores attributes for a given edge
+    #     for _name in edge_names:
+    #         # loop through each edge
+    #         if _name in edge_dict:
+    #             _data = edge_dict[_name]
+    #             _values = []  # stores attributes for a given edge
                 
-                for _key in _data:
-                    # add code here to change, skip any attributes
+    #             for _key in _data:
+    #                 # add code here to change, skip any attributes
 
-                    if self.edge_attribute_list:
-                        if _key not in self.edge_attribute_list:
-                            continue
+    #                 if self.edge_attribute_list:
+    #                     if _key not in self.edge_attribute_list:
+    #                         continue
 
-                    if isinstance(_data[_key], list):
-                        _values += _data[_key]
-                    else:
-                        _values.append(_data[_key])
+    #                 if isinstance(_data[_key], list):
+    #                     _values += _data[_key]
+    #                 else:
+    #                     _values.append(_data[_key])
 
-                # append to edge_attr
-                edge_attr.append(_values)
-            else:
-                print('> Error: Edge name = {} does not exist in edge_attribute.pickle'.format(_name))
-                #sys.exit()
-                # print('> Error: in extract_edge_attr _name = {} does not exist in edge_attribute.pickle'.format(_name))
-            #    sys.exit()
+    #             # append to edge_attr
+    #             edge_attr.append(_values)
+    #         else:
+    #             print('> Error: Edge name = {} does not exist in edge_attribute.pickle'.format(_name))
+    #             #sys.exit()
+    #             # print('> Error: in extract_edge_attr _name = {} does not exist in edge_attribute.pickle'.format(_name))
+    #         #    sys.exit()
                 
-        return edge_attr
-    # [[read+ 3]+[]+[]]
-    def extract_edge_list(self, graph):
-        """
-        constructs edge_list in pytorch-geometric format
-        Note: I found that loading the Igraph(GraphML) through nx. to be much faster than through Igraph itself?
+    #     return edge_attr
+    # # [[read+ 3]+[]+[]]
+    # def extract_edge_list(self, graph):
 
-        Args:
-           graph (nx.Graph)
+    #     # old version (edge == events)
+
+    #     """
+    #     constructs edge_list in pytorch-geometric format
+    #     Note: I found that loading the Igraph(GraphML) through nx. to be much faster than through Igraph itself?
+
+    #     Args:
+    #        graph (nx.Graph)
         
-        Returns
-           edge_list (list): the edge list from the graph
-           edge_names (list): the names for all edges, used to get attributes
-        """
-        u, v = [], []  # will hold u,v nodes for all u->v edges
-        edge_list, edge_names = [], []  # will hold edge_list = [u, v] and edge_names
+    #     Returns
+    #        edge_list (list): the edge list from the graph
+    #        edge_names (list): the names for all edges, used to get attributes
+    #     """
+    #     u, v = [], []  # will hold u,v nodes for all u->v edges
+    #     edge_list, edge_names = [], []  # will hold edge_list = [u, v] and edge_names
 
-        # loop through and extract edges
-        # a given edge can hold many edges (I think events) inside it (i.e., > 1 #names)
-        for edge in graph.edges(data=True):
-            _u, _v, edge_data = edge
+    #     # loop through and extract edges
+    #     # a given edge can hold many edges (I think events) inside it (i.e., > 1 #names)
+    #     for edge in graph.edges(data=True):
+    #         _u, _v, edge_data = edge
 
-            # get u->v node id's, must be int. cannot be n0, n1... for models
-            _u = int(_u.strip('n'))
-            _v = int(_v.strip('n'))
+    #         # get u->v node id's, must be int. cannot be n0, n1... for models
+    #         _u = int(_u.strip('n'))
+    #         _v = int(_v.strip('n'))
             
-            # extracting edge names
-            _names = edge_data['name']
-            _names = ast.literal_eval(_names)  # the names are a str from a list
-            for _name in _names:
-                u.append(_u)
-                v.append(_v)
-                edge_names.append(_name)
+    #         # extracting edge names
+    #         _names = edge_data['name']
+    #         _names = ast.literal_eval(_names)  # the names are a str from a list
+    #         for _name in _names:
+    #             u.append(_u)
+    #             v.append(_v)
+    #             edge_names.append(_name)
 
-        # construct final edge_list
-        edge_list.append(u)
-        edge_list.append(v)
-        return edge_list, edge_names
+    #     # construct final edge_list
+    #     edge_list.append(u)
+    #     edge_list.append(v)
+    #     return edge_list, edge_names
 
 
 

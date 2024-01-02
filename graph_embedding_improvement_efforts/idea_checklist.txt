@@ -47,8 +47,11 @@
     #               (i.e., don't repeat for node-message; combine edge-feature, share common node-feature once, put it together)
 
 
-   TODO: /Trial_3__Standard_Message_Passing/standard_message_passing__graph_embedding.py" seems to work.
+   DONE: /Trial_3__Standard_Message_Passing/standard_message_passing__graph_embedding.py" seems to work.
          Do alittle sanity-checking and start tuning.
+
+   TODO: Maybe write an option to read in the csv file,
+         if there is a corresponding saved "X" and "final_test_X" for faster debugging?
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?

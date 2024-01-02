@@ -109,7 +109,7 @@ def run_data_processor(data_type : str, load_and_save_path: str):
     edge_attribute_list = ['Task Name']
 
     # JY @ 2023-05-20 : NO NEED TO CONCAT_EVENTS ANYMORE.
-    concat_events = False  # will also concatonate events and take a frequency count 
+    concat_events = True  # will also concatonate events and take a frequency count # JY @ 2024-1-2: Updated based on current need
     
     # JY @ 2023-05-20 : YES WE MAY STILL WANT THIS.
     compute_order = True  # will compute order for all events [1/#events, 2/#events, ...., #events/#events==1.0] 
@@ -130,14 +130,22 @@ def run_data_processor(data_type : str, load_and_save_path: str):
     # 1. process and save all benign samples
     if data_type == "Benign":
         print("\n>> Benign <<")
-        process_all_graphs(data_type, load_path, save_path, data_proc, debug=debug, 
+        process_all_graphs(data_type, 
+                           load_path, 
+                           save_path, 
+                           data_proc, 
+                           debug=debug, 
                            concat_events=concat_events, 
                            compute_order=compute_order)
 
     # 2. process and save all malware samples
     if data_type == "Malware":
         #print("\n>> Malware <<")
-        process_all_graphs(data_type, load_path, save_path, data_proc, debug=debug, 
+        process_all_graphs(data_type, 
+                           load_path, 
+                           save_path, 
+                           data_proc, 
+                           debug=debug, 
                            concat_events=concat_events, 
                            compute_order=compute_order)
 

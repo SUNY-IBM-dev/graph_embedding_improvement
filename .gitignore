@@ -1,7 +1,6 @@
 *.pyc
 *.git/*
 *.vscode*
-*RESULTS/*
 *traces_stratkfold_double_strat_sklearn*
 *.csv
 *traces*
@@ -12,3 +11,4 @@
 *EXPLANATION_COMPARISONS*
 *Subgraphs__SimpleGraph*
 *Subgraphs*
+*RESULTS*
