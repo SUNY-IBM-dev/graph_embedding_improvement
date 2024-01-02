@@ -516,11 +516,12 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
 #**********************************************************************************************************************************************************************
 #**********************************************************************************************************************************************************************
 
-def get__standard_message_passing_graph_embedding__dict( dataset : list, 
-                                                         n_hops : int = 1,
-                                                         neighborhood_aggr : str = "sum", 
-                                                         pool : str = "sum",
-                                                         verbose : bool = True ):
+def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset : list, 
+                                                                       N_gram : int = 4, 
+                                                                       n_hops : int = 1,
+                                                                       neighborhood_aggr : str = "sum", 
+                                                                       pool : str = "sum",
+                                                                       verbose : bool = True ):
 
    '''
     JY @ 2023-12-27
@@ -741,14 +742,14 @@ if __name__ == '__main__':
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
                         
                         choices= [
-                                  'standard_message_passing_graph_embedding', # Added by JY @ 2023-12-27
+                                  'local_ngram__standard_message_passing__graph_embedding', # Added by JY @ 2023-12-27
                                   # vs. (for now)
                                   'no_graph_structure__event_1gram_nodetype_5bit', 
                                   'no_graph_structure__event_1gram',
                                   'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
                                   ], 
 
-                                  default = ["standard_message_passing_graph_embedding"])
+                                  default = ["local_ngram__standard_message_passing__graph_embedding"])
 
     # ---------------------------------------------------------------------------------------------------
 
@@ -762,20 +763,14 @@ if __name__ == '__main__':
                                  "RandomForest_searchspace_1",
 
                                  # Best tuned of following -------------------------------------------
-                                 "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125", # running
-                                 "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515", # running
-                                 "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029", # running
 
-                                 "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149", # running
-                                 "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539", # running
-                                 "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047", # running
                                   ], 
-                                  default = ["Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047"])
+                                  default = ["RandomForest_searchspace_1"])
    
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     # --------- specific to standard-message-passing 
@@ -789,7 +784,9 @@ if __name__ == '__main__':
     parser.add_argument('-pool_opt', '--pool_option', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
                         default = ["sum"])
-    # --------------------------------------------------
+    # --------- n-gram
+    parser.add_argument('-n', '--N', nargs = 1, type = int, default = [4])  # Added by JY @ 12-23
+
    
    # ==================================================================================================================================
 
@@ -802,6 +799,8 @@ if __name__ == '__main__':
     neighborhood_aggregation = parser.parse_args().neighborhood_aggregation[0]
     pool_option = parser.parse_args().pool_option[0]
 
+    N_gram = parser.parse_args().N[0] # for n-gram
+
     graph_embedding_option = parser.parse_args().graph_embedding_option[0]
     search_space_option = parser.parse_args().search_space_option[0]
     search_on_train__or__final_test = parser.parse_args().search_on_train__or__final_test[0] 
@@ -812,8 +811,8 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
 
-       if graph_embedding_option == "standard_message_passing_graph_embedding":
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       if graph_embedding_option == "local_ngram__standard_message_passing__graph_embedding":
+         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__local_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
          run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/RESULTS/{run_identifier}"
@@ -823,8 +822,8 @@ if __name__ == '__main__':
 
 
     if search_on_train__or__final_test == "final_test":
-       if graph_embedding_option == "standard_message_passing_graph_embedding":
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       if graph_embedding_option == "local_ngram__standard_message_passing__graph_embedding":
+         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__local_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
          run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
@@ -844,38 +843,38 @@ if __name__ == '__main__':
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       #PW: Dataset-Case-1 
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
+         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train"
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train"
     }
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test"
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test",
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
+         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test"
     }
     ###############################################################################################################################################
 
@@ -1107,108 +1106,6 @@ if __name__ == '__main__':
 
     # Best found hyperparameter sets ===================================================================================================================================================
 
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060125",
-    def Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125():
-         manual_space = []
-         manual_space.append(
-               {'bootstrap': False,
-               'criterion': 'gini',
-               'max_depth': 15.0,
-               'max_features': 'log2',
-               'min_samples_leaf': 1,
-               'min_samples_split': 2,
-               'n_estimators': 300,
-               'random_state': 42,
-               'split_shuffle_seed': 100}
-         )
-         return manual_space      
-
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__2023-12-29_055515",
-    def Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515():
-         manual_space = []
-         manual_space.append(
-               {'bootstrap': False,
-               'criterion': 'gini',
-               'max_depth': 15.0,
-               'max_features': 'sqrt',
-               'min_samples_leaf': 1,
-               'min_samples_split': 5,
-               'n_estimators': 100,
-               'random_state': 0,
-               'split_shuffle_seed': 100}         
-         )
-         return manual_space      
-                                 
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225029",
-    def Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': False,
-            'criterion': 'gini',
-            'max_depth': 15.0,
-            'max_features': 'sqrt',
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 200,
-            'random_state': 42,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space      
-
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060149",
-    def Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': False,
-            'criterion': 'gini',
-            'max_depth': None,
-            'max_features': 'sqrt',
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 300,
-            'random_state': 99,
-            'split_shuffle_seed': 100}         
-         )
-         return manual_space      
-
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__2023-12-29_055539",
-    def Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': True,
-            'criterion': 'gini',
-            'max_depth': None,
-            'max_features': None,
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 200,
-            'random_state': 0,
-            'split_shuffle_seed': 100}         
-         )
-         return manual_space      
-
-
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225047",
-    def Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': True,
-            'criterion': 'gini',
-            'max_depth': 15.0,
-            'max_features': None,
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 100,
-            'random_state': 0,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space      
-
-    # ====================================================================================================================================================================================
-
-
-
-
     ####################################################################################################################################################
     # defaults
     if search_space_option == "XGBoost_default_hyperparam": search_space = XGBoost_default_hyperparam()   
@@ -1219,24 +1116,6 @@ if __name__ == '__main__':
     elif search_space_option == "RandomForest_searchspace_1": search_space = RandomForest_searchspace_1()   
 
     # best found
-    elif search_space_option == "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125":
-         search_space = Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125()
-
-    elif search_space_option == "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515":
-         search_space = Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515()
-    
-    elif search_space_option == "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029":
-         search_space = Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029()
-
-    elif search_space_option == "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149":
-         search_space = Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149()
-
-    elif search_space_option == "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539":
-         search_space = Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539()
-
-    elif search_space_option == "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047":
-         search_space = Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047()
-
     else:
         ValueError("Unavailable search-space option")
 
@@ -1269,11 +1148,13 @@ if __name__ == '__main__':
 
    
     # Added by JY @ 2023-12-27
-    if graph_embedding_option == "standard_message_passing_graph_embedding":
-        train_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= train_dataset,
-                                                                                                            n_hops= n_hops,
-                                                                                                            neighborhood_aggr= neighborhood_aggregation,
-                                                                                                            pool= pool_option )
+    if graph_embedding_option == "local_ngram__standard_message_passing__graph_embedding":
+        train_dataset__standard_message_passing_dict = get__local_Ngram__standard_message_passing__graph_embedding__dict(
+                                                                                                          dataset= final_test_dataset,
+                                                                                                          N_gram= N_gram,
+                                                                                                          n_hops= n_hops,
+                                                                                                          neighborhood_aggr= neighborhood_aggregation,
+                                                                                                          pool= pool_option )
         nodetype_names = ["file", "registry", "network", "process", "thread"] 
         feature_names = nodetype_names + taskname_colnames # yes this order is correct
         X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
@@ -1324,11 +1205,13 @@ if __name__ == '__main__':
         # Also prepare for final-test dataset, to later test the best-fitted models on test-set
          # Now apply signal-amplification here (here least conflicts with existing code.)
 
-         if graph_embedding_option == "standard_message_passing_graph_embedding":
-            final_test_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= final_test_dataset,
-                                                                                                                     n_hops= n_hops,
-                                                                                                                     neighborhood_aggr= neighborhood_aggregation,
-                                                                                                                     pool= pool_option )
+         if graph_embedding_option == "local_ngram__standard_message_passing__graph_embedding":
+            final_test_dataset__standard_message_passing_dict = get__local_Ngram__standard_message_passing__graph_embedding__dict(
+                                                                                                          dataset= final_test_dataset,
+                                                                                                          N_gram= N_gram,
+                                                                                                          n_hops= n_hops,
+                                                                                                          neighborhood_aggr= neighborhood_aggregation,
+                                                                                                          pool= pool_option )
             nodetype_names = ["file", "registry", "network", "process", "thread"] 
             feature_names = nodetype_names + taskname_colnames # yes this order is correct
             final_test_X = pd.DataFrame(final_test_dataset__standard_message_passing_dict).T

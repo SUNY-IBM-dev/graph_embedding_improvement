@@ -151,3 +151,6 @@ Lalji
 
 
 Inject "standard-message-passing" into GNN <-- Prof Guanhua talked about this before.
+
+
+Try everythiing also for XGBoost? But if we are including GNN results would it be necessary?
