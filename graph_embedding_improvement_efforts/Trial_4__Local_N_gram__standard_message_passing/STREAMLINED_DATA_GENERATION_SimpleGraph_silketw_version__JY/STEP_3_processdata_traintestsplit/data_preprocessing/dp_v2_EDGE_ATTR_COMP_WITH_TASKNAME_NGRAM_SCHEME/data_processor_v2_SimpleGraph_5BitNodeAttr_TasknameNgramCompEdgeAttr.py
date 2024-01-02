@@ -200,8 +200,10 @@ class DataProcessor:
             #   Note that this *_v3 is almost same as dinal's *_v2. 
             #   Only change I remember that I made is some network-x or graph library compatibility related issue. 
 
-            edge_list, edge_names, freq_vector = self.extract_edge_list_v3(graph, edge_dict)  # new version (edge = concat.events)
+            # edge_list, edge_names, freq_vector = self.extract_edge_list_v3(graph, edge_dict)  # new version (edge = concat.events)
             # edge_names are now the first event seen
+
+            edge_list, edge_attr = self.extract_edge_list_and_edge_attr__for_SimpleGraph_TasknameNgram_20240102(graph, edge_dict)
 
         # else:
 
@@ -218,7 +220,9 @@ class DataProcessor:
 
 
         if self.debug:
-            print("1. loaded edge_list, #edges==#names? {}".format(len(edge_list[0]) == len(edge_names)))
+            # print("1. loaded edge_list, #edges==#names? {}".format(len(edge_list[0]) == len(edge_names)))
+            print("1. loaded edge_list, #edges==#edge_attr? {}".format(len(edge_list[0]) == len(edge_attr)))
+
 
         #-------------------------------------------------------------------------------------------------------------------
 
@@ -235,16 +239,16 @@ class DataProcessor:
             print("2. loaded node attributes, len(x)==len(nodes)? {}".format(len(x) == len(graph.nodes())))
         #-------------------------------------------------------------------------------------------------------------------
         # 3. get edge feats
-        edge_attr = None
+        # edge_attr = None
 
-        if concat_events and compute_order:
+        # if concat_events and compute_order:
 
-            # JY @ 2023-05-20:
-            #   Note that this *_v3 is almost same as dinal's *_v2. 
-            #   Only change I remember that I made is some network-x or graph library compatibility related issue. 
+        #     # JY @ 2023-05-20:
+        #     #   Note that this *_v3 is almost same as dinal's *_v2. 
+        #     #   Only change I remember that I made is some network-x or graph library compatibility related issue. 
 
-            # the only edge attributes = frequency count of tasks + the order-value for the first event seen
-            edge_attr = self.extract_edge_attr_v3(edge_names, freq_vector, events_order )
+        #     # the only edge attributes = frequency count of tasks + the order-value for the first event seen
+        #     edge_attr = self.extract_edge_attr_v3(edge_names, freq_vector, events_order )
         # else:
         #     # JY @ 2023-05-20: 
         #     #   This is not what is needed for MultiEdge graph.
@@ -261,8 +265,11 @@ class DataProcessor:
 
         del edge_dict  # to make code memory efficient
         if self.debug:
-            print("3. extracted edge attributes, len(edge_attr)==len(edge_names)? {}".format(len(edge_attr) == len(edge_names)))
-            print(f"4. node_dim = {len(x[0])}, edge_dim = {len(edge_attr[0])} (printed for node[0] and edge[0])")
+            # print("3. extracted edge attributes, len(edge_attr)==len(edge_names)? {}".format(len(edge_attr) == len(edge_names)))
+            # print(f"4. node_dim = {len(x[0])}, edge_dim = {len(edge_attr[0])} (printed for node[0] and edge[0])")
+
+            print(f"3. node_dim = {len(x[0])} (printed for node[0])")
+
             # prints first node attribute vector and edge attribute vector
             # print(x[0])
             # print(edge_attr[0])
@@ -494,7 +501,95 @@ class DataProcessor:
     #     return edge_attr
 
 
-    def extract_edge_list_v3(self, graph, edge_dict):
+    # def extract_edge_list_v3(self, graph, edge_dict):
+    #     """
+    #     constructs edge_list in pytorch-geometric format
+    #     concatonates consecutive events into a single edge
+
+    #     Args:
+    #        graph (nx.Graph)
+    #        edge_dict (dict): attribute dictionary
+        
+    #     Returns
+    #        edge_list (list): the edge list from the graph
+    #        edge_names (list): the names for all edges, used to get attributes
+    #        task_freqs (list): frequency count computed
+    #     """
+    #     u, v = [], []  # will hold u,v nodes for all u->v edges
+    #     edge_list, edge_names = [], []  # will hold edge_list = [u, v] and edge_names
+    #     task_freqs = []
+
+    #     # loop through and extract edges
+    #     # a given edge can hold many edges (I think events) inside it (i.e., > 1 #names)
+    #     for edge in graph.edges(data=True):
+    #         _u, _v, edge_data = edge
+
+    #         # get u->v node id's, must be int. cannot be n0, n1... for models
+    #         _u = int(_u.strip('n'))
+    #         _v = int(_v.strip('n'))
+
+    #         # append the edge u->v
+    #         u.append(_u)
+    #         v.append(_v)
+            
+    #         # extracting all event names
+    #         _names = edge_data['name']
+    #         _names = ast.literal_eval(_names)  # the names are a str from a list
+
+    #         # obtain-first event name and first task freq. value
+    #         _temp = [[_names[0], edge_dict[_names[0]]["TimeStamp"]]]  # stores [[name-1,time-1],[name-2,time-2],...,]
+    #         # print(edge_dict[_names[0]]["Task Name"])
+    #         _task_freqs = edge_dict[_names[0]]["Task Name"].copy() # The copy() method returns a new list. It doesn't modify the original list.
+    #         ###----- IRP : with hex value (address) aggregation is not possible-------------####
+    #         #_irp_sum = edge_dict[_names[0]]["Irp"] 
+    #         ### ----------------------------------------###
+            
+
+
+    #         # add the rest of the timestamps, update the frequency count
+    #         for i in range(len(_names) - 1):
+    #             _temp.append([_names[i + 1], edge_dict[_names[i + 1]]["TimeStamp"]])
+
+    #             # update frequency count (sum() operation)
+    #             _temp_task = edge_dict[_names[i + 1]]["Task Name"]
+    #             for j in range(len(_task_freqs)):
+    #                 _task_freqs[j] += _temp_task[j]
+
+    #         # sort and get the first event that occurs w.r.t timstamp
+    #         _temp.sort(key=lambda x: x[1])
+    #         edge_names.append(_temp[0][0])  # appends the event that occured first based on timestamp
+
+    #         # append task frequencies for current edge
+    #         task_freqs.append(_task_freqs)
+
+            
+    #     # In subgraph-A
+    #     #  Assumming there's 3 edges , E1, E2, E3
+    #     #  X = [ <E1's readopcount>, <E2's readopcount> , <E3's readopcount> ]  <-- raw
+    #     #
+    #     #  [ ( i / L2Norm(X) ) for i in X ]
+    #     #  X_normalized = [ <E1's normalized readopcount>, <E2's normalized readopcount> , <E3's normalized readopcount> ] <<< we have access
+    #     #  
+    #     #  [ i * L2Norm(X) for i in X_normalized ]   f == inverse-(1/L2Norm)
+    #     # 
+    #     #   X = [ 40 ,30 , 20]  
+    #     #   <E1's normalized readopcount> == ( <E1's readopcount> / L2Norm(X) )
+    #     #   
+    #     #  [0.2, 0.3, 0.7]      [40, 60, 140]     [20 30 70] [10 15 35]
+
+        
+        
+    #     # not used timestamp as a feature
+    #     freq_vector = {"Task Name":task_freqs}
+    #     # construct final edge_list
+    #     edge_list.append(u)
+    #     edge_list.append(v)
+
+    #     return edge_list, edge_names, freq_vector
+
+
+
+    def extract_edge_list_and_edge_attr__for_SimpleGraph_TasknameNgram_20240102(self, graph, edge_dict):
         """
         constructs edge_list in pytorch-geometric format
         concatonates consecutive events into a single edge
@@ -509,8 +604,11 @@ class DataProcessor:
            task_freqs (list): frequency count computed
         """
         u, v = [], []  # will hold u,v nodes for all u->v edges
-        edge_list, edge_names = [], []  # will hold edge_list = [u, v] and edge_names
-        task_freqs = []
+        # edge_list, edge_names = [], []  # will hold edge_list = [u, v] and edge_names
+        
+        edge_list, edge_attr = [] , [] # will hold edge_list = [u, v]
+
+        # task_freqs = []
 
         # loop through and extract edges
         # a given edge can hold many edges (I think events) inside it (i.e., > 1 #names)
@@ -527,58 +625,61 @@ class DataProcessor:
             
             # extracting all event names
             _names = edge_data['name']
-            _names = ast.literal_eval(_names)  # the names are a str from a list
+            _names = ast.literal_eval(_names)  # the names are a str from a list --  # JY @ 2024-1-2 : names of the edges on the edge , 
+                                                                                     #                 in simple-graph setting
 
             # obtain-first event name and first task freq. value
-            _temp = [[_names[0], edge_dict[_names[0]]["TimeStamp"]]]  # stores [[name-1,time-1],[name-2,time-2],...,]
+            _temp = [ [ _names[0], 
+                        taskname_colnames[ edge_dict[_names[0]]['Task Name'].index(1) ], # JY @ 2024-1-2 : Get the string EventName
+                        edge_dict[_names[0]]["TimeStamp"]
+                      ]
+                    ]  # stores [[name-1, taskname-1, time-1],[name-2, taskname-2,time-2],...,]
             # print(edge_dict[_names[0]]["Task Name"])
-            _task_freqs = edge_dict[_names[0]]["Task Name"].copy() # The copy() method returns a new list. It doesn't modify the original list.
+            # _task_freqs = edge_dict[_names[0]]["Task Name"].copy() # The copy() method returns a new list. It doesn't modify the original list.
             ###----- IRP : with hex value (address) aggregation is not possible-------------####
             #_irp_sum = edge_dict[_names[0]]["Irp"] 
             ### ----------------------------------------###
             
-
-
-            # add the rest of the timestamps, update the frequency count
+            # add the rest to the _temp
             for i in range(len(_names) - 1):
-                _temp.append([_names[i + 1], edge_dict[_names[i + 1]]["TimeStamp"]])
-
-                # update frequency count (sum() operation)
-                _temp_task = edge_dict[_names[i + 1]]["Task Name"]
-                for j in range(len(_task_freqs)):
-                    _task_freqs[j] += _temp_task[j]
+                _temp.append( [ _names[i + 1], 
+                                taskname_colnames[ edge_dict[_names[i + 1]]['Task Name'].index(1) ],  # JY @ 2024-1-2 : Get the string EventName
+                                edge_dict[_names[i + 1]]["TimeStamp"] 
+                              ]
+                            )
+                # # update frequency count (sum() operation)
+                # _temp_task = edge_dict[_names[i + 1]]["Task Name"]
+                # for j in range(len(_task_freqs)):
+                #     _task_freqs[j] += _temp_task[j]
 
             # sort and get the first event that occurs w.r.t timstamp
-            _temp.sort(key=lambda x: x[1])
-            edge_names.append(_temp[0][0])  # appends the event that occured first based on timestamp
+            # _temp.sort(key=lambda x: x[1])
+            # edge_names.append(_temp[0][0])  # appends the event that occured first based on timestamp
 
-            # append task frequencies for current edge
-            task_freqs.append(_task_freqs)
-
+            # # append task frequencies for current edge
+            # task_freqs.append(_task_freqs)
             
-        # In subgraph-A
-        #  Assumming there's 3 edges , E1, E2, E3
-        #  X = [ <E1's readopcount>, <E2's readopcount> , <E3's readopcount> ]  <-- raw
-        #
-        #  [ ( i / L2Norm(X) ) for i in X ]
-        #  X_normalized = [ <E1's normalized readopcount>, <E2's normalized readopcount> , <E3's normalized readopcount> ] <<< we have access
-        #  
-        #  [ i * L2Norm(X) for i in X_normalized ]   f == inverse-(1/L2Norm)
-        # 
-        #   X = [ 40 ,30 , 20]  
-        #   <E1's normalized readopcount> == ( <E1's readopcount> / L2Norm(X) )
-        #   
-        #  [0.2, 0.3, 0.7]      [40, 60, 140]     [20 30 70] [10 15 35]
 
-        
+            # sort the events w.r.t timstamp (index-2)
+            _temp.sort(key=lambda x: x[2])
+
+            # JY @ 2024-1-2: To be compatible for sklearn countvectorizer (just as we did : Benign_Train_data_str = [ ' '.join(v) for k,v in Benign_Train_SG_TaskName_dict.items()] # list of TaskNameOpcodes-strings (each string for each SG))
+            tasknames_str__timesorted__on__simple_graph_edge = ' '.join([x[1] for x in _temp])
+
+            edge_attr.append( tasknames_str__timesorted__on__simple_graph_edge )
         
         # not used timestamp as a feature
-        freq_vector = {"Task Name":task_freqs}
+        # freq_vector = {"Task Name":task_freqs}
         # construct final edge_list
         edge_list.append(u)
         edge_list.append(v)
 
-        return edge_list, edge_names, freq_vector
+        return edge_list, edge_attr
+
+        # return edge_list, edge_names, freq_vector
+
+
+
 
 # Note: currently we are normalizing using local vectors (local to edge). However, this local 
 # approach looses the global information accross edges.
@@ -590,21 +691,21 @@ class DataProcessor:
 # have disavd when the outlier is extream. bcz, the majority typical values will be expressed 
 # similarly in terms of value.
 
-    def extract_edge_attr_v3(self, edge_names, freq_vector, events_order):
-        """
-        combines task_freqs with events_order
-        """
-        edge_attr = []
+    # def extract_edge_attr_v3(self, edge_names, freq_vector, events_order):
+    #     """
+    #     combines task_freqs with events_order
+    #     """
+    #     edge_attr = []
 
-        for i in range(len(edge_names)): # looping thru each edge
-            # for each edge combines frequency_count with order
-            _temp_vector = freq_vector["Task Name"][i]
+    #     for i in range(len(edge_names)): # looping thru each edge
+    #         # for each edge combines frequency_count with order
+    #         _temp_vector = freq_vector["Task Name"][i]
 
-            # [events_order[edge_names[i]]] : order of all edge based on 1st event on an edge which is sorted by timestamp
-            _temp = _temp_vector + [events_order[edge_names[i]]] # edge_names[i] : 1st event uid of edge 'i'
+    #         # [events_order[edge_names[i]]] : order of all edge based on 1st event on an edge which is sorted by timestamp
+    #         _temp = _temp_vector + [events_order[edge_names[i]]] # edge_names[i] : 1st event uid of edge 'i'
             
-            edge_attr.append(_temp)
-        return edge_attr
+    #         edge_attr.append(_temp)
+    #     return edge_attr
 
 
     # ------------------
