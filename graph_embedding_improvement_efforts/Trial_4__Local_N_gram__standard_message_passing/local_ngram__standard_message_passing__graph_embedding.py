@@ -1196,6 +1196,7 @@ if __name__ == '__main__':
 
    # =================================================================================================================================================
    # Prepare for train_dataset (or all-dataset) 
+    ngram_feature_names = [] # for scope resolution put here since need to be visible in final_test if block 
 
     if search_on_train__or__final_test == "search_on_all":  # ***** #
          train_dataset = train_dataset + final_test_dataset
@@ -1224,7 +1225,7 @@ if __name__ == '__main__':
         # need to flatten for compatiblitiy with CountVectorizer
         Train_data_str =  [item for sublist in Train_data_str__list_of_list for item in sublist]
 
-
+      #   ngram_feature_names = []
         for N in range(1, N_gram+1):
 
             # if N > 1:
@@ -1255,8 +1256,10 @@ if __name__ == '__main__':
 
             fitted_countvectorizers_dict[str(N)] = countvectorizer # fitted countvectorizer
 
+            ngram_feature_names += list(countvectorizer.get_feature_names_out())
+
         # ------------------------------------------------------------------------------------------
-        len( fitted_countvectorizers_dict['1'].get_feature_names_out() )
+        #len( fitted_countvectorizers_dict['1'].get_feature_names_out() )
 
         train_dataset__standard_message_passing_dict = get__local_Ngram__standard_message_passing__graph_embedding__dict(
                                                                                                 dataset= train_dataset,
@@ -1268,7 +1271,7 @@ if __name__ == '__main__':
         # ------------------------------------------------------------------------------------------
 
         nodetype_names = ["file", "registry", "network", "process", "thread"] 
-        feature_names = nodetype_names + taskname_colnames # yes this order is correct
+        feature_names = nodetype_names + ngram_feature_names # yes this order is correct
         X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
     else:
 
@@ -1319,13 +1322,14 @@ if __name__ == '__main__':
 
          if graph_embedding_option == "local_ngram__standard_message_passing__graph_embedding":
             final_test_dataset__standard_message_passing_dict = get__local_Ngram__standard_message_passing__graph_embedding__dict(
-                                                                                                          dataset= final_test_dataset,
-                                                                                                          N_gram= N_gram,
-                                                                                                          n_hops= n_hops,
-                                                                                                          neighborhood_aggr= neighborhood_aggregation,
-                                                                                                          pool= pool_option )
+                                                                                                dataset= final_test_dataset,
+                                                                                                fitted_countvectorizers= fitted_countvectorizers_dict,
+                                                                                                n_hops= n_hops,
+                                                                                                neighborhood_aggr= neighborhood_aggregation,
+                                                                                                pool= pool_option )
             nodetype_names = ["file", "registry", "network", "process", "thread"] 
-            feature_names = nodetype_names + taskname_colnames # yes this order is correct
+            ''' JY @ 2024-1-24: Need'''
+            feature_names = nodetype_names + ngram_feature_names # yes this order is correct
             final_test_X = pd.DataFrame(final_test_dataset__standard_message_passing_dict).T
 
 
