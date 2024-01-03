@@ -517,7 +517,7 @@ def get_No_Graph_Structure_eventdist_dict( dataset : list ):
 #**********************************************************************************************************************************************************************
 
 def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset : list, 
-                                                                       N_gram : int = 4, 
+                                                                       fitted_countvectorizers : dict, 
                                                                        n_hops : int = 1,
                                                                        neighborhood_aggr : str = "sum", 
                                                                        pool : str = "sum",
@@ -601,6 +601,10 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
     # 7. Since message-passing is done, "pool" all node's embedding, to generate the "graph embedding".
 
 
+
+
+
+
    data_dict = dict()
    cnt = 0
    for graph_data in dataset: 
@@ -625,9 +629,23 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
          thread_node_indices = torch.nonzero(torch.all(torch.eq( graph_data.x, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
          # ------------------------------------------------------------------------------------------------------------------------------
 
-         ''' 1. Initialize each node's feature vector '''        
-         edge_feat_len = len(graph_data.edge_attr[0][:-1]) # drop time-scalar for now
+         ''' 1. Initialize each node's feature vector '''   
+
+         # edge_feat_len = len(graph_data.edge_attr[0][:-1]) # drop time-scalar for now
+         # edge_feat_placeholders = torch.zeros(graph_data.x.shape[0], edge_feat_len) # create a zero-tensors to concat
+         
+         # JY @ 2024-1-2 
+         #      In 'local n-gram' setting,
+         #      'edge_feat_len' corresponds to the 'sum of number of n-gram features' produced by all fitted countvectorizers
+         
+         edge_feat_len = 0
+         for N, Ngram_countvectorizer in fitted_countvectorizers.items(): # TODO: Could be more robust about the order 
+             Ngram_countvectorizer__num_features = len(Ngram_countvectorizer.get_feature_names_out())
+             print(f"{N}-gram countvectorizer produces {Ngram_countvectorizer__num_features}", flush = True)
+             edge_feat_len += Ngram_countvectorizer__num_features
+         
          edge_feat_placeholders = torch.zeros(graph_data.x.shape[0], edge_feat_len) # create a zero-tensors to concat
+
          graph_data.x = torch.cat((graph_data.x, edge_feat_placeholders), dim=1) # concatenate graph_data.x with zero tensors (~edge-feature placehodler) along the second dimension
 
          '''
@@ -666,9 +684,36 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
 
                # ---------------------------------------------------------------------------------------------
                # edge-attributes of incoming edges to this node (i.e. edge-level messages)
-               edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
+
+               # edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
+
+               # JY @ 2024-1-2: Might be challenging to optimize this double-for-loop
+               
+               edge_level_messages = []
+               for incoming_edge_idx in incoming_edges_to_this_node_idx:
+                  
+                  # need to be a list of string, instead of just string
+                  countvecotrizer_input = list( graph_data__from_previous_hop.edge_attr[ incoming_edge_idx ] )
+
+                  edge_level_message = []
+
+                  for N, Ngram_countvectorizer in fitted_countvectorizers.items(): # TODO: Could be more robust about the order 
+                  
+                     edge_level_message__Ngram_portion = Ngram_countvectorizer.transform( countvecotrizer_input )
+
+                     edge_level_message += edge_level_message__Ngram_portion
+                  
+                  edge_level_messages.append(edge_level_message)
+
+               edge_level_messages = torch.Tensor(edge_level_messages)
 
                # ---------------------------------------------------------------------------------------------
+               ''' JY @ 2024-1-2 : Note that no longer multi-graph but simple-graph
+                                   But can still use the following, since still applicable
+                                   (i.e. following part is to avoid duplicate incoming nodes and obtain unique incoming nodes
+                                         in multi-graph setting. In simple-graph, incoming nodes are naturally unique.)
+               '''
+               
                # Following is for handling "duplicate neighboring nodes" problem due to multi-graph
                # - Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
                unique_incoming_edges_to_this_node, _ = torch.unique( graph_data.edge_index[:, incoming_edges_to_this_node_idx ], 
@@ -1157,12 +1202,70 @@ if __name__ == '__main__':
    
     # Added by JY @ 2023-12-27
     if graph_embedding_option == "local_ngram__standard_message_passing__graph_embedding":
+
+        
+        # ------------------------------------------------------------------------------------------        
+        # JY @ 2024-1-2: First fit the countvectorizer here with the entire train_dataset 
+        #                (^-- This is sort of a compromization, think alittle more),
+        #                     
+        #                Also, fit multiple countvectorizers from 'N_gram' to 1, for now, 
+        #                (e.g. If 'N_gram' is 4, fit countvecotrizors based on 4,3,2, and 1.)
+        #                Reason is, because there are many edges with smaller number of events 
+        #                (only 1 event or lesser # of events), and we would have to account for that.
+        #
+        #                When we fit, we are fitting on all 'timesorted eventname strings' from all graphs in train_dataset
+        #                (i.e. edge_attr of data)
+        #                This is possible because I've regenerated dataset with "simple-graph local N gram" compatible setting.
+        #
+        fitted_countvectorizers_dict = dict()   # key '<N_gram>' : value <countvectorizer based on N_gram> 
+        
+        Train_data_str__list_of_list = [ data.edge_attr for data in train_dataset ]
+        # need to flatten for compatiblitiy with CountVectorizer
+        Train_data_str =  [item for sublist in Train_data_str__list_of_list for item in sublist]
+
+
+        for N in range(1, N_gram+1):
+
+            # if N > 1:
+            #    countvectorizer = CountVectorizer(ngram_range=(N, N), 
+            #                                      max_df= 0.3, 
+            #                                      min_df= 10, 
+            #                                      max_features= None )
+               
+            # else:
+            #    countvectorizer = CountVectorizer(ngram_range=(N, N),
+            #                                        max_df= 1.0,
+            #                                        min_df= 1,
+            #                                        max_features= None)
+
+            # JY @ 2024-1-2: Could just try 1.0, 1 for all N grams (unless going to try crazy big N)
+            #                Since the length of each string is much shorter in this local-n-gram
+            #                compared to global-n-gram, resulting in much more manageable length.
+            countvectorizer = CountVectorizer(ngram_range=(N, N),
+                                                max_df= 1.0,
+                                                min_df= 1,
+                                                max_features= None)               
+
+            # 'Train_data_str' should be a list of strings for compatiblity with countvectorizer, not a list of list 
+            start = datetime.now()
+            Train_data_vec = countvectorizer.fit_transform(Train_data_str).toarray()
+            end = datetime.now()
+            print(f"Elapsed time for fitting {N}-gram countvectorizer : {end - start}", flush= True)
+
+            fitted_countvectorizers_dict[str(N)] = countvectorizer # fitted countvectorizer
+
+        # ------------------------------------------------------------------------------------------
+        len( fitted_countvectorizers_dict['1'].get_feature_names_out() )
+
         train_dataset__standard_message_passing_dict = get__local_Ngram__standard_message_passing__graph_embedding__dict(
-                                                                                                          dataset= train_dataset,
-                                                                                                          N_gram= N_gram,
-                                                                                                          n_hops= n_hops,
-                                                                                                          neighborhood_aggr= neighborhood_aggregation,
-                                                                                                          pool= pool_option )
+                                                                                                dataset= train_dataset,
+                                                                                                fitted_countvectorizers= fitted_countvectorizers_dict,
+                                                                                                n_hops= n_hops,
+                                                                                                neighborhood_aggr= neighborhood_aggregation,
+                                                                                                pool= pool_option )
+        
+        # ------------------------------------------------------------------------------------------
+
         nodetype_names = ["file", "registry", "network", "process", "thread"] 
         feature_names = nodetype_names + taskname_colnames # yes this order is correct
         X = pd.DataFrame(train_dataset__standard_message_passing_dict).T

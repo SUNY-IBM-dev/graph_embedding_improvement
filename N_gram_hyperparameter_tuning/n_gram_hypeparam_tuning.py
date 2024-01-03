@@ -955,8 +955,22 @@ if __name__ == '__main__':
         # But as a rule of thumb, I generally start with min_df to 5-10 and max_df to 30% for a corpus of that size.
         
     print(f"N: {N}",  flush = True)
-    countvectorizer = CountVectorizer(ngram_range=(N, N), max_df= 0.3, min_df= 10, max_features= None )  # ngram [use 4-gram or 8-gram] 
-
+    if N > 1:
+      # max_df and min_df here are necessary and values are conventionally used ones
+      # necessity is because , say, 61 C 4 will result in 61! / (61-4)! * 4! which is unreasonably large, 
+      # so necesary to filter out features based on frequency 
+      # intuition is meaningful ngram features should not appear too little or too frequent
+      countvectorizer = CountVectorizer(ngram_range=(N, N), 
+                                        max_df= 0.3, 
+                                        min_df= 10, 
+                                        max_features= None )  # ngram [use 4-gram or 8-gram] 
+    else:
+        # N = 1 <-- we don't want to drop any 1-gram features since we don't have feature-space too big problem
+        #           Following does not ignore any n-gram feautres
+        countvectorizer = CountVectorizer(ngram_range=(N, N),
+                                          max_df= 1.0,
+                                          min_df= 1,
+                                          max_features= None)
     # Train Data ---------------------------------------------------------------------------------------------------------------
     Benign_Train_SG_names = [ k for k,v in Benign_Train_SG_TaskName_dict.items()] # list of SG names
     Malware_Train_SG_names = [ k for k,v in Malware_Train_SG_TaskName_dict.items()]
@@ -964,7 +978,7 @@ if __name__ == '__main__':
     #{idx name: ["create"],["image"]}
     Benign_Train_data_str = [ ' '.join(v) for k,v in Benign_Train_SG_TaskName_dict.items()] # list of TaskNameOpcodes-strings (each string for each SG)
     Malware_Train_data_str = [ ' '.join(v) for k,v in Malware_Train_SG_TaskName_dict.items()]
-    Train_data_str = Benign_Train_data_str + Malware_Train_data_str 
+    Train_data_str = Benign_Train_data_str + Malware_Train_data_str # list
     
     # Get the Train-target (labels)
    #  Train_target = [0]*len(Benign_Train_data_str) + [1]*len(Malware_Train_data_str)
