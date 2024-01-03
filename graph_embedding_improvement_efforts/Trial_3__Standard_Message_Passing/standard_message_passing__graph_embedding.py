@@ -663,6 +663,25 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                # edge-indices of incoming-edges to this node   # "torch.nonzero" returns a 2-D tensor where each row is the index for a nonzero value.
                incoming_edges_to_this_node_idx = torch.nonzero( edge_tar_indices == node_idx ).flatten()  
 
+
+
+               if len(incoming_edges_to_this_node_idx) == 0:
+                  # JY @ 2024-1-4:
+                  #    Even when this if-statement was not here, things worked PROPERLY,
+                  #    because the subsequent operations that involve the empty 'incoming_edges_to_this_node_idx',
+                  #    will just result in zero-vectors 
+                  #    (obviously, when 'incoming_edges_to_this_node_idx' is empty, 
+                  #     'node_level_messages__aggregated' will also be a zero-vector) 
+                  #    Therefore, "messages__aggregated" in "graph_data.x[node_idx] = graph_data.x[node_idx] + messages__aggregated" 
+                  #    just being a zero vector (i.e. No update in 'graph_data.x[node_idx]' )
+                  #
+                  #    HOWEVER, it would be alittle more efficient here to just 'continue' to next-node
+                  #    instead of going through the above's zero-vector addition for this node.
+                  continue
+
+
+
+
                # ---------------------------------------------------------------------------------------------
                # edge-attributes of incoming edges to this node (i.e. edge-level messages)
                edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
@@ -735,7 +754,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-2"])
+                        default = ["Dataset-Case-1"])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -780,7 +799,7 @@ if __name__ == '__main__':
 
     # --------- specific to standard-message-passing 
     parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
-                        default = [3])
+                        default = [5])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 

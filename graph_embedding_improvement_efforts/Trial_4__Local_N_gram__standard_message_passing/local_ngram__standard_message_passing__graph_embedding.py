@@ -802,7 +802,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        default = ["Dataset-Case-2"])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
