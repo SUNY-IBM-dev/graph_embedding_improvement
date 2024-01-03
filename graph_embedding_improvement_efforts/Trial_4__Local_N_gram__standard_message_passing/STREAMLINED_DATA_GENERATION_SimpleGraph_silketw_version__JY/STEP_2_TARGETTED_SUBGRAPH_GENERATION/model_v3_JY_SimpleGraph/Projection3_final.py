@@ -108,6 +108,12 @@ from dateutil import parser
 #                         attributes(root_path,subgraph_path)
 #                     return
 
+'''
+JY @ 2024-1-3: Projection code's readability should be improved (e.g. more straightforward variable names, comments)
+               because each time I come back, I again need to spend time, which decreases productivity,
+               to understand the code due to lack of readability.
+'''
+
 
 def targetted_projection3(root_path,idx,mal_PID,ids,edge_data,proc_node,proc_thread_node): 
     i = 0 
@@ -181,7 +187,7 @@ def targetted_projection3(root_path,idx,mal_PID,ids,edge_data,proc_node,proc_thr
             # return
 
 
-def earliest_time(G2,edge_data,node,e1):
+def earliest_time(G2, edge_data, node, e1):
     n = G2.es[e1]["name"].replace("[","").replace("]","").replace(" ","").replace("\'","").split(',')
     min_ts=math.inf
     event1 =''
@@ -249,6 +255,7 @@ def subgraph(subgraph_path,g,tainted_nodes,edge_data,edge_min_ts,sub_edge_set,pr
                 sub_edge_set.add(e)
     raw_subg = g.subgraph_edges(sub_edge_set)
     exclude_events_based_on_cutoff(subgraph_path,edge_min_ts,edge_data,g,raw_subg) 
+
 
 def exclude_events_based_on_cutoff(subgraph_path,edge_min_ts,edge_data,G,gph):
     eid_list = []
