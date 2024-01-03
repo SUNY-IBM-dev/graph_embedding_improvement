@@ -720,6 +720,9 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                # Need to update with "graph_data" since this will be the next iteration's "graph_data__from_previous_hop"
                # (i.e. "graph_data" is the graph that is mutating and the medium for information-propagation )
                # For "SimpleConv", similar to edge-weight being considered as 1
+
+               # JY @ 2024-1-3: Put update-weightage here?
+
                graph_data.x[node_idx] = graph_data.x[node_idx] + messages__aggregated
 
 

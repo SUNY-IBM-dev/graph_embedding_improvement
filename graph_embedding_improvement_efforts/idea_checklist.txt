@@ -61,6 +61,11 @@
 
    COULD-TRY: Global temporal + standard message passing
 
+   TODO: Put update weightage for standard-message-passing?
+         (i.e. )
+
+   TODO** : Run explainer on this, why is it doing relatively better?
+
 
 -----------------------------------------------------------------------------------------------------------------------------------
 [Priority-4] Do alittle more analysis on "Investigating the reason using SHAP explainer" to see if can get clue?
@@ -137,23 +142,6 @@ GRNN?
 Are the signals (from our train/test data to acheive 85%+ exist at first place?)
 
 
-If we conceptualize the information that we can get by manipulating the graph:
-- Global-Temporal (flattened graph N>1 gram) [ TODO @ 2024-1-3: -- dig into this in graphical level ]
-- Local-Temporal (N>1 gram between events in pair of nodes 
-                 ( so more of a limited local-temporal -- since not across all events of all incoming nodes -- order of events across multiple edges from different nodes may not matter much )
-
-                  * need to also think about Projection 3 algorithm) [ TODO @ 2024-1-3: -- dig into this in graphical level ]
-- Spatial Information (~Graph-embedding)
-Are there more?
-
-In current GNN,
-would the information-flow (across multiple edges) contradict the timestamp info?
-
-
----> JY @ 2024-1-3:
-     How can "local-spatio-temporal (local n gram + standard message passing)" and "global temporal" both be fed into the model?
-     -- Concatenate? this might lead to quite big feature-space and may not be very scalable
-     -- Is there another clever way?
 
 Dissect all procedures , revisit and question all assumptions that we made
 - e.g. How are we so sure that graph-structure will help for classification?
@@ -172,3 +160,34 @@ Inject "standard-message-passing" into GNN <-- Prof Guanhua talked about this be
 Try everything also for XGBoost? 
 But if we are including GNN results would it be necessary?
 -- Could try, but first do with RF
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+If we conceptualize the information that we can get by manipulating the graph:
+- Global-Temporal (flattened graph N>1 gram) [ TODO @ 2024-1-3: -- dig into this in graphical level ]
+- Local-Temporal (N>1 gram between events in pair of nodes 
+                 ( above is a more of a limited local-temporal -- since not across all events of all incoming nodes -- order of events across multiple edges from different nodes may not matter much )
+
+                  * need to also think about Projection 3 algorithm) [ TODO @ 2024-1-3: -- dig into this in graphical level ]
+- Spatial Information (~Graph-embedding)
+Are there more?
+
+In current GNN,
+would the information-flow (across multiple edges) contradict the timestamp info?
+
+
+---> JY @ 2024-1-3:
+     How can "local-spatio-temporal (local n gram + standard message passing)" and "global temporal" both be fed into the model?
+     -- Concatenate? this might lead to quite big feature-space and may not be very scalable
+     -- Is there another clever way?
+
+
+"temporally incorrect information-flow in message-passing" problem?
+--> Re-examination on projection-3 algorithm, 
+    and there could be still be temporally-incorrect information-flow
+    (e.g. 
+         (F1) <--t1-- (T1) <-- t3 -- (F2)
+
+         If  
+     
