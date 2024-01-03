@@ -675,7 +675,11 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
             for node_idx in range( graph_data.x.shape[0] ):
 
                if node_idx == 77:
-                   print() # something wrong at dataset-1 node_idx 77 -- maybe edge-case
+                   print() # fixed -- was edge-case of NO incoming_edges_to_this_node_idx
+
+               if node_idx == 536:
+                  print() # TO-FIX -- when there are MANY incoming_edges_to_this_node_idx
+                   
 
                print(f"{cnt} / {len(dataset)}: {graph_data.name} | {n+1} hop | {node_idx+1} / {graph_data.x.shape[0]} : message passing for node", flush = True)
 
@@ -698,23 +702,27 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
 
                # JY @ 2024-1-2: Might be challenging to optimize this double-for-loop
                
-               edge_level_messages_nparray = np.array([]) # torch.Tensor() # https://discuss.pytorch.org/t/appending-to-a-tensor/2665/3
+               #edge_level_messages_nparray = np.array([]) # torch.Tensor() # https://discuss.pytorch.org/t/appending-to-a-tensor/2665/3
+               edge_level_messages = torch.empty((0, edge_feat_len))
+
                for incoming_edge_idx in incoming_edges_to_this_node_idx:
                   
                   # need to be a list of string, instead of just string
                   countvecotrizer_input = [ graph_data__from_previous_hop.edge_attr[ incoming_edge_idx ] ]
 
-                  edge_level_message = np.array([]) # torch.Tensor()
+                  edge_level_message__nparray = np.array([]) # torch.Tensor()
 
                   for N, Ngram_countvectorizer in fitted_countvectorizers.items(): # TODO: Could be more robust about the order 
                   
                      edge_level_message__Ngram_portion = Ngram_countvectorizer.transform( countvecotrizer_input ).toarray()
 
-                     edge_level_message = np.append(edge_level_message, edge_level_message__Ngram_portion)
+                     edge_level_message__nparray = np.append(edge_level_message__nparray, edge_level_message__Ngram_portion)
                   
-                  edge_level_messages_nparray = np.append(edge_level_messages_nparray, edge_level_message)
+ 
+                  # JY @ 2024-1-2: so that can stack on 'edge_level_messages'
+                  edge_level_message = torch.Tensor(edge_level_message__nparray).view(1,-1) # for Size([1,edge_feat_len])
+                  edge_level_messages = torch.cat((edge_level_messages, edge_level_message), dim=0)                  
 
-               edge_level_messages = torch.Tensor(edge_level_messages_nparray)
 
 
 
@@ -749,7 +757,7 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
                elif neighborhood_aggr == "mean": neighborhood_aggr__func = torch.mean
 
                node_level_messages__aggregated = neighborhood_aggr__func(node_level_messages, dim = 0)
-               edge_level_messages__aggregated = neighborhood_aggr__func(edge_level_messages.view(1, -1), dim = 0) # view(1,-1) for compatiblity 
+               edge_level_messages__aggregated = neighborhood_aggr__func(edge_level_messages, dim = 0) # view(1,-1) for compatiblity 
 
                messages__aggregated = torch.cat([node_level_messages__aggregated, edge_level_messages__aggregated], dim = 0) # node-feat should come first
 
