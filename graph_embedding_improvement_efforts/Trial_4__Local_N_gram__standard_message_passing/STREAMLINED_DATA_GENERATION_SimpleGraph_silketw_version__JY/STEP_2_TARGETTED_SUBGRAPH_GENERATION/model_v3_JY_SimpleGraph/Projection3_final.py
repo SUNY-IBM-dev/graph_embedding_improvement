@@ -114,188 +114,249 @@ JY @ 2024-1-3: Projection code's readability should be improved (e.g. more strai
                to understand the code due to lack of readability.
 '''
 
+# -----------------------------------------------------------------------------------------------------------------------------
+def projection(root_path, idx, PID, edge_data):
 
-def targetted_projection3(root_path,idx,mal_PID,ids,edge_data,proc_node,proc_thread_node): 
+    print(idx, flush= True)
+
+    ids=set() # no root node should be common in subgraphs
+
+    f1 = open(os.path.join(root_path,"proc_node.json")) 
+    f2 = open(os.path.join(root_path,"proc_thread.json"))
+
+    proc_nodes= json.load(f1)
+    proc_thread_nodes = json.load(f2)   
+
+    targetted_projection3(root_path,idx, PID, ids, edge_data, proc_nodes, proc_thread_nodes)
+
+# -----------------------------------------------------------------------------------------------------------------------------
+def targetted_projection3(root_path, 
+                          idx, # elastic-serach idx 
+                          Root_PID,  # Targetted PID
+                          ids,  # node-ids 
+                          edge_data, # edgeattr
+                          proc_nodes, # json file loaded
+                          proc_thread_nodes # json file loaded
+                          ): 
+    
     i = 0 
     G= Graph.Read_GraphML(os.path.join(root_path,"graph.GraphML"))
-    for edge in G.es:
-        name_list= edge["name"].replace("[","").replace("]","").replace(" ","").replace("\'","").split(',')
-        key1 = edge_data.get(name_list[0],{}).get("Task Name")
-        #key2 = edge_data.get(name_list[0],{}).get("ImageName")
-        key3 = edge_data.get(name_list[0],{}).get("ProcessID")
-        #if key3 != None:
-        #    print("check here")
 
-        # if key2 != None:
-            # k= re.search("malware.exe",key2)
-            # if k != None:
-        #if (key1 == "PROCESSSTART") and (key3 != mal_PID): # JY @ 2023-1-5 : I believe this was for benign-noise
-        if (key1 == "ProcessStart/Start") and (key3 == mal_PID):
+    for edge in G.es:
+
+        name_list= edge["name"].replace("[","").replace("]","").replace(" ","").replace("\'","").split(',')
+        TaskName = edge_data.get(name_list[0],{}).get("Task Name")
+        ProcessID = edge_data.get(name_list[0],{}).get("ProcessID")
+
+        if (TaskName == "ProcessStart/Start") and (ProcessID == Root_PID):
+
             print(f"processstart -- subgraph root: {G.vs[edge.target]['name']}", flush=True)
-            #print(f"user-activity PID: {mal_PID}")
-            #print("")
-            #print(f"G.vs[edge.target]['name']: {G.vs[edge.target]['name']}")
-            #print(f"edge['name']: {edge['name']}")
-            #print(f"G.vs[edge.target]['name']: {G.vs[edge.target]['name']}")
-            #print("")
-            #cmd_proc= edge['name'][ edge['name'].index("(PID):") + len( "(PID):") : edge['name'].index("_(TID):") ]
-            #[ v['name'] for v in G.vs if v['name'].startswith('<<PROC-NODE>>') and cmd_proc in v['name']]
-            
+
             # START FROM EDGE.SOURCE INSTEAD OF EDGE.TARGET
+            
             if edge.target not in ids:
+
                 ids.add(edge.target)
+                
                 G.vs["taint"]=math.inf
+                
                 subgraph_path = os.path.join(root_path,"SUBGRAPH_P3_"+idx)
                 if not os.path.exists(subgraph_path):
                     print(f"made directory {subgraph_path}")
                     os.makedirs(subgraph_path)
-                ts = edge_data.get(name_list[0],{}).get("TimeStamp") #Processstart root node timestamp
-                #with open('out_mal1.txt', 'a') as f:
-                    #print("root node:",a.target,", taint time:", ts, file=f)
-                G.vs[edge.target]["taint"] = ts            # root node taint time
-                current_list=[]
-                next_list=[edge.target]
-                tainted_nodes={edge.target}
-                sub_edge_set=set()
-                edge_min_ts={} # mapping of edge with cutoff time
-                tainted_subgraph(subgraph_path,G,current_list,next_list,tainted_nodes,edge_data,edge_min_ts,sub_edge_set,proc_node,proc_thread_node)
-                #print("calling attributes")
-                attributes(root_path,subgraph_path)
-                i=i+1
-
-            '''
-            if edge.target not in ids:
-                ids.add(edge.target)
-                G.vs["taint"]=math.inf
-                subgraph_path = os.path.join(root_path,"SUBGRAPH_P3_"+idx)
-                if not os.path.exists(subgraph_path):
-                    os.mkdir(subgraph_path)
-                ts = edge_data.get(name_list[0],{}).get("TimeStamp") #Processstart root node timestamp
-                #with open('out_mal1.txt', 'a') as f:
-                    #print("root node:",a.target,", taint time:", ts, file=f)
-                G.vs[edge.target]["taint"] = ts            # root node taint time
-                current_list=[]
-                next_list=[edge.target]
-                tainted_nodes={edge.target}
-                sub_edge_set=set()
-                edge_min_ts={} # mapping of edge with cutoff time
-                tainted_subgraph(subgraph_path,G,current_list,next_list,tainted_nodes,edge_data,edge_min_ts,sub_edge_set,proc_node,proc_thread_node)
-                #print("calling attributes")
-                attributes(root_path,subgraph_path)
-                i=i+1
-            '''
-            # return
-
-
-def earliest_time(G2, edge_data, node, e1):
-    n = G2.es[e1]["name"].replace("[","").replace("]","").replace(" ","").replace("\'","").split(',')
-    min_ts=math.inf
-    event1 =''
-    tn = edge_data.get(n[0],{}).get("Task Name") #only first event on an edge gets checked using "n[0]"
-    ts = edge_data.get(n[0],{}).get("TimeStamp")
-    if G2.vs[node]["taint"] < ts:
-        if(tn == "ProcessStart/Start" or tn == "ThreadStart/Start"):
-            min_ts =ts 
-            event1 = tn 
-    return min_ts , event1
-
-def tainted_subgraph(subgraph_path,G1,current_list,next_list,tainted_nodes,edge_data,edge_min_ts,sub_edge_set,proc_node,proc_thread_node):
-    while(len(next_list)!=0):
-        current_list=next_list
-        next_list = []
-        while(len(current_list)!=0):
-            node= current_list.pop(0)
-
-            if (G1.vs[node]["name"] in proc_node) or (G1.vs[node]["name"] in proc_thread_node):
-                edges=G1.incident(node, "out")  
                 
-                # Added by JY @ 2023-1-13
-                #outgoing_edges = [G1.es[e]['name'] for e in edges]
-                for e in edges: # G1.es[e]['name']
-                    x = G1.es[e].target
-                    #print("")
-                    #print(f"<**source-of-outgoing-edge>: {G1.vs[node]['name']}")
-                    #print(f"<**outgoing-edge (single or multiple events)>: {G1.es[e]['name']}")
-                    #target_from_outgoing_edge = [G1.vs[x]['name']]
-                    #print(f"<**target-of-outgoing-edge>: {target_from_outgoing_edge}")
+                ts = edge_data.get(name_list[0],{}).get("TimeStamp") #Processstart root node timestamp
+
+                G.vs[edge.target]["taint"] = ts            # root node taint time
+
+                current_list=[] # to traverse
+
+                next_list=[edge.target] # next to traverse
+
+                tainted_nodes={edge.target}
+
+                subgraph_edge_set=set()
+
+                edge__min_ts__dict={} # mapping of edge with cutoff time
+
+                tainted_subgraph(subgraph_path, G, current_list, next_list, tainted_nodes, edge_data, edge__min_ts__dict, subgraph_edge_set, proc_nodes, proc_thread_nodes)
+                
+                attributes(root_path,subgraph_path)
+                i=i+1
 
 
+# -----------------------------------------------------------------------------------------------------------------------------
+def tainted_subgraph(subgraph_path, G1, current_list, next_list, tainted_nodes, 
+                     
+                     edge_data, edge__min_ts__dict, subgraph_edge_set, # 'edge_data', 'edge_min_ts', 'subgraph_edge_set' are only here to pass to nested functions
+                     
+                     proc_nodes, proc_thread_nodes):
+        
 
-                    ts, event =earliest_time(G1, edge_data, node, e)
-                    
-                    if G1.vs[x]["taint"] > ts :      #if target node taint time is not infinity but it should be minimum
-                        G1.vs[x]["taint"] = ts
-                        next_list.append(x)
-                        tainted_nodes.add(x)  
-
-    subgraph(subgraph_path,G1,tainted_nodes,edge_data,edge_min_ts,sub_edge_set,proc_node,proc_thread_node)
-
-def subgraph(subgraph_path,g,tainted_nodes,edge_data,edge_min_ts,sub_edge_set,proc_node,proc_thread_node):
-    while(len(tainted_nodes)!=0):
-        node=tainted_nodes.pop()
-        # if tainted node is process or thread node then check all its incoming and outgoing edges
-        if (g.vs[node]["name"] in proc_node) or (g.vs[node]["name"] in proc_thread_node):
-
-            ###
-            # # Added by JY for debugging
-            # if g.vs[node]["name"]  == "<<THREAD>>(TID):3940_(TS):N/A__(PID):6056_(CT):N/A":
-            #     print("found the thread-of-interest")
-            #     pass
-
-            ###
-
-            edges_all = g.incident(node,"all")
-            for e in edges_all:
-                src = g.es[e].source
-                tar = g.es[e].target
-                if g.vs[src]["taint"] < g.vs[tar]["taint"]:
-                    edge_min_ts[e]=g.vs[src]["taint"] # earliest tainted time between src and tar
-                else:
-                    edge_min_ts[e]=g.vs[tar]["taint"]
-                sub_edge_set.add(e)
-    raw_subg = g.subgraph_edges(sub_edge_set)
-    exclude_events_based_on_cutoff(subgraph_path,edge_min_ts,edge_data,g,raw_subg) 
-
-
-def exclude_events_based_on_cutoff(subgraph_path,edge_min_ts,edge_data,G,gph):
-    eid_list = []
-    #gph=Graph.Read_GraphML(os.path.join(root_path,"graph.graphml"))
-    for a1 in gph.es:
-        x = gph.vs[a1.source]["id"]
-        y = gph.vs[a1.target]["id"]
-        z=G.get_eid(int(x[1:]), int(y[1:]))
-        l =[]
-        t1 =[]
-        t2= []
-        sub_name_list= a1["name"].replace("[","").replace("]","").replace(" ","").replace("\'","").split(',')
-        cutoff_time = edge_min_ts[z]
-        for p in sub_name_list:
-           # print("edge_id:", z,  ", cutoff time", cutoff_time)
-            ts = edge_data.get(p,{}).get("TimeStamp")
-            #tn = edge_data.get(p,{}).get("Task Name")
+        
+        while( len(next_list) != 0 ):
             
-            if ts >= cutoff_time:
-                #print("source:",x, ",target:",y, ", edge_id:" ,z, ", cutoff_time:", cutoff_time , ", Timestamp:", ts, ", event:", tn)
-                l.append(p)
-                #t1.append(ts)
-                #t2.append(tn)
+            current_list = next_list # to traverse
 
-        if len(l) != 0:
-            a1["name"] = str(l)
-            #a1["Time"] = str(t1)
-            #a1["Task"] = str(t2)
+            next_list = [] # next to traverse
+            
+            while( len(current_list) != 0):
+                
+                node= current_list.pop(0)
+
+                if (G1.vs[node]["name"] in proc_nodes) or (G1.vs[node]["name"] in proc_thread_nodes):
+                    
+                    outgoing_edges = G1.incident(node, "out")  
+                    
+                    for outgoing_edge in outgoing_edges: # G1.es[e]['name']
+                    
+                        target_node = G1.es[outgoing_edge].target
+                    
+                        earliest_ts = earliest_time(G1, edge_data, node, outgoing_edge) # here, node is either proc or thread node
+                        
+                        if G1.vs[target_node]["taint"] > earliest_ts :      # compare target-node's taint time (could be infinity), 4
+                                                                            # with earliest_ts__of_outgoing_edge (could be infinity?)
+                            
+                            G1.vs[target_node]["taint"] = earliest_ts       # assign taint-time
+                            
+                            next_list.append(target_node)
+                            
+                            tainted_nodes.add(target_node)  
+        
+        # Pass the populated 'tainted_nodes' to subgraph() function
+        subgraph(subgraph_path, G1, tainted_nodes, 
+                 edge_data, edge__min_ts__dict, subgraph_edge_set, 
+                 proc_nodes, proc_thread_nodes)
+
+# -----------------------------------------------------------------------------------------------------------------------------
+def earliest_time(G2, edge_data, source_P_or_T_node, outgoing_edge):
+    
+    events_on_edge = G2.es[outgoing_edge]["name"].replace("[","").replace("]","").replace(" ","").replace("\'","").split(',')
+    
+    earliest_ts__of_outgoing_edge = math.inf # default infinity
+
+    outgoing_edge__First_event__TaskName = edge_data.get(events_on_edge[0],{}).get("Task Name") # only first event on an edge gets checked using "n[0]"
+    outgoing_edge__First_event__TimeStamp = edge_data.get(events_on_edge[0],{}).get("TimeStamp") 
+
+    if G2.vs[source_P_or_T_node]["taint"] < outgoing_edge__First_event__TimeStamp:
+
+        if (outgoing_edge__First_event__TaskName in ["ProcessStart/Start","ThreadStart/Start"]):
+
+            earliest_ts__of_outgoing_edge = outgoing_edge__First_event__TimeStamp 
+
+    return earliest_ts__of_outgoing_edge
+
+# -----------------------------------------------------------------------------------------------------------------------------
+def subgraph(subgraph_path, G, 
+             tainted_nodes, 
+             edge_data, 
+             edge__min_ts__dict, 
+             subgraph_edge_set, 
+             proc_nodes, 
+             proc_thread_nodes):
+    
+
+    while( len(tainted_nodes) != 0): # for all tainted nodes
+
+        node=tainted_nodes.pop()
+
+        # (JY @ 2024-1-3)
+        #   ** if tainted node is process or thread node then check all its incoming and outgoing edges 
+        #       -- Key of projection-3 
+        #           -- For Process/Thread node: all incoming (F/R/N/T or F/R/N/P) + outgoing edges.
+        #           -- Including the external node F/R/N (created by other benign process) -> P/T,
+        #              only if the timestamp of the external node event is after the P/T node taint-time.
+        
+        if (G.vs[node]["name"] in proc_nodes) or (G.vs[node]["name"] in proc_thread_nodes):
+
+            edges_all = G.incident(node,"all") # both incoming and outgoing edges w.r.t P/T node
+
+            for edge in edges_all:
+
+                src = G.es[edge].source
+                tar = G.es[edge].target
+                
+                # compare taint-time of source-node and target-node of edge,
+                # and set the edge's cutoff time, as the earlier(smaller) taint-time ; note that taint-time of nodes are by initiated as infinite 
+                # (i.e. to later cutoff all events before this time of the edge)
+
+                if G.vs[ src ]["taint"] < G.vs[ tar ]["taint"]:
+
+                    edge__min_ts__dict[ edge ] = G.vs[ src ]["taint"]     #  earliest tainted time between src and tar
+                                                                          #  edge__min_ts__dict ==  mapping of edge with cutoff time
+                
+                else:
+                    edge__min_ts__dict[ edge ] = G.vs[ tar ]["taint"]
+                
+                subgraph_edge_set.add(edge)
+
+
+    raw_subgraph = G.subgraph_edges(subgraph_edge_set)
+
+    # pass the populated 'edge__min_ts__dict' and generated 'raw_subgraph' 
+    exclude_events_based_on_cutoff(subgraph_path, 
+                                   edge__min_ts__dict, 
+                                   edge_data, 
+                                   G, 
+                                   raw_subgraph) 
+
+# -----------------------------------------------------------------------------------------------------------------------------
+def exclude_events_based_on_cutoff(subgraph_path, 
+                                   edge__min_ts__dict, 
+                                   edge_data, 
+                                   G, 
+                                   subgraph):
+    
+    # JY @ 2024-1-4: this function was written considering simple-graph setting (multiple events on an edge),
+    #                which led to this concept of 'cutoff time' (cutoff all events on this edge that happened before the edge's cutoff time)
+    #                but does not cause problem in multi-graph (event == edge) setting
+
+    eid_list = []
+    
+    for edge in subgraph.es:
+
+        source_id = subgraph.vs[edge.source]["id"]
+        
+        target_id = subgraph.vs[edge.target]["id"]
+        
+        edge_id = G.get_eid(int(source_id[1:]), int(target_id[1:]))        
+        edge__cutoff_time = edge__min_ts__dict[edge_id] # get cut-off(min_ts) time of the edge
+
+        names_list__after_cutting_off =[]
+        
+        names_list= edge["name"].replace("[","").replace("]","").replace(" ","").replace("\'","").split(',')
+        
+        for name in names_list: # each name corresponds to an event.
+           
+           # print("edge_id:", z,  ", cutoff time", cutoff_time)
+            
+            event_ts = edge_data.get(name,{}).get("TimeStamp")
+            
+            if event_ts >= edge__cutoff_time:
+                names_list__after_cutting_off.append(name)
+
+
+        if len(names_list__after_cutting_off) != 0:
+            edge["name"] = str(names_list__after_cutting_off)
+
         else:
-            eid= gph.get_eid(a1.source, a1.target)
+            # if all events on edge are cutted off (i.e. no events left on edge --> need to delete this edge)
+            eid= subgraph.get_eid(edge.source, edge.target)
             eid_list.append(eid)
-            #print(eid)
-            #g.delete_edges(eid)
-    gph.delete_edges(eid_list)
-    #print(f"start save subgraph at {subgraph_path}", flush= True)
-    gph.write_graphml(os.path.join(subgraph_path,"new_graph.graphml"))
-    print(f"saved subgraph at {subgraph_path}", flush= True)
-    #print(gph.summary())
+            
 
+    subgraph.delete_edges(eid_list)
+
+    subgraph.write_graphml(os.path.join(subgraph_path,"new_graph.graphml"))
+    print(f"saved subgraph at {subgraph_path}", flush= True)
+
+
+
+# -----------------------------------------------------------------------------------------------------------------------------
 def attributes(root_path,subgraph_path):
+
+    # This function is just to write out attributes
+
     dic_node = {}
     dic_edge = {}
     with (open(os.path.join(root_path,"global_node_attribute.pickle"), "rb")) as f1:
@@ -324,19 +385,7 @@ def attributes(root_path,subgraph_path):
 
 
 
-def projection(root_path,idx, PID, edge_data):
-    print(idx, flush= True)
-    #backup=[] 
-    ids=set() # no root node should be common in subgraphs
-    f1 = open(os.path.join(root_path,"proc_node.json")) 
-    f2 = open(os.path.join(root_path,"proc_thread.json"))
-    proc_node= json.load(f1)
-    proc_thread_node = json.load(f2)   
 
-    # if not mal_PID:
-    #     benign(root_path,idx,ids,edge_data,proc_node,proc_thread_node)
-    # else:
-    targetted_projection3(root_path,idx, PID, ids,edge_data,proc_node,proc_thread_node)
 
 
 # if __name__ == "__main__":

@@ -139,8 +139,10 @@ Are the signals (from our train/test data to acheive 85%+ exist at first place?)
 
 If we conceptualize the information that we can get by manipulating the graph:
 - Global-Temporal (flattened graph N>1 gram) [ TODO @ 2024-1-3: -- dig into this in graphical level ]
-- Local-Temporal (N>1 gram between events in pair of nodes ( so more of a limited local-temporal -- since not across all events of all incoming nodes )
-                  need to also think about Projection algorithm) [ TODO @ 2024-1-3: -- dig into this in graphical level ]
+- Local-Temporal (N>1 gram between events in pair of nodes 
+                 ( so more of a limited local-temporal -- since not across all events of all incoming nodes -- order of events across multiple edges from different nodes may not matter much )
+
+                  * need to also think about Projection 3 algorithm) [ TODO @ 2024-1-3: -- dig into this in graphical level ]
 - Spatial Information (~Graph-embedding)
 Are there more?
 
