@@ -673,6 +673,10 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
             
             
             for node_idx in range( graph_data.x.shape[0] ):
+
+               if node_idx == 77:
+                   print() # something wrong at dataset-1 node_idx 77 -- maybe edge-case
+
                print(f"{cnt} / {len(dataset)}: {graph_data.name} | {n+1} hop | {node_idx+1} / {graph_data.x.shape[0]} : message passing for node", flush = True)
 
                ''' Get Messages '''
@@ -682,6 +686,11 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
                # edge-indices of incoming-edges to this node   # "torch.nonzero" returns a 2-D tensor where each row is the index for a nonzero value.
                incoming_edges_to_this_node_idx = torch.nonzero( edge_tar_indices == node_idx ).flatten()  
 
+               # JY @ 2024-1-2 : edge-case is when a node has NO incoming edge, 
+               #                 then no need to do message-passing for this node
+               if len(incoming_edges_to_this_node_idx) == 0:
+                   continue
+
                # ---------------------------------------------------------------------------------------------
                # edge-attributes of incoming edges to this node (i.e. edge-level messages)
 
@@ -689,7 +698,7 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
 
                # JY @ 2024-1-2: Might be challenging to optimize this double-for-loop
                
-               edge_level_messages = np.array([]) # torch.Tensor() # https://discuss.pytorch.org/t/appending-to-a-tensor/2665/3
+               edge_level_messages_nparray = np.array([]) # torch.Tensor() # https://discuss.pytorch.org/t/appending-to-a-tensor/2665/3
                for incoming_edge_idx in incoming_edges_to_this_node_idx:
                   
                   # need to be a list of string, instead of just string
@@ -703,9 +712,13 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
 
                      edge_level_message = np.append(edge_level_message, edge_level_message__Ngram_portion)
                   
-                  edge_level_messages = np.append(edge_level_messages, edge_level_message)
+                  edge_level_messages_nparray = np.append(edge_level_messages_nparray, edge_level_message)
 
-               edge_level_messages = torch.Tensor(edge_level_messages)
+               edge_level_messages = torch.Tensor(edge_level_messages_nparray)
+
+
+
+
 
                # ---------------------------------------------------------------------------------------------
                ''' JY @ 2024-1-2 : Note that no longer multi-graph but simple-graph
@@ -820,7 +833,7 @@ if __name__ == '__main__':
 
     # --------- specific to standard-message-passing 
     parser.add_argument('--n_hops',  nargs = 1, type = int, 
-                        default = [1])
+                        default = [3])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
