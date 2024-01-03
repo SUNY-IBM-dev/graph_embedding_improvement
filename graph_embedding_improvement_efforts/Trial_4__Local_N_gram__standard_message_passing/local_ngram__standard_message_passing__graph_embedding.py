@@ -689,21 +689,21 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
 
                # JY @ 2024-1-2: Might be challenging to optimize this double-for-loop
                
-               edge_level_messages = []
+               edge_level_messages = np.array([]) # torch.Tensor() # https://discuss.pytorch.org/t/appending-to-a-tensor/2665/3
                for incoming_edge_idx in incoming_edges_to_this_node_idx:
                   
                   # need to be a list of string, instead of just string
-                  countvecotrizer_input = list( graph_data__from_previous_hop.edge_attr[ incoming_edge_idx ] )
+                  countvecotrizer_input = [ graph_data__from_previous_hop.edge_attr[ incoming_edge_idx ] ]
 
-                  edge_level_message = []
+                  edge_level_message = np.array([]) # torch.Tensor()
 
                   for N, Ngram_countvectorizer in fitted_countvectorizers.items(): # TODO: Could be more robust about the order 
                   
-                     edge_level_message__Ngram_portion = Ngram_countvectorizer.transform( countvecotrizer_input )
+                     edge_level_message__Ngram_portion = Ngram_countvectorizer.transform( countvecotrizer_input ).toarray()
 
-                     edge_level_message += edge_level_message__Ngram_portion
+                     edge_level_message = np.append(edge_level_message, edge_level_message__Ngram_portion)
                   
-                  edge_level_messages.append(edge_level_message)
+                  edge_level_messages = np.append(edge_level_messages, edge_level_message)
 
                edge_level_messages = torch.Tensor(edge_level_messages)
 
@@ -736,7 +736,7 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
                elif neighborhood_aggr == "mean": neighborhood_aggr__func = torch.mean
 
                node_level_messages__aggregated = neighborhood_aggr__func(node_level_messages, dim = 0)
-               edge_level_messages__aggregated = neighborhood_aggr__func(edge_level_messages, dim = 0)
+               edge_level_messages__aggregated = neighborhood_aggr__func(edge_level_messages.view(1, -1), dim = 0) # view(1,-1) for compatiblity 
 
                messages__aggregated = torch.cat([node_level_messages__aggregated, edge_level_messages__aggregated], dim = 0) # node-feat should come first
 
@@ -819,8 +819,8 @@ if __name__ == '__main__':
 
 
     # --------- specific to standard-message-passing 
-    parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
-                        default = [2])
+    parser.add_argument('--n_hops',  nargs = 1, type = int, 
+                        default = [1])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
@@ -829,8 +829,9 @@ if __name__ == '__main__':
     parser.add_argument('-pool_opt', '--pool_option', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
                         default = ["sum"])
-    # --------- n-gram
-    parser.add_argument('--N', nargs = 1, type = int, default = [4])  # Added by JY @ 12-23
+    # --------- local n-gram
+    parser.add_argument('--N', nargs = 1, type = int, 
+                        default = [4])  # Added by JY @ 12-23
 
    
    # ==================================================================================================================================
