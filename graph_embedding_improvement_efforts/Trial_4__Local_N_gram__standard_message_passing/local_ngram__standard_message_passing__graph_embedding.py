@@ -736,7 +736,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-2"])
+                        default = ["Dataset-Case-1"])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -775,7 +775,7 @@ if __name__ == '__main__':
 
     # --------- specific to standard-message-passing 
     parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
-                        default = [3])
+                        default = [2])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
@@ -785,7 +785,7 @@ if __name__ == '__main__':
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
                         default = ["sum"])
     # --------- n-gram
-    parser.add_argument('-n', '--N', nargs = 1, type = int, default = [4])  # Added by JY @ 12-23
+    parser.add_argument('--N', nargs = 1, type = int, default = [4])  # Added by JY @ 12-23
 
    
    # ==================================================================================================================================
@@ -1129,14 +1129,22 @@ if __name__ == '__main__':
 
     # Load both benign and malware graphs """
     dataprocessor = LoadGraphs()
-    benign_train_dataset = dataprocessor.parse_all_data(_benign_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
-    malware_train_dataset = dataprocessor.parse_all_data(_malware_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+   #  benign_train_dataset = dataprocessor.parse_all_data(_benign_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+   #  malware_train_dataset = dataprocessor.parse_all_data(_malware_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+    benign_train_dataset = dataprocessor.parse_all_data__local_ngram__standard_message_pasing(_benign_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+    malware_train_dataset = dataprocessor.parse_all_data__local_ngram__standard_message_pasing(_malware_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+
+
     train_dataset = benign_train_dataset + malware_train_dataset
     print('+ train data loaded #Malware = {} | #Benign = {}'.format(len(malware_train_dataset), len(benign_train_dataset)), flush=True)
 
     # Load test benign and malware graphs """
-    benign_test_dataset = dataprocessor.parse_all_data(_benign_final_test_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
-    malware_test_dataset = dataprocessor.parse_all_data(_malware_final_test_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+   #  benign_test_dataset = dataprocessor.parse_all_data(_benign_final_test_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+   #  malware_test_dataset = dataprocessor.parse_all_data(_malware_final_test_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+
+    benign_test_dataset = dataprocessor.parse_all_data__local_ngram__standard_message_pasing(_benign_final_test_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+    malware_test_dataset = dataprocessor.parse_all_data__local_ngram__standard_message_pasing(_malware_final_test_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+
     final_test_dataset = benign_test_dataset + malware_test_dataset
     print('+ final-test data loaded #Malware = {} | #Benign = {}'.format(len(malware_test_dataset), len(benign_test_dataset)), flush=True)
 
@@ -1150,7 +1158,7 @@ if __name__ == '__main__':
     # Added by JY @ 2023-12-27
     if graph_embedding_option == "local_ngram__standard_message_passing__graph_embedding":
         train_dataset__standard_message_passing_dict = get__local_Ngram__standard_message_passing__graph_embedding__dict(
-                                                                                                          dataset= final_test_dataset,
+                                                                                                          dataset= train_dataset,
                                                                                                           N_gram= N_gram,
                                                                                                           n_hops= n_hops,
                                                                                                           neighborhood_aggr= neighborhood_aggregation,
