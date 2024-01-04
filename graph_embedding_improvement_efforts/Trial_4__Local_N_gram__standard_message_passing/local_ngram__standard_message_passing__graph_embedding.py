@@ -419,7 +419,7 @@ taskname_colnames = [
 #       feature_names = taskname_colnames + nodetype_names
    
 #    elif signal_amplification_option == "signal_amplified__event_1gram":
-#       feature_names = taskname_colnames
+#       feature_names = taskname_colnamesftaskname_colnames
 
 #    elif signal_amplification_option == "signal_amplified__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
 #       nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
