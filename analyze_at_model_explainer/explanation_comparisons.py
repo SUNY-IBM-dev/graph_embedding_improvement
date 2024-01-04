@@ -22,6 +22,8 @@ def predictions_comparisons(graph_embedding__mispredictions__dirpath : str,
    prefix_to_drop = "1-gram SHAP_local_interpretability_waterfall_plot_"
    suffix_to_drop = ".png"
 
+   possibly_drop = "SUBGRAPH_P3_" # Added by JY @ 2024-1-4: Priti's files contain "SUBGRAPH_P3_" in the middle that should be dropped for matching
+
    # ----------------------------------------------------------------------------------------
    # Get correct predictions by both ------------------------------------------------------------------------------------------
 
@@ -32,16 +34,16 @@ def predictions_comparisons(graph_embedding__mispredictions__dirpath : str,
    no_graph__correctpredictions__dirpath = os.path.join(no_graph__waterfallplots__dirpath,"Correct_Predictions")
 
    graph_embedding__correctpredictions__datanames = \
-      { x.removeprefix(prefix_to_drop).removesuffix(suffix_to_drop) for x in os.listdir(graph_embedding__correctpredictions__dirpath) }
-   no_graph__correctpredictions__datanames = { x.removeprefix(prefix_to_drop).removesuffix(suffix_to_drop) for x in os.listdir(no_graph__correctpredictions__dirpath) }  
+      { x.removeprefix(prefix_to_drop).removesuffix(suffix_to_drop).replace(possibly_drop,"") for x in os.listdir(graph_embedding__correctpredictions__dirpath) }
+   no_graph__correctpredictions__datanames = { x.removeprefix(prefix_to_drop).removesuffix(suffix_to_drop).replace(possibly_drop,"") for x in os.listdir(no_graph__correctpredictions__dirpath) }  
 
    correctpredictions_by_both = list( graph_embedding__correctpredictions__datanames.intersection(no_graph__correctpredictions__datanames) )
 
    # ------------------------------------------------------------------------------------------
    # Do misprediction comparisons
    graph_embedding__mispredictions__datanames = \
-      { x.removeprefix(prefix_to_drop).removesuffix(suffix_to_drop) for x in os.listdir(graph_embedding__mispredictions__dirpath) }
-   no_graph__mispredictions__datanames = { x.removeprefix(prefix_to_drop).removesuffix(suffix_to_drop) for x in os.listdir(no_graph__mispredictions__dirpath) }  
+      { x.removeprefix(prefix_to_drop).removesuffix(suffix_to_drop).replace(possibly_drop,"") for x in os.listdir(graph_embedding__mispredictions__dirpath) }
+   no_graph__mispredictions__datanames = { x.removeprefix(prefix_to_drop).removesuffix(suffix_to_drop).replace(possibly_drop,"") for x in os.listdir(no_graph__mispredictions__dirpath) }  
 
 
    mispredictions__only_in__graph_embedding = list(graph_embedding__mispredictions__datanames - no_graph__mispredictions__datanames )
@@ -65,7 +67,7 @@ def predictions_comparisons(graph_embedding__mispredictions__dirpath : str,
    print(f"\n[ mispredictions only with 'flattened-graph' (#{len(mispredictions__only_in__no_graph)}) ]\n")
    print(*mispredictions__only_in__no_graph, sep="\n")
 
-   print(f"\n[ intersectiong mispredictions (#{len(mispredictions__intersecting)}) ]\n")
+   print(f"\n[ intersecting mispredictions (#{len(mispredictions__intersecting)}) ]\n")
    print(*mispredictions__intersecting, sep="\n")
    
    return {"correctpredictions_by_both" : correctpredictions_by_both,
@@ -213,7 +215,7 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
                                                            explanation_comparision_savedir : str,
                                                            ):
       
-         index_columns = ["data_name", "ROW_IDENTIFIER", "SHAP_sum_of_feature_shaps", "SHAP_base_value", "predict_proba"]
+         index_columns = ["data_name", "ROW_IDENTIFIER", "SHAP_sum_of_feature_shaps", "SHAP_base_value", "predict_proba", "SUM"]
 
          # Extract from GlobalSHAP-TestDataset for comparison
          graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest = \
