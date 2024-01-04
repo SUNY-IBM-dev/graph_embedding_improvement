@@ -213,43 +213,53 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
                                                            explanation_comparision_savedir : str,
                                                            ):
       
+         index_columns = ["data_name", "ROW_IDENTIFIER", "SHAP_sum_of_feature_shaps", "SHAP_base_value", "predict_proba"]
+
          # Extract from GlobalSHAP-TestDataset for comparison
          graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest = \
             graph_embedding__GlobalSHAP_TestDataset_df[ graph_embedding__GlobalSHAP_TestDataset_df['data_name'].str.contains(sample) ]
          
          graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest["ROW_IDENTIFIER"] = "Graph Embedding"
-
+         
 
          no_graph__GlobalSHAP_TestDataset_df__row_of_interest = \
             no_graph__GlobalSHAP_TestDataset_csv__df[ no_graph__GlobalSHAP_TestDataset_csv__df['data_name'].str.contains(sample) ]
          no_graph__GlobalSHAP_TestDataset_df__row_of_interest["ROW_IDENTIFIER"] = "No Graph"
 
 
+         # JY @ 2024-1-4: before concatenating, make sure all non-index-column-names are lower-case, to avoid concat going wrong
+
+         graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest.columns = \
+            [ colname.lower() if colname not in index_columns else colname for colname in graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest.columns ]
+
+         no_graph__GlobalSHAP_TestDataset_df__row_of_interest.columns = \
+            [colname.lower() if colname not in index_columns else colname for colname in no_graph__GlobalSHAP_TestDataset_df__row_of_interest.columns ]
+
+
          # save out
          GlobalSHAP_TestDataset_df__rows_of_interest__comparison = \
             pd.concat([no_graph__GlobalSHAP_TestDataset_df__row_of_interest, graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest])
          
-         index_columns = ["data_name", "ROW_IDENTIFIER", "SHAP_sum_of_feature_shaps", "SHAP_base_value", "predict_proba"]
          GlobalSHAP_TestDataset_df__rows_of_interest__comparison.set_index( index_columns, inplace = True)
 
          GlobalSHAP_TestDataset_df__rows_of_interest__comparison.to_csv(os.path.join(explanation_comparision_savedir, "GlobalSHAP_TestDataset_dfs__Row__Comparison.csv"))
 
          # TODO: histogram comparison w.r.t feature-values as well? -----------------------------------------------------------------------------
 
-         feature_columns = [ col for col in graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest.columns if col not in index_columns + ["SUM"] ]
-
+         no_graph__feature_columns = [ col for col in no_graph__GlobalSHAP_TestDataset_df__row_of_interest.columns if col not in index_columns + ["SUM"] ]
          plt.figure(figsize=(20, 10)) 
-         plt.bar(no_graph__GlobalSHAP_TestDataset_df__row_of_interest[feature_columns].columns.tolist(), 
-                 no_graph__GlobalSHAP_TestDataset_df__row_of_interest[feature_columns].values.tolist()[0])
+         plt.bar(no_graph__GlobalSHAP_TestDataset_df__row_of_interest[no_graph__feature_columns].columns.tolist(), 
+                 no_graph__GlobalSHAP_TestDataset_df__row_of_interest[no_graph__feature_columns].values.tolist()[0])
          plt.xticks(rotation=90, fontsize='xx-small')
          plt.title("No Graph -- Feature-value Distribution")
          plt.savefig( os.path.join( explanation_comparision_savedir,
                                    'No_Graph__Feature-value_Distribution.png') )
          plt.close()
 
+         graph_embedding__feature_columns = [ col for col in graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest.columns if col not in index_columns + ["SUM"] ]
          plt.figure(figsize=(20, 10))
-         plt.bar(graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest[feature_columns].columns.tolist(), 
-                 graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest[feature_columns].values.tolist()[0])
+         plt.bar(graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest[graph_embedding__feature_columns].columns.tolist(), 
+                 graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest[graph_embedding__feature_columns].values.tolist()[0])
          plt.xticks(rotation=90, fontsize='xx-small')
          plt.title("Graph Embedding -- Feature-value Distribution")
          plt.savefig( os.path.join( explanation_comparision_savedir,
@@ -389,10 +399,17 @@ if __name__ == "__main__":
    # -----------------------------------------------------------------------------------------------------------------------------
 
 
+   # graph_embedding__mispredictions__dirpath = \
+   #    "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_best_hyperparameter_mean_case2__final_test__signal_amplified__event_1gram_nodetype_5bit__mean__2023-12-21_194828/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
+   # no_graph__mispredictions__dirpath = \
+   #    "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_best_hyperparameter_mean_case2_nograph__final_test__no_graph_structure__event_1gram_nodetype_5bit__mean__2023-12-21_194942/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
+
+
+   # JY @ 2024-1-4 : compare BestRFs of standard-message-passing-1gram-1hop-sumaggr-sumpool vs. baseline of 1gram, on dataset-1
    graph_embedding__mispredictions__dirpath = \
-      "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_best_hyperparameter_mean_case2__final_test__signal_amplified__event_1gram_nodetype_5bit__mean__2023-12-21_194828/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
+   "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125__final_test__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2024-01-01_213240/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
    no_graph__mispredictions__dirpath = \
-      "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_best_hyperparameter_mean_case2_nograph__final_test__no_graph_structure__event_1gram_nodetype_5bit__mean__2023-12-21_194942/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
+   "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__1gram__Dataset-Case-1__RandomForest_besthyperparameter_case1_1gram__final_test__2023-12-29_075550/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
 
 
    predictions_comparisons_dict = predictions_comparisons(graph_embedding__mispredictions__dirpath, no_graph__mispredictions__dirpath)
