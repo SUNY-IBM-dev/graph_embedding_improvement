@@ -1,0 +1,2 @@
+  ,bootstrap ,criterion ,max_depth ,max_features ,min_samples_leaf ,min_samples_split ,n_estimators ,random_state ,split_shuffle_seed ,Final_Test_Accuracy ,Final_Test_F1      ,Final_Test_Precision ,Final_Test_Recall ,FN ,FP ,TN  ,TP
+0 ,False     ,gini      ,          ,sqrt         ,               1 ,                2 ,         300 ,          99 ,               100 , 0.8395061728395061 ,0.8289473684210527 ,  0.8571428571428571 ,0.802547770700637 ,31 ,21 ,146 ,126

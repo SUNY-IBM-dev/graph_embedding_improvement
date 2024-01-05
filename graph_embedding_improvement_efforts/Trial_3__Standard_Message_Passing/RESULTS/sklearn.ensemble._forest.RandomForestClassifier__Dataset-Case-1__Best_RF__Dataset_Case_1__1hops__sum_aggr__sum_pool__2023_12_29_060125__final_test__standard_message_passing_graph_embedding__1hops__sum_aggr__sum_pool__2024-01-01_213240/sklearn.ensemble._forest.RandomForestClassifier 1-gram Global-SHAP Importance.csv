@@ -1,0 +1,67 @@
+   ,col_name                                                    ,feature_importance_vals
+ 8 ,Create                                                      ,0.03536710640988699
+21 ,Read                                                        ,0.03441381687835683
+ 6 ,Cleanup                                                     ,0.03334320908226632
+ 7 ,Close                                                       ,0.03242765244933495
+48 ,QueryValueKey                                               ,0.02331681271406721
+53 ,CloseKey                                                    ,0.021603806175463123
+ 4 ,thread                                                      ,0.02086957449809282
+18 ,QueryInformation                                            ,0.020746776319006156
+15 ,NameCreate                                                  ,0.019078649664299955
+ 0 ,file                                                        ,0.018980352872783643
+11 ,DirEnum                                                     ,0.018931184832982634
+50 ,EnumerateValueKey                                           ,0.01874493305068567
+29 ,ImageLoad                                                   ,0.018336026259678725
+45 ,QueryKey                                                    ,0.017481677489468578
+43 ,OpenKey                                                     ,0.01694569731748505
+30 ,ImageUnload                                                 ,0.0168230386026971
+42 ,CreateKey                                                   ,0.012908492939127532
+ 2 ,network                                                     ,0.011519486066489965
+ 1 ,registry                                                    ,0.010492385532700373
+52 ,SetinformationKey                                           ,0.008584417644858337
+56 ,KERNEL_NETWORK_TASK_TCPIP/Datasent.                         ,0.007900925441692061
+57 ,KERNEL_NETWORK_TASK_TCPIP/Datareceived.                     ,0.007628879811202771
+ 3 ,process                                                     ,0.007378284213043811
+34 ,ThreadStart/Start                                           ,0.007345003959005432
+35 ,ThreadStop/Stop                                             ,0.006295939185533743
+49 ,EnumerateKey                                                ,0.0035483691977302874
+31 ,ProcessStop/Stop                                            ,0.0021149249467593673
+14 ,FSCTL                                                       ,0.0020445366651738045
+32 ,ProcessStart/Start                                          ,0.0018881668113606073
+60 ,KERNEL_NETWORK_TASK_TCPIP/Dataretransmitted.                ,0.0018500844793605216
+ 9 ,CreateNewFile                                               ,0.001509430561254761
+23 ,SetDelete                                                   ,0.001273584638765862
+24 ,SetInformation                                              ,0.0011739592155893977
+22 ,Write                                                       ,0.0011414214576856965
+20 ,QuerySecurity                                               ,0.0010997359908741454
+27 ,CpuBasePriorityChange                                       ,0.0010851863696836857
+10 ,DeletePath                                                  ,0.0010631257632777711
+54 ,QuerySecurityKey                                            ,0.0010542959360729898
+46 ,SetValueKey                                                 ,0.0009086673848450345
+65 ,Unseen                                                      ,0.0008989430994503504
+13 ,Flush                                                       ,0.0006288918728221016
+63 ,KERNEL_NETWORK_TASK_UDPIP/DatareceivedoverUDPprotocol.      ,0.0006042719410143077
+58 ,KERNEL_NETWORK_TASK_TCPIP/Connectionattempted.              ,0.0004534334799809949
+55 ,SetSecurityKey                                              ,0.0002937351493357897
+28 ,CpuPriorityChange                                           ,0.0002584727867513187
+25 ,PagePriorityChange                                          ,0.00020011845759678511
+59 ,KERNEL_NETWORK_TASK_TCPIP/Disconnectissued.                 ,0.00019036546968045237
+64 ,KERNEL_NETWORK_TASK_UDPIP/DatasentoverUDPprotocol.          ,0.00017251092105648037
+19 ,QueryEA                                                     ,0.0001290569361493985
+36 ,ThreadWorkOnBehalfUpdate                                    ,6.715314628922525e-05
+62 ,KERNEL_NETWORK_TASK_TCPIP/Protocolcopieddataonbehalfofuser. ,1.7421014891744045e-07
+40 ,Renamepath                                                  ,0.0
+61 ,KERNEL_NETWORK_TASK_TCPIP/connectionaccepted.               ,0.0
+ 5 ,None_or_empty                                               ,0.0
+12 ,DirNotify                                                   ,0.0
+17 ,OperationEnd                                                ,0.0
+16 ,NameDelete                                                  ,0.0
+41 ,RegPerfOpHiveFlushWroteLogFile                              ,0.0
+51 ,QueryMultipleValueKey                                       ,0.0
+26 ,IoPriorityChange                                            ,0.0
+47 ,DeleteValueKey                                              ,0.0
+37 ,JobStart/Start                                              ,0.0
+44 ,DeleteKey                                                   ,0.0
+38 ,JobTerminate/Stop                                           ,0.0
+39 ,Rename                                                      ,0.0
+33 ,ProcessFreeze/Start                                         ,0.0
