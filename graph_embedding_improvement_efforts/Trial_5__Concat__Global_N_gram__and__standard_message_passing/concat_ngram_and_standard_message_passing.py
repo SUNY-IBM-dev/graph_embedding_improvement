@@ -821,16 +821,12 @@ if __name__ == '__main__':
                         
                         choices= [
                                   'standard_message_passing_graph_embedding', # Added by JY @ 2023-12-27
-                                  # vs. (for now)
-                                  'no_graph_structure__event_1gram_nodetype_5bit', 
-                                  'no_graph_structure__event_1gram',
-                                  'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
                                   ], 
 
                                   default = ["standard_message_passing_graph_embedding"])
 
     parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
-                        default = [5])
+                        default = [2])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
@@ -840,7 +836,7 @@ if __name__ == '__main__':
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
                         default = ["sum"])
     # --------------------------------------------------
-    # speicific to 'global' N-gram 
+    # speicific to 'Global' N-gram 
     parser.add_argument('--N_gram', nargs = 1, type = int, default = [4])  
 
     # --------------------------------------------------
@@ -891,10 +887,7 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
   
-       if graph_embedding_option == "standard_message_passing_graph_embedding":
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__Global_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-       else:
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
+       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__Global_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
 
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_5__Concat__Global_N_gram__and__standard_message_passing/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
@@ -904,10 +897,7 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test == "final_test":
 
-       if graph_embedding_option == "standard_message_passing_graph_embedding":
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__Global_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-       else:
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
+       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__Global_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
 
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_5__Concat__Global_N_gram__and__standard_message_passing/RESULTS/{run_identifier}"
        final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
@@ -1299,26 +1289,11 @@ if __name__ == '__main__':
          nodetype_names = ["file", "registry", "network", "process", "thread"] 
          feature_names = nodetype_names + taskname_colnames # yes this order is correct
          X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
+
     else:
+         ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")                  
 
-         if graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit":
-               train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_dist_dict( dataset= train_dataset )  
-               nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
-               feature_names = taskname_colnames + nodetype_names
 
-         elif graph_embedding_option == "no_graph_structure__event_1gram":
-               train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= train_dataset )  
-               feature_names = taskname_colnames
-
-         elif graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
-               train_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= train_dataset ) 
-               nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
-               feature_names = taskname_colnames + nodetype_names + [f"adhoc_pattern_{i}" for i in range(len(X.columns) - len(taskname_colnames) - len(nodetype_names))]
-
-         else:
-               ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")                  
-
-         X = pd.DataFrame(train_dataset__no_graph_structure_dict).T
 
 
     X.columns = feature_names
@@ -1341,21 +1316,6 @@ if __name__ == '__main__':
             feature_names = nodetype_names + taskname_colnames # yes this order is correct
             final_test_X = pd.DataFrame(final_test_dataset__standard_message_passing_dict).T
 
-
-         elif graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit":
-               final_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_dist_dict( dataset= final_test_dataset )  
-               nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
-               feature_names = taskname_colnames + nodetype_names
-
-         elif graph_embedding_option == "no_graph_structure__event_1gram":
-               final_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_dict( dataset= final_test_dataset )  
-               feature_names = taskname_colnames
-
-         elif graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier":
-               final_test_dataset__no_graph_structure_dict = get_No_Graph_Structure_eventdist_nodetype5bit_adhoc_identifier_dist_dict( dataset= final_test_dataset ) 
-               nodetype_names = ["file", "registry", "network", "process", "thread"] # this is the correct-order
-               feature_names = taskname_colnames + nodetype_names + [f"adhoc_pattern_{i}" for i in range(len(X.columns) - len(taskname_colnames) - len(nodetype_names))]
-
          else:
                ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")                  
 
@@ -1375,18 +1335,15 @@ if __name__ == '__main__':
     Malware_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
                                                                                        target_subgraph_list = Malware_Train_SG_list,
                                                                                        EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
-                                                                                                     #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
 
     Malware_Test_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
                                                                                       target_subgraph_list = Malware_Test_SG_list,
                                                                                       EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
-                                                                                                     #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
 
 
     Benign_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Benign_Offline_Subgraphs_dirpath_list, 
                                                                                       target_subgraph_list = Benign_Train_SG_list,
                                                                                       EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
-                                                                                                   #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
 
     Benign_Test_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Benign_Offline_Subgraphs_dirpath_list, 
                                                                                      target_subgraph_list = Benign_Test_SG_list,
@@ -1428,12 +1385,24 @@ if __name__ == '__main__':
         # But as a rule of thumb, I generally start with min_df to 5-10 and max_df to 30% for a corpus of that size.
         
     print(f"N_gram: {N_gram}",  flush = True)
-    countvectorizer = CountVectorizer(ngram_range=(N_gram, N_gram), max_df= 0.3, min_df= 10, max_features= None )  # ngram [use 4-gram or 8-gram] 
+
+    if N_gram > 1:
+      countvectorizer = CountVectorizer(ngram_range=(N_gram, N_gram), 
+                                          max_df= 0.3, 
+                                          min_df= 10, 
+                                          max_features= None )
+      
+    else:
+      countvectorizer = CountVectorizer(ngram_range=(N_gram, N_gram),
+                                          max_df= 1.0,
+                                          min_df= 1,
+                                          max_features= None)
 
     # Train Data ---------------------------------------------------------------------------------------------------------------
     Benign_Train_SG_names = [ k for k,v in Benign_Train_SG_TaskName_dict.items()] # list of SG names
     Malware_Train_SG_names = [ k for k,v in Malware_Train_SG_TaskName_dict.items()]
     Train_SG_names = Benign_Train_SG_names + Malware_Train_SG_names
+    
     #{idx name: ["create"],["image"]}
     Benign_Train_data_str = [ ' '.join(v) for k,v in Benign_Train_SG_TaskName_dict.items()] # list of TaskNameOpcodes-strings (each string for each SG)
     Malware_Train_data_str = [ ' '.join(v) for k,v in Malware_Train_SG_TaskName_dict.items()]
