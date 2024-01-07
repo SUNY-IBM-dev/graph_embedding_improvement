@@ -520,6 +520,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                                                          n_hops : int = 1,
                                                          neighborhood_aggr : str = "sum", 
                                                          pool : str = "sum",
+                                                         update_weight : float = 1.0,
                                                          verbose : bool = True ):
 
    '''
@@ -722,8 +723,8 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                # For "SimpleConv", similar to edge-weight being considered as 1
 
                # JY @ 2024-1-3: Put update-weightage here?
-
-               graph_data.x[node_idx] = graph_data.x[node_idx] + messages__aggregated
+               # JY @ 2024-1-6: Added update-weightage.
+               graph_data.x[node_idx] = graph_data.x[node_idx] + update_weight * messages__aggregated
 
 
          ''' 7. Since message-passing is done, "pool" all node's embedding, to generate the "graph embedding". '''
@@ -792,17 +793,17 @@ if __name__ == '__main__':
                                  "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539", # running
                                  "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047", # running
                                   ], 
-                                  default = ["Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047"])
+                                  default = ["RandomForest_searchspace_1"])
    
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     # --------- specific to standard-message-passing 
     parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
-                        default = [5])
+                        default = [3])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
@@ -811,6 +812,14 @@ if __name__ == '__main__':
     parser.add_argument('-pool_opt', '--pool_option', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
                         default = ["sum"])
+
+    # Added by JY @ 2024-1-6
+    parser.add_argument('-u_weight', '--update_weight', 
+                        nargs = 1, type = float,
+                        default = [0.8])
+
+
+
     # --------------------------------------------------
    
    # ==================================================================================================================================
@@ -823,6 +832,11 @@ if __name__ == '__main__':
     n_hops = parser.parse_args().n_hops[0]
     neighborhood_aggregation = parser.parse_args().neighborhood_aggregation[0]
     pool_option = parser.parse_args().pool_option[0]
+    # Added by JY @ 2024-1-6
+    update_weight = parser.parse_args().update_weight[0]
+    if update_weight < 0.0 or update_weight > 1.0:
+        ValueError(f"update_weight should be between 0.0 and 1.0, but got {update_weight}", flush = True) 
+
 
     graph_embedding_option = parser.parse_args().graph_embedding_option[0]
     search_space_option = parser.parse_args().search_space_option[0]
@@ -1295,7 +1309,9 @@ if __name__ == '__main__':
         train_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= train_dataset,
                                                                                                             n_hops= n_hops,
                                                                                                             neighborhood_aggr= neighborhood_aggregation,
-                                                                                                            pool= pool_option )
+                                                                                                            pool= pool_option 
+                                                                                                            update_weight = update_weight
+                                                                                                            )
         nodetype_names = ["file", "registry", "network", "process", "thread"] 
         feature_names = nodetype_names + taskname_colnames # yes this order is correct
         X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
@@ -1350,7 +1366,9 @@ if __name__ == '__main__':
             final_test_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= final_test_dataset,
                                                                                                                      n_hops= n_hops,
                                                                                                                      neighborhood_aggr= neighborhood_aggregation,
-                                                                                                                     pool= pool_option )
+                                                                                                                     pool= pool_option,
+                                                                                                                     update_weight = update_weight
+                                                                                                                     )
             nodetype_names = ["file", "registry", "network", "process", "thread"] 
             feature_names = nodetype_names + taskname_colnames # yes this order is correct
             final_test_X = pd.DataFrame(final_test_dataset__standard_message_passing_dict).T

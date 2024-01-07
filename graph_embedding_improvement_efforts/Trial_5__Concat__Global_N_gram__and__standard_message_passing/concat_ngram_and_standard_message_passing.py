@@ -813,7 +813,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        default = ["Dataset-Case-2"])
 
 
     # --------- specific to standard-message-passing 
@@ -826,7 +826,7 @@ if __name__ == '__main__':
                                   default = ["standard_message_passing_graph_embedding"])
 
     parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
-                        default = [2])
+                        default = [3])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
