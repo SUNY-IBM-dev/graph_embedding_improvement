@@ -899,7 +899,7 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
   
-       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__Global_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__Global_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__updateWeight_{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
 
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_5__Concat__Global_N_gram__and__standard_message_passing/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
@@ -909,7 +909,7 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test == "final_test":
 
-       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__Global_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__Global_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__updateWeight_{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
 
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_5__Concat__Global_N_gram__and__standard_message_passing/RESULTS/{run_identifier}"
        final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")

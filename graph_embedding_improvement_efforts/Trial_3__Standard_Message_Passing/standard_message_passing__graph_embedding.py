@@ -758,7 +758,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        default = ["Dataset-Case-2"])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -816,7 +816,7 @@ if __name__ == '__main__':
     # Added by JY @ 2024-1-6
     parser.add_argument('-u_weight', '--update_weight', 
                         nargs = 1, type = float,
-                        default = [0.8])
+                        default = [0.7])
 
 
 
@@ -849,7 +849,7 @@ if __name__ == '__main__':
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
 
        if graph_embedding_option == "standard_message_passing_graph_embedding":
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__updateWeight_{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
          run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/{run_identifier}"
@@ -860,7 +860,7 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test == "final_test":
        if graph_embedding_option == "standard_message_passing_graph_embedding":
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__updateWeight_{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
          run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
