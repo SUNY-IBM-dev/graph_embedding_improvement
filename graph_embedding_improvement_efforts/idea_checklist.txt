@@ -182,7 +182,7 @@ would the information-flow (across multiple edges) contradict the timestamp info
      -- Concatenate? this might lead to quite big feature-space and may not be very scalable
      -- Is there another clever way?
 
-
+-----------------------------------------------------------------------------------------------------------------------------------
 "temporally incorrect information-flow in message-passing" problem?
 --> Re-examination on projection-3 algorithm, 
     and there could be still be temporally-incorrect information-flow
@@ -191,3 +191,13 @@ would the information-flow (across multiple edges) contradict the timestamp info
 
          If  
      
+
+1. Use multi-graph (edge == event)
+2. Each event should be associated with actual timestamp , not the normalized one, 
+   since this approach is to message passing 
+
+   -- > Could just directly use the multi-graph subgraphs for 2. “Temporally incorrect information flow with standard message passing” problem: Link: Diagram with Texts”
+        Because the “timestamp-float” is directly corresponds to the timestamp (e.g. 13332324324),
+        Since timestamp-float preserves the “global” temporal-ordering of the subgraph, instead of being local to a component.
+
+        (Check get_events_order )

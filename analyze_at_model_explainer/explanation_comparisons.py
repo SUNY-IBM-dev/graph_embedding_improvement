@@ -173,9 +173,9 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
       # 2. Add a explanantion-comparison description file
       with open( os.path.join(explanation_comparison_trial_dirpath, "description_of_explanation_comparison.txt"), "w" ) as f:
          f.write("explanation comparisons between:\n\n")
-         f.write(f"  { os.path.split(materials_for_explanation_comparison__dict['graph_embedding__results__dirpath'])[1] }\n")
+         f.write(f"  { os.path.split(materials_for_explanation_comparison__dict['graph_embedding__results__dirpath'])[1] } ( f{materials_for_explanation_comparison__dict['graph_embedding__results__dirpath']} ) \n")
          f.write("    vs.\n")
-         f.write(f"  { os.path.split(materials_for_explanation_comparison__dict['no_graph__results__dirpath'])[1] }\n")
+         f.write(f"  { os.path.split(materials_for_explanation_comparison__dict['no_graph__results__dirpath'])[1] }  ( f{materials_for_explanation_comparison__dict['no_graph__results__dirpath']} )\n")
 
       # 3. Create 'explanation comparison' sub-directories for the following 4 categories:
       #      category-1: samples which both graph-embedding and no-graph mis-predicted
