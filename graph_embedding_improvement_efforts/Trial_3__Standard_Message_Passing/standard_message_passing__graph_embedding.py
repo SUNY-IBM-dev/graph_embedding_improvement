@@ -1309,7 +1309,7 @@ if __name__ == '__main__':
         train_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= train_dataset,
                                                                                                             n_hops= n_hops,
                                                                                                             neighborhood_aggr= neighborhood_aggregation,
-                                                                                                            pool= pool_option 
+                                                                                                            pool= pool_option, 
                                                                                                             update_weight = update_weight
                                                                                                             )
         nodetype_names = ["file", "registry", "network", "process", "thread"] 

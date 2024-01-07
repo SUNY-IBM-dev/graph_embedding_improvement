@@ -690,7 +690,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
 
                # JY @ 2024-1-3: Put update-weightage here?
 
-               graph_data.x[node_idx] = graph_data.x[node_idx] + messages__aggregated
+               graph_data.x[node_idx] = graph_data.x[node_idx] + update_weight * messages__aggregated
 
 
          ''' 7. Since message-passing is done, "pool" all node's embedding, to generate the "graph embedding". '''
@@ -835,6 +835,13 @@ if __name__ == '__main__':
     parser.add_argument('-pool_opt', '--pool_option', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
                         default = ["sum"])
+
+    # Added by JY @ 2024-1-6
+    parser.add_argument('-u_weight', '--update_weight', 
+                        nargs = 1, type = float,
+                        default = [1.0])
+
+
     # --------------------------------------------------
     # speicific to 'Global' N-gram 
     parser.add_argument('--N_gram', nargs = 1, type = int, default = [4])  
@@ -871,6 +878,11 @@ if __name__ == '__main__':
     n_hops = parser.parse_args().n_hops[0]
     neighborhood_aggregation = parser.parse_args().neighborhood_aggregation[0]
     pool_option = parser.parse_args().pool_option[0]
+
+    update_weight = parser.parse_args().update_weight[0]
+    if update_weight < 0.0 or update_weight > 1.0:
+        ValueError(f"update_weight should be between 0.0 and 1.0, but got {update_weight}", flush = True) 
+
 
     N_gram = parser.parse_args().N_gram[0]
 
@@ -1285,7 +1297,9 @@ if __name__ == '__main__':
          train_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= train_dataset,
                                                                                                             n_hops= n_hops,
                                                                                                             neighborhood_aggr= neighborhood_aggregation,
-                                                                                                            pool= pool_option )
+                                                                                                            pool= pool_option,
+                                                                                                            update_weight = update_weight 
+                                                                                                            )
          nodetype_names = ["file", "registry", "network", "process", "thread"] 
          feature_names = nodetype_names + taskname_colnames # yes this order is correct
          X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
@@ -1311,7 +1325,10 @@ if __name__ == '__main__':
             final_test_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding__dict( dataset= final_test_dataset,
                                                                                                                      n_hops= n_hops,
                                                                                                                      neighborhood_aggr= neighborhood_aggregation,
-                                                                                                                     pool= pool_option )
+                                                                                                                     pool= pool_option,
+                                                                                                                     update_weight = update_weight 
+                                                                                                            
+                                                                                                                     )
             nodetype_names = ["file", "registry", "network", "process", "thread"] 
             feature_names = nodetype_names + taskname_colnames # yes this order is correct
             final_test_X = pd.DataFrame(final_test_dataset__standard_message_passing_dict).T
