@@ -451,12 +451,16 @@ def Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list : l
 
                   print(f"{subgraph}",  flush = True)
 
+                  if subgraph == 'SUBGRAPH_P3_check-health':
+                     print("for debugging @ 2024-1-7 -- QueryValueKey")
+
                   try:
 
                      # file-pointer to the edge_attribute.pickle file of the subgraph
                      edgeattr_pkl_fp = open( os.path.join(Subgraphs_dirpath, subgraph, "edge_attribute.pickle"), "rb" )
                      SG_edgeattr = pickle.load( edgeattr_pkl_fp )
                      
+                     QueryValueKey_cnt = 0
                      for event_uid in SG_edgeattr:
                            
                            event_TimeStamp = SG_edgeattr[event_uid]['TimeStamp']
@@ -466,6 +470,10 @@ def Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list : l
 
     
                            event_TaskName = taskname_colnames[event_TaskName_bit_vector.index(1)]
+
+                           # Added by JY @ 2024-1-7
+                           if event_TaskName_bit_vector.index(1) == 43: #QueryValueKey
+                              QueryValueKey_cnt+=1
 
                            # Added by JY -- this is important for countvectorizer because "(" ")" will be used as delimiters in countervectorizer which shouldn't be.
                            if event_TaskName in EventID_to_RegEventName_dict:
@@ -532,7 +540,7 @@ if __name__ == '__main__':
                          #default = ["search_on_train"] )
                          default = ["final_test"] )
 
-    parser.add_argument('-n', '--N', nargs = 1, type = int, default = [8])  # Added by JY @ 12-23
+    parser.add_argument('-n', '--N', nargs = 1, type = int, default = [1])  # Added by JY @ 12-23
 
 
     # cmd args
@@ -1076,22 +1084,22 @@ if __name__ == '__main__':
    #  final_test_dataset = benign_test_dataset + malware_test_dataset
    #  print('+ final-test data loaded #Malware = {} | #Benign = {}'.format(len(malware_test_dataset), len(benign_test_dataset)), flush=True)
 
+    ''' JY @ 2024-1-7: Commented out for debugging '''
+   #  Malware_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
+   #                                                                                     target_subgraph_list = Malware_Train_SG_list,
+   #                                                                                     EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
+   #                                                                                                   #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
 
-    Malware_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
-                                                                                       target_subgraph_list = Malware_Train_SG_list,
-                                                                                       EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
-                                                                                                     #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
-
-    Malware_Test_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
-                                                                                      target_subgraph_list = Malware_Test_SG_list,
-                                                                                      EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
-                                                                                                     #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
+   #  Malware_Test_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Malware_Offline_Subgraphs_dirpath_list, 
+   #                                                                                    target_subgraph_list = Malware_Test_SG_list,
+   #                                                                                    EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
+   #                                                                                                   #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
 
 
-    Benign_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Benign_Offline_Subgraphs_dirpath_list, 
-                                                                                      target_subgraph_list = Benign_Train_SG_list,
-                                                                                      EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
-                                                                                                   #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
+   #  Benign_Train_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Benign_Offline_Subgraphs_dirpath_list, 
+   #                                                                                    target_subgraph_list = Benign_Train_SG_list,
+   #                                                                                    EventID_to_RegEventName_dict = EventID_to_RegEventName_dict )
+   #                                                                                                 #EventTypes_to_Drop_set = EventTypes_to_Drop_set )
 
     Benign_Test_SG_TaskName_dict = Extract_TaskName_TSsorted_vectors_from_Subgraphs( Subgraphs_dirpath_list = Benign_Offline_Subgraphs_dirpath_list, 
                                                                                      target_subgraph_list = Benign_Test_SG_list,

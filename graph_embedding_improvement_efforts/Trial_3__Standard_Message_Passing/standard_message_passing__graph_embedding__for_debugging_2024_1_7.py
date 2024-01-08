@@ -628,12 +628,15 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
          # sum( graph_data.x[ torch.nonzero(torch.all(torch.eq( graph_data.x, thread_node_tensor), dim=1), as_tuple=False) ] ) # <-- this is fine
          # JY @ 2024-1-7: For debugging
 
-         if "malware_psbits_flatten-gpo" not in graph_data.name: 
+         #dataname_of_interest = "cd-home" # 1346 맞음
+         dataname_of_interest = "check-health" # 1736 맞음
+
+         if dataname_of_interest not in graph_data.name: 
             continue
 
-         if "malware_psbits_flatten-gpo" in graph_data.name: 
+         if dataname_of_interest in graph_data.name: 
             print("Invesitage why QueryValueKey value is 0 (index 43 of edge-attr)")
-            assert sum( [ x[43].tolist() for x in graph_data.edge_attr ] ) == 1320 # Refer to : https://docs.google.com/spreadsheets/d/161t7tQQ3Rk6gUSEfVBfuR_ons6FwgNqzLIUc1cFrR3c/edit#gid=922262486
+            assert sum( [ x[43].tolist() for x in graph_data.edge_attr ] ) == 1346 # Refer to : https://docs.google.com/spreadsheets/d/161t7tQQ3Rk6gUSEfVBfuR_ons6FwgNqzLIUc1cFrR3c/edit#gid=922262486
              #  -- JY @ 2024-1-7: Value turns out to be 1320 which is as expected.
              #                                                                      So no problem with graph itself.
 
@@ -662,7 +665,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                   
                   reg_to_thread__edge_indices.append(edge_index)
 
-            assert sum( graph_data.edge_attr[ reg_to_thread__edge_indices ][:, 43] ) == 1320   # also satisfied
+            assert sum( graph_data.edge_attr[ reg_to_thread__edge_indices ][:, 43] ) == 1544   # also satisfied
 
             # Now Identify all the edge-indices which are "Reg-node---QueryValueKey---->Thread-node"
             reg__QueryValueKey__thread___edge_indices = []
@@ -766,7 +769,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
 
                # ==================================================================================================================================
                # JY @ 2024-1-7 -- for debugging
-               if "malware_psbits_flatten-gpo" in graph_data.name: 
+               if dataname_of_interest in graph_data.name: 
 
                   if node_idx in reg__QueryValueKey__thread___target_thread_node_indices__int_list:
                      
@@ -821,7 +824,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
 
          # ==================================================================================================================================
          # JY @ 2024-1-7 -- for debugging
-         if "malware_psbits_flatten-gpo" in graph_data.name: 
+         if dataname_of_interest in graph_data.name: 
             # first 5 corresponds to node-type 5 bit 
             if 1320 == int(graph_embedding[5+43]): 
                print("QueryValueKey has 1320 as expected")
@@ -1340,7 +1343,6 @@ if __name__ == '__main__':
          return manual_space      
 
     # ====================================================================================================================================================================================
-
 
 
 
