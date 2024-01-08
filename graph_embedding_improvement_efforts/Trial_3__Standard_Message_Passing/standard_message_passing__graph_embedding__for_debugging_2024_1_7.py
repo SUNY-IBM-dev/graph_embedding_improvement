@@ -608,7 +608,8 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
          # graph_data corresponds to "torch_geometric.data.data.Data"
          print(f"{cnt} / {len(dataset)}: {graph_data.name}\n", flush = True)
          #original_graph_data = copy.deepcopy(graph_data) # just save it for just in case (debugging purpose)
-         
+
+
 
          # ------------------------------------------------------------------------------------------------------------------------------
          # for just in case ; might not be needed 
@@ -623,8 +624,68 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
          net_node_indices = torch.nonzero(torch.all(torch.eq( graph_data.x, net_node_tensor), dim=1), as_tuple=False).flatten().tolist()
          proc_node_indices = torch.nonzero(torch.all(torch.eq( graph_data.x, proc_node_tensor), dim=1), as_tuple=False).flatten().tolist()
          thread_node_indices = torch.nonzero(torch.all(torch.eq( graph_data.x, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-         # ------------------------------------------------------------------------------------------------------------------------------
+         # ==================================================================================================================================
+         # sum( graph_data.x[ torch.nonzero(torch.all(torch.eq( graph_data.x, thread_node_tensor), dim=1), as_tuple=False) ] ) # <-- this is fine
+         # JY @ 2024-1-7: For debugging
 
+         if "malware_psbits_flatten-gpo" not in graph_data.name: 
+            continue
+
+         if "malware_psbits_flatten-gpo" in graph_data.name: 
+            print("Invesitage why QueryValueKey value is 0 (index 43 of edge-attr)")
+            assert sum( [ x[43].tolist() for x in graph_data.edge_attr ] ) == 1320 # Refer to : https://docs.google.com/spreadsheets/d/161t7tQQ3Rk6gUSEfVBfuR_ons6FwgNqzLIUc1cFrR3c/edit#gid=922262486
+             #  -- JY @ 2024-1-7: Value turns out to be 1320 which is as expected.
+             #                                                                      So no problem with graph itself.
+
+            edge_tar_indices = graph_data.edge_index[1]          # this graph's edge-target indices vector
+            edge_src_indices = graph_data.edge_index[0]          # this graph's edge-source indices vector
+
+            edge_tar_indices__list = edge_tar_indices.tolist()
+            edge_src_indices__list = edge_src_indices.tolist()
+
+            # "QueryValueKey" event is, "Reg-node -----QueryValueKey----->Thread-node"         
+
+
+            # Identify all the edge-indices which are "Reg-node------->Thread-node"
+            
+            
+            reg_to_thread__edge_indices = []
+
+            for edge_index, edge_src_node_index__edge_tar_node_index__tuple in enumerate( list(zip(edge_src_indices__list,
+                                                                                                   edge_tar_indices__list)) ):
+               
+               edge_src_node_index = edge_src_node_index__edge_tar_node_index__tuple[0]
+               edge_tar_node_index = edge_src_node_index__edge_tar_node_index__tuple[1]
+
+               if (edge_src_node_index in reg_node_indices) and \
+                  (edge_tar_node_index in thread_node_indices):
+                  
+                  reg_to_thread__edge_indices.append(edge_index)
+
+            assert sum( graph_data.edge_attr[ reg_to_thread__edge_indices ][:, 43] ) == 1320   # also satisfied
+
+            # Now Identify all the edge-indices which are "Reg-node---QueryValueKey---->Thread-node"
+            reg__QueryValueKey__thread___edge_indices = []
+            for reg_to_thread__edge_index in reg_to_thread__edge_indices:
+               if graph_data.edge_attr[ reg_to_thread__edge_index ][43] == 1.0:
+                   reg__QueryValueKey__thread___edge_indices.append(reg_to_thread__edge_index)
+
+            reg__QueryValueKey__thread___target_thread_node_indices = []
+            reg__QueryValueKey__thread___source_registry_node_indices = []
+            for reg__QueryValueKey__thread___edge_index in reg__QueryValueKey__thread___edge_indices:
+               reg__QueryValueKey__thread___target_thread_node_indices.append( edge_tar_indices[reg__QueryValueKey__thread___edge_index] )
+               reg__QueryValueKey__thread___source_registry_node_indices.append( edge_src_indices[reg__QueryValueKey__thread___edge_index] )
+               # ^- list of tensors (e.g [ tensor([2307]), ....]) <-- use for indexing
+            # following looks fine
+            sum( graph_data.x[reg__QueryValueKey__thread___target_thread_node_indices] )
+            sum( graph_data.x[reg__QueryValueKey__thread___source_registry_node_indices] )               
+
+            reg__QueryValueKey__thread___target_thread_node_indices__int_list =  [int(x) for x in reg__QueryValueKey__thread___target_thread_node_indices]
+            reg__QueryValueKey__thread___source_registry_node_indices__int_list = [int(x) for x in reg__QueryValueKey__thread___source_registry_node_indices]
+
+
+
+         # ==================================================================================================================================
          ''' 1. Initialize each node's feature vector '''        
          edge_feat_len = len(graph_data.edge_attr[0][:-1]) # drop time-scalar for now
          edge_feat_placeholders = torch.zeros(graph_data.x.shape[0], edge_feat_len) # create a zero-tensors to concat
@@ -655,6 +716,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
             
             
             for node_idx in range( graph_data.x.shape[0] ):
+               
                print(f"{cnt} / {len(dataset)}: {graph_data.name} | {n+1} hop | {node_idx+1} / {graph_data.x.shape[0]} : message passing for node", flush = True)
 
                ''' Get Messages '''
@@ -663,9 +725,6 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                
                # edge-indices of incoming-edges to this node   # "torch.nonzero" returns a 2-D tensor where each row is the index for a nonzero value.
                incoming_edges_to_this_node_idx = torch.nonzero( edge_tar_indices == node_idx ).flatten()  
-
-
-
 
 
                if len(incoming_edges_to_this_node_idx) == 0:
@@ -702,11 +761,31 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                # (i.e. node-level messages) # 
                node_level_messages = graph_data_x_first_5_bits[ unique__source_nodes_of_incoming_edges_to_this_node ]
 
+
+
+
+               # ==================================================================================================================================
+               # JY @ 2024-1-7 -- for debugging
+               if "malware_psbits_flatten-gpo" in graph_data.name: 
+
+                  if node_idx in reg__QueryValueKey__thread___target_thread_node_indices__int_list:
+                     
+                     graph_data.edge_attr[incoming_edges_to_this_node_idx] 
+                     edge_level_messages # at least one has 43-index set
+
+                     print()
+
+               # ==================================================================================================================================
+
+
+
+
                ''' First perform neighborhood aggregation for edge-feats and node-feats separately,
                    as the latter has considered unique incoming nodes to evade "duplicate neighboring nodes"
                    
                    Next, combine the separately aggregated node and edge level messages 
                '''
+
 
 
 
@@ -731,12 +810,27 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                # JY @ 2024-1-6: Added update-weightage.
                graph_data.x[node_idx] = graph_data.x[node_idx] + update_weight * messages__aggregated
 
+               print()
 
          ''' 7. Since message-passing is done, "pool" all node's embedding, to generate the "graph embedding". '''
          if pool == "sum": pool__func = torch.sum
          elif pool == "mean": pool__func = torch.mean
 
          graph_embedding = pool__func(graph_data.x, dim = 0)
+
+
+         # ==================================================================================================================================
+         # JY @ 2024-1-7 -- for debugging
+         if "malware_psbits_flatten-gpo" in graph_data.name: 
+            # first 5 corresponds to node-type 5 bit 
+            if 1320 == int(graph_embedding[5+43]): 
+               print("QueryValueKey has 1320 as expected")
+            else:
+               ValueError("something is wrong")
+
+         # ==================================================================================================================================
+
+
 
          data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*)\.pickle', graph_data.name).group(1) ] = graph_embedding.tolist()
 
@@ -1291,11 +1385,12 @@ if __name__ == '__main__':
 
     # Load both benign and malware graphs """
     dataprocessor = LoadGraphs()
-    benign_train_dataset = dataprocessor.parse_all_data(_benign_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
-    malware_train_dataset = dataprocessor.parse_all_data(_malware_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
-    train_dataset = benign_train_dataset + malware_train_dataset
-    print('+ train data loaded #Malware = {} | #Benign = {}'.format(len(malware_train_dataset), len(benign_train_dataset)), flush=True)
-
+    '''  # Commented-out by JY @ 2024-1-7 for debugging 
+     benign_train_dataset = dataprocessor.parse_all_data(_benign_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+     malware_train_dataset = dataprocessor.parse_all_data(_malware_train_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
+     train_dataset = benign_train_dataset + malware_train_dataset
+     print('+ train data loaded #Malware = {} | #Benign = {}'.format(len(malware_train_dataset), len(benign_train_dataset)), flush=True)
+    '''
     # Load test benign and malware graphs """
     benign_test_dataset = dataprocessor.parse_all_data(_benign_final_test_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
     malware_test_dataset = dataprocessor.parse_all_data(_malware_final_test_data_path, _dim_node, _dim_edge, drop_dim_edge_timescalar = False)
@@ -1305,8 +1400,11 @@ if __name__ == '__main__':
    # =================================================================================================================================================
    # Prepare for train_dataset (or all-dataset) 
 
+    '''  # Commented-out by JY @ 2024-1-7 for debugging 
+
     if search_on_train__or__final_test == "search_on_all":  # ***** #
-         train_dataset = train_dataset + final_test_dataset
+          train_dataset = train_dataset + final_test_dataset
+
 
     # Added by JY @ 2023-12-27
     if graph_embedding_option == "standard_message_passing_graph_embedding":
@@ -1347,7 +1445,7 @@ if __name__ == '__main__':
     X.reset_index(inplace = True)
     X.rename(columns = {'index':'data_name'}, inplace = True)
     X.to_csv(os.path.join(this_results_dirpath,"X.csv"))
-
+    '''
     
    #  y = [data.y for data in train_dataset]
 

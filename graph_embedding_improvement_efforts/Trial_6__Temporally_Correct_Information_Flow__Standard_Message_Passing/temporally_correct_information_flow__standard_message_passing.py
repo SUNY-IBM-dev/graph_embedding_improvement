@@ -521,9 +521,13 @@ def get__temporally_correct__standard_message_passing__graph_embedding__dict( da
                                                                               neighborhood_aggr : str = "sum", 
                                                                               pool : str = "sum",
                                                                               update_weight : float = 1.0,
-                                                                              verbose : bool = True ):
+                                                                              verbose : bool = True 
+                                                                              ):
 
-   ''' TODO @ 2024-1-7 : Start working on this '''
+   ''' TODO @ 2024-1-7 : Start working on this 
+   
+                         Refer to : /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_6__Temporally_Correct_Information_Flow__Standard_Message_Passing/Problem with temporally incorrect information flow with standard message passing.png
+   '''
 
 
    '''
