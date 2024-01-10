@@ -122,6 +122,7 @@ EventID_to_RegEventName_dict =\
 }
 
 
+
 def produce_SHAP_explanations(classification_model, 
                               Test_dataset : pd.DataFrame,
                               Train_dataset : pd.DataFrame,
@@ -207,7 +208,7 @@ def produce_SHAP_explanations(classification_model,
 
       Test_dataset__data_name_column = Test_dataset['data_name']  # added by JY @ 2023-12-21
 
-      Global_Important_Features_Test_dataset = Global_Important_Features_Test_dataset.assign(SUM = Global_Important_Features_Test_dataset.sum(axis=1)) 
+      Global_Important_Features_Test_dataset = Global_Important_Features_Test_dataset.assign(SUM = Global_Important_Features_Test_dataset.sum(axis=1)) # SUM column
 
       Global_Important_Features_Test_dataset = pd.concat([Test_dataset__data_name_column, Global_Important_Features_Test_dataset], axis = 1) # added by JY @ 2023-12-21
       Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
@@ -237,6 +238,10 @@ def produce_SHAP_explanations(classification_model,
 
       Global_Important_Features_Test_dataset['SHAP_sum_of_feature_shaps'] = None
       Global_Important_Features_Test_dataset['SHAP_base_value'] = None
+
+      ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)'''
+      Local_SHAP_values_Test_dataset = pd.DataFrame(columns = Test_dataset.columns)
+
       cnt = 0
       for Test_SG_name in Test_SG_names:
             cnt += 1
@@ -302,6 +307,14 @@ def produce_SHAP_explanations(classification_model,
             Global_Important_Features_Test_dataset.loc[Test_SG_name,'SHAP_sum_of_feature_shaps'] = Test_SG_Local_Shap
             Global_Important_Features_Test_dataset.loc[Test_SG_name, 'SHAP_base_value'] = base_value
 
+
+            ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)'''
+            # class-information? do it later in another file
+            Local_SHAP_values_Test_dataset = pd.concat([ Local_SHAP_values_Test_dataset, pd.DataFrame([ dict(zip(Test_dataset.columns, shap_values)) | {'data_name': Test_SG_name} ]) ], 
+                                                       axis = 0)
+
+
+
             print(f"{cnt} / {len(Test_SG_names)} : SHAP-local done for {Test_SG_name}", flush=True)
 
       # added by JY @ 2023-12-21
@@ -315,6 +328,15 @@ def produce_SHAP_explanations(classification_model,
       # Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
 
       Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Test-Dataset.csv"))
+
+      ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)
+          Note that here, negative SHAP values are ones that push towards benign-prediction
+      '''
+      Local_SHAP_values_Test_dataset.set_index("data_name", inplace = True)
+      Local_SHAP_values_Test_dataset.index = Local_SHAP_values_Test_dataset.index.map(lambda x: append_prefix(x, "benign_"))
+      Local_SHAP_values_Test_dataset.sort_index(inplace=True)
+      Local_SHAP_values_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Local-SHAP values Test-Dataset.csv"))
+
 
       print("done", flush=True)
 
@@ -948,7 +970,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-readout_opt', '--readout_option', 
                         choices= ['max', 'mean' ],  # mean 도 해봐라 
-                        default = ["mean"])
+                        default = ["max"])
 
     parser.add_argument('-ss_opt', '--search_space_option', 
                         choices= [ 
@@ -959,10 +981,12 @@ if __name__ == '__main__':
                                  #PW: RF and XGboost ----------------------------------------------------------
                                  # JY: non-ahoc seems to be '5bit eventdist' + final-test
                                  "RandomForest_best_hyperparameter_max_case1",
+
                                  "RandomForest_best_hyperparameter_max_case1_nograph",
 
+
                                  "RandomForest_best_hyperparameter_max_case2",
-                                 "RandomForest_best_hyperparameter_max_case2_nograph",   
+                                 "RandomForest_best_hyperparameter_max_case2_nograph",
 
                                  "RandomForest_best_hyperparameter_max_case1_ahoc",   
                                  "RandomForest_best_hyperparameter_max_case1_ahoc_nograph",  
@@ -996,7 +1020,7 @@ if __name__ == '__main__':
                                  "RandomForest_best_hyperparameter_mean_case2_ahoc_nograph",
                                   
                                   ], 
-                                  default = ["RandomForest_best_hyperparameter_mean_case2_nograph"])
+                                  default = ["RandomForest_best_hyperparameter_max_case2_nograph"])
    
     parser.add_argument('-sig_amp_opt', '--signal_amplification_option', 
                         
@@ -1052,8 +1076,6 @@ if __name__ == '__main__':
 
     trace_filename = f'traces_stratkfold_double_strat_{model_cls_name}__generated@'+str(datetime.now())+".txt" 
 
-    ###############################################################################################################################################
-    # Set data paths
     ###############################################################################################################################################
     # Set data paths
     projection_datapath_Benign_Train_dict = {
@@ -1250,39 +1272,49 @@ if __name__ == '__main__':
                )
       return manual_space
 
+    # /data/d1/jgwak1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_Priti/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_best_hyperparameter_case1_nograph__final_test__no_graph_structure__event_1gram_nodetype_5bit__max__2023-12-15_084924.csv
     def RandomForest_best_hyperparameter_max_case1_nograph():
       manual_space = []
       manual_space.append(
                {
-               'n_estimators': 200, 
-               'criterion': 'gini', 
-               'max_depth': None, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 3, 
-               'max_features': None,
-               'bootstrap': True,
-               'random_state': 99,
-               'split_shuffle_seed': 100
+               'n_estimators': 200, # confirmed with "get_best_hyperparameter_from_csv.py" on "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__no_graph_structure__event_1gram_nodetype_5bit__max__2023-12-14_185502.csv"
+               'criterion': 'gini', # confirmed
+               'max_depth': None, # confirmed 
+               'min_samples_split': 2, # confirmed
+               'min_samples_leaf': 3, # confirmed
+               'max_features': None, # confirmed
+               'bootstrap': True, # confirmed
+               'random_state': 99, # confirmed
+               'split_shuffle_seed': 100 # confirmed
                }
                )
       return manual_space
 
+
+
+
+
+
+    # /data/d1/jgwak1/tabby/Graph_embedding_aka_signal_amplification_files/Stratkfold_Priti/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_best_hyperparameter_case2_nograph__final_test__no_graph_structure__event_1gram_nodetype_5bit__max__2023-12-15_221512.csv
     def RandomForest_best_hyperparameter_max_case2_nograph():
       manual_space = []
       manual_space.append(
                {
-               'n_estimators': 300, 
-               'criterion': 'gini', 
-               'max_depth': 20, 
-               'min_samples_split': 2, 
-               'min_samples_leaf': 1, 
-               'max_features': 'sqrt',
-               'bootstrap': False,
-               'random_state': 0,
-               'split_shuffle_seed': 100
+               'n_estimators': 300, # confirmed with "get_best_hyperparameter_from_csv.py" on ""/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__no_graph_structure__event_1gram_nodetype_5bit__max__2023-12-14_185615.csv"
+               'criterion': 'gini', # confirmed 
+               'max_depth': 20, # confirmed 
+               'min_samples_split': 2, # confirmed 
+               'min_samples_leaf': 1, # confirmed 
+               'max_features': 'sqrt', # confirmed 
+               'bootstrap': False, # confirmed 
+               'random_state': 0, # confirmed 
+               'split_shuffle_seed': 100 # confirmed 
                }
                )
       return manual_space
+
+
+
 
     def RandomForest_best_hyperparameter_max_case1_ahoc():
       manual_space = []
@@ -1633,6 +1665,7 @@ if __name__ == '__main__':
     # JY: non-ahoc seems to be '5bit eventdist'
     elif search_space_option == "RandomForest_best_hyperparameter_max_case1": search_space = RandomForest_best_hyperparameter_max_case1()   
     elif search_space_option == "RandomForest_best_hyperparameter_max_case2": search_space = RandomForest_best_hyperparameter_max_case2()   
+
     elif search_space_option == "RandomForest_best_hyperparameter_max_case1_nograph": search_space = RandomForest_best_hyperparameter_max_case1_nograph()   
     elif search_space_option == "RandomForest_best_hyperparameter_max_case2_nograph": search_space = RandomForest_best_hyperparameter_max_case2_nograph()   
     elif search_space_option == "RandomForest_best_hyperparameter_max_case1_ahoc": search_space = RandomForest_best_hyperparameter_max_case1_ahoc()   

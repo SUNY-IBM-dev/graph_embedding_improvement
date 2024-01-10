@@ -53,7 +53,9 @@ if __name__ == "__main__":
 
       pprint.pprint(best_hyperparameters_dict)
 
-      print()
+      print("\n[IMPORTANT] Check if data-type is correct BEFORE copy-and-paste", flush = True)
+      print("            e.g. 'max_depth' should be INT not FLOAT", flush = True)
+      print("                 'nan' should be replaced with None", flush = True)
 
 
 

@@ -125,7 +125,6 @@ EventID_to_RegEventName_dict =\
 "Thisgroupofeventstrackstheperformanceofflushinghives": "RegPerfOpHiveFlushWroteLogFile",
 }
 
-
 def produce_SHAP_explanations(classification_model, 
                               Test_dataset : pd.DataFrame,
                               Train_dataset : pd.DataFrame,
@@ -211,7 +210,7 @@ def produce_SHAP_explanations(classification_model,
 
       Test_dataset__data_name_column = Test_dataset['data_name']  # added by JY @ 2023-12-21
 
-      Global_Important_Features_Test_dataset = Global_Important_Features_Test_dataset.assign(SUM = Global_Important_Features_Test_dataset.sum(axis=1)) 
+      Global_Important_Features_Test_dataset = Global_Important_Features_Test_dataset.assign(SUM = Global_Important_Features_Test_dataset.sum(axis=1)) # SUM column
 
       Global_Important_Features_Test_dataset = pd.concat([Test_dataset__data_name_column, Global_Important_Features_Test_dataset], axis = 1) # added by JY @ 2023-12-21
       Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
@@ -241,6 +240,10 @@ def produce_SHAP_explanations(classification_model,
 
       Global_Important_Features_Test_dataset['SHAP_sum_of_feature_shaps'] = None
       Global_Important_Features_Test_dataset['SHAP_base_value'] = None
+
+      ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)'''
+      Local_SHAP_values_Test_dataset = pd.DataFrame(columns = Test_dataset.columns)
+
       cnt = 0
       for Test_SG_name in Test_SG_names:
             cnt += 1
@@ -306,6 +309,14 @@ def produce_SHAP_explanations(classification_model,
             Global_Important_Features_Test_dataset.loc[Test_SG_name,'SHAP_sum_of_feature_shaps'] = Test_SG_Local_Shap
             Global_Important_Features_Test_dataset.loc[Test_SG_name, 'SHAP_base_value'] = base_value
 
+
+            ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)'''
+            # class-information? do it later in another file
+            Local_SHAP_values_Test_dataset = pd.concat([ Local_SHAP_values_Test_dataset, pd.DataFrame([ dict(zip(Test_dataset.columns, shap_values)) | {'data_name': Test_SG_name} ]) ], 
+                                                       axis = 0)
+
+
+
             print(f"{cnt} / {len(Test_SG_names)} : SHAP-local done for {Test_SG_name}", flush=True)
 
       # added by JY @ 2023-12-21
@@ -320,10 +331,18 @@ def produce_SHAP_explanations(classification_model,
 
       Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Test-Dataset.csv"))
 
+      ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)
+          Note that here, negative SHAP values are ones that push towards benign-prediction
+      '''
+      Local_SHAP_values_Test_dataset.set_index("data_name", inplace = True)
+      Local_SHAP_values_Test_dataset.index = Local_SHAP_values_Test_dataset.index.map(lambda x: append_prefix(x, "benign_"))
+      Local_SHAP_values_Test_dataset.sort_index(inplace=True)
+      Local_SHAP_values_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Local-SHAP values Test-Dataset.csv"))
+
+
       print("done", flush=True)
 
       return 
-
 
 
 ##############################################################################################################################

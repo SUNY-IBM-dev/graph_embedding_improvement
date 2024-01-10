@@ -127,7 +127,6 @@ EventID_to_RegEventName_dict =\
 "Thisgroupofeventstrackstheperformanceofflushinghives": "RegPerfOpHiveFlushWroteLogFile",
 }
 
-
 def produce_SHAP_explanations(classification_model, 
                               Test_dataset : pd.DataFrame,
                               Train_dataset : pd.DataFrame,
@@ -136,8 +135,7 @@ def produce_SHAP_explanations(classification_model,
                               Test_SG_names : list,
                               misprediction_subgraph_names : list,
                               Predict_proba_dict : dict,
-                              # search_space_option : str, # if add both two, filename gets too long
-                              # N : int = 1,
+                              N : int = 1,
                               ):
 
       # JY @ 2023-12-20: Integrate SHAP into this file based on:
@@ -176,8 +174,9 @@ def produce_SHAP_explanations(classification_model,
             model_resultX = pd.DataFrame(shap_values, columns = list(Test_dataset.drop(columns=['data_name']).columns))
 
       f.savefig( os.path.join(Explanation_Results_save_dirpath, 
-                              f"SHAP_Global_Interpretability_Summary_BarPlot_Push_Towards_Malware_Features.png"), 
+                              f"{N}_gram_SHAP_Global_Interpretability_Summary_BarPlot_Push_Towards_Malware_Features.png"), 
                               bbox_inches='tight', dpi=600)
+
 
       # TODO: Important: Get a feature-importance from shap-values
       # https://stackoverflow.com/questions/65534163/get-a-feature-importance-from-shap-values
@@ -186,7 +185,7 @@ def produce_SHAP_explanations(classification_model,
       shap_importance = pd.DataFrame(list(zip(list(Test_dataset.drop(columns=['data_name']).columns), vals)),
                                      columns=['col_name','feature_importance_vals']) # Later could make use of the "feature_importance_vals" if needed.
       shap_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
-      shap_importance.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} Global-SHAP Importance.csv"))
+      shap_importance.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Importance.csv"))
 
       # JY @ 2023-12-21: Need to get "dataname" here
 
@@ -206,14 +205,14 @@ def produce_SHAP_explanations(classification_model,
       Global_Important_Features_Train_dataset.sort_values(by = "data_name", inplace = True)
       Global_Important_Features_Train_dataset.set_index("data_name", inplace = True)
 
-      Global_Important_Features_Train_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} Global-SHAP Important FeatureNames Train-Dataset.csv"))
+      Global_Important_Features_Train_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Train-Dataset.csv"))
 
       # Save Global-First20Important Features "Test dataset"
       Global_Important_Features_Test_dataset = Test_dataset[ Global_Important_featureNames ] 
 
       Test_dataset__data_name_column = Test_dataset['data_name']  # added by JY @ 2023-12-21
 
-      Global_Important_Features_Test_dataset = Global_Important_Features_Test_dataset.assign(SUM = Global_Important_Features_Test_dataset.sum(axis=1)) 
+      Global_Important_Features_Test_dataset = Global_Important_Features_Test_dataset.assign(SUM = Global_Important_Features_Test_dataset.sum(axis=1)) # SUM column
 
       Global_Important_Features_Test_dataset = pd.concat([Test_dataset__data_name_column, Global_Important_Features_Test_dataset], axis = 1) # added by JY @ 2023-12-21
       Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
@@ -229,7 +228,7 @@ def produce_SHAP_explanations(classification_model,
       # =============================================================================================================================
       # SHAP-Local (Waterfall-Plots)
 
-      WATERFALL_PLOTS_Local_Explanation_dirpath = os.path.join(Explanation_Results_save_dirpath, f"WATERFALL_PLOTS_Local-Explanation")
+      WATERFALL_PLOTS_Local_Explanation_dirpath = os.path.join(Explanation_Results_save_dirpath, f"WATERFALL_PLOTS_Local-Explanation_{N}gram")
       Correct_Predictions_WaterfallPlots_subdirpath = os.path.join(WATERFALL_PLOTS_Local_Explanation_dirpath, "Correct_Predictions")
       Mispredictions_WaterfallPlots_subdirpath = os.path.join(WATERFALL_PLOTS_Local_Explanation_dirpath, "Mispredictions")
 
@@ -243,6 +242,10 @@ def produce_SHAP_explanations(classification_model,
 
       Global_Important_Features_Test_dataset['SHAP_sum_of_feature_shaps'] = None
       Global_Important_Features_Test_dataset['SHAP_base_value'] = None
+
+      ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)'''
+      Local_SHAP_values_Test_dataset = pd.DataFrame(columns = Test_dataset.columns)
+
       cnt = 0
       for Test_SG_name in Test_SG_names:
             cnt += 1
@@ -297,9 +300,9 @@ def produce_SHAP_explanations(classification_model,
             # https://github.com/shap/shap/blob/2262893cf441478418abac5fd8cdd38e436a867b/shap/plots/_waterfall.py#L321C107-L321C117
 
             if Test_SG_name in misprediction_subgraph_names:
-               waterfallplot_out.savefig( os.path.join(Mispredictions_WaterfallPlots_subdirpath, f"SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+               waterfallplot_out.savefig( os.path.join(Mispredictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
             else:
-               waterfallplot_out.savefig( os.path.join(Correct_Predictions_WaterfallPlots_subdirpath, f"SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+               waterfallplot_out.savefig( os.path.join(Correct_Predictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
 
 
             # Added by JY @ 2023-12-21 : For local shap of sample (SUM of all feature's shap values for the sample)
@@ -307,6 +310,14 @@ def produce_SHAP_explanations(classification_model,
             Test_SG_Local_Shap = sum(shap_values)
             Global_Important_Features_Test_dataset.loc[Test_SG_name,'SHAP_sum_of_feature_shaps'] = Test_SG_Local_Shap
             Global_Important_Features_Test_dataset.loc[Test_SG_name, 'SHAP_base_value'] = base_value
+
+
+            ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)'''
+            # class-information? do it later in another file
+            Local_SHAP_values_Test_dataset = pd.concat([ Local_SHAP_values_Test_dataset, pd.DataFrame([ dict(zip(Test_dataset.columns, shap_values)) | {'data_name': Test_SG_name} ]) ], 
+                                                       axis = 0)
+
+
 
             print(f"{cnt} / {len(Test_SG_names)} : SHAP-local done for {Test_SG_name}", flush=True)
 
@@ -320,12 +331,20 @@ def produce_SHAP_explanations(classification_model,
       # Global_Important_Features_Test_dataset.sort_values(by = "data_name", inplace = True)
       # Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
 
-      Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} Global-SHAP Important FeatureNames Test-Dataset.csv"))
+      Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Test-Dataset.csv"))
+
+      ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)
+          Note that here, negative SHAP values are ones that push towards benign-prediction
+      '''
+      Local_SHAP_values_Test_dataset.set_index("data_name", inplace = True)
+      Local_SHAP_values_Test_dataset.index = Local_SHAP_values_Test_dataset.index.map(lambda x: append_prefix(x, "benign_"))
+      Local_SHAP_values_Test_dataset.sort_index(inplace=True)
+      Local_SHAP_values_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Local-SHAP values Test-Dataset.csv"))
+
 
       print("done", flush=True)
 
       return 
-
 ##############################################################################################################################
 
 #**********************************************************************************************************************************************************************

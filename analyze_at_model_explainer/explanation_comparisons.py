@@ -309,11 +309,13 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
          # JY @ 2023-12-28: TODO : could also saveout outputs in results_dict to explanation_comparision_savedir
          results_dict = get_sumShap_basevalue_predictprobas__and_saveout(sample, explanation_comparision_savedir )
 
-
-         get_waterfallplots_and_copy(sample = sample, 
-                                     graph_embedding__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['graph_embedding__mispredictions__dirpath'],
-                                     no_graph__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['no_graph__mispredictions__dirpath'],
-                                     explanation_comparision_savedir= explanation_comparision_savedir)
+         try:
+            get_waterfallplots_and_copy(sample = sample, 
+                                       graph_embedding__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['graph_embedding__mispredictions__dirpath'],
+                                       no_graph__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['no_graph__mispredictions__dirpath'],
+                                       explanation_comparision_savedir= explanation_comparision_savedir)
+         except:
+             pass
 
 
          # (do this?) get manually feature values, and feature shaps
@@ -371,6 +373,9 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
 
 if __name__ == "__main__":
 
+
+   # TODO: Also incorporate built-in feature-importance for RF
+
    # JY @ 2023-12-28:
    # Refer to : https://docs.google.com/spreadsheets/d/1It7q8PZcwHNsWK9OALr3YT9B09uH_JkuZIiN9Q3sqaM/edit#gid=546272642
 
@@ -409,9 +414,9 @@ if __name__ == "__main__":
 
    # JY @ 2024-1-4 : compare BestRFs of standard-message-passing-1gram-1hop-sumaggr-sumpool vs. baseline of 1gram, on dataset-1
    graph_embedding__mispredictions__dirpath = \
-   "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125__final_test__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2024-01-01_213240/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
+   "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149__final_test__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2024-01-01_213448/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
    no_graph__mispredictions__dirpath = \
-   "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__1gram__Dataset-Case-1__RandomForest_besthyperparameter_case1_1gram__final_test__2023-12-29_075550/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
+   "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_best_hyperparameter_max_case2_nograph__final_test__no_graph_structure__event_1gram_nodetype_5bit__max__2024-01-08_104251/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
 
 
    predictions_comparisons_dict = predictions_comparisons(graph_embedding__mispredictions__dirpath, no_graph__mispredictions__dirpath)

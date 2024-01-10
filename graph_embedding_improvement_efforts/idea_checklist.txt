@@ -33,6 +33,9 @@
 
     # TODO -- Ask Priti if she found something
 
+    * CONCLUSION @ 2024-1-9 : According to Priti, hard to figure out threads that might be artifactual.
+
+
 -----------------------------------------------------------------------------------------------------------------------------------
 
 [Priority-3] Incorporate n-hop information flow with directed graph, similar to the neighborhood aggregation in GNN.
@@ -65,6 +68,9 @@
          (i.e. )
 
    TODO** : Run explainer on this, why is it doing relatively better?
+
+
+  
 
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -109,8 +115,6 @@
                       Simple graph setting 에서 event 와 timestamp 간 1 to 1 mapping 있었었나? simple graph 의 second step 확인
                       만약 1 to 1 mapping이 없었다면 그냥 multigraph 에서 하는 방법도? ** <-- 고려 
 
-       
-
        2. for each edge, get strings that correspond to events sorted in timestamp order (getting strings b/c compatiblity with countvectorizer)
                          so for each graph, the number of strings we get is equivalent to number of edges
 
@@ -129,6 +133,8 @@
 
       TODO: Check correctness of code
 
+       * CONCLUSION @ 2024-1-9 : Looking at Avg-Val-F1, this approach does not improve but worsens
+
 -----------------------------------------------------------------------------------------------------------------------------------
 
 [ Priti is also running the "Signal-Amplification suggested approach suggested by Prof Guanhua way back" ]
@@ -139,8 +145,7 @@
 
 GRNN?
 
-Are the signals (from our train/test data to acheive 85%+ exist at first place?)
-
+Are the signals (from our train/test data to acheive 85%+ exist at first place?) -- yes
 
 
 Dissect all procedures , revisit and question all assumptions that we made
