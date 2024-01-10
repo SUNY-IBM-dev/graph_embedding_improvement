@@ -7,12 +7,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt
-
-'''
-
-TODO: explanation_comparisons.py KIND OF WORKING BUT NEEDS DEBUGGING
-
-'''
+import json
 
 
 def predictions_comparisons(graph_embedding__mispredictions__dirpath : str, 
@@ -82,6 +77,8 @@ def predictions_comparisons(graph_embedding__mispredictions__dirpath : str,
 def get_materials_for_explanation_comparison(graph_embedding__mispredictions__dirpath : str, 
                                              no_graph__mispredictions__dirpath : str) -> dict:
 
+      ''' '''
+
       ''' first get all dirpaths/filepaths/datasets that may contain result of interest (e.g.waterfallplots-dirpath) '''
       # get dirpaths 
       graph_embedding__waterfallplots__dirpath = os.path.split(graph_embedding__mispredictions__dirpath)[0]
@@ -93,22 +90,32 @@ def get_materials_for_explanation_comparison(graph_embedding__mispredictions__di
       graph_embedding__results__dirpath = os.path.split( graph_embedding__waterfallplots__dirpath )[0]
       no_graph__results__dirpath = os.path.split( no_graph__waterfallplots__dirpath )[0]
 
-      # get fnames ad fpaths in preparation of reading in dfs
-      graph_embedding__GlobalSHAP_TestDataset_csv__fname = [f for f in os.listdir(graph_embedding__results__dirpath) if "Test-Dataset.csv" in f][0]
+      # get fnames ad fpaths in preparation of reading in dfs ( modified by JY @ 2024-1-10)
+      graph_embedding__GlobalSHAP_TestDataset_csv__fname = [f for f in os.listdir(graph_embedding__results__dirpath) if "Global-SHAP Important FeatureNames Test-Dataset" in f][0]
       graph_embedding__GlobalSHAP_TestDataset_csv__fpath = os.path.join(graph_embedding__results__dirpath,
                                                                         graph_embedding__GlobalSHAP_TestDataset_csv__fname)
-      no_graph__GlobalSHAP_TestDataset_csv__fname = [f for f in os.listdir(no_graph__results__dirpath) if "Test-Dataset.csv" in f][0]
+      no_graph__GlobalSHAP_TestDataset_csv__fname = [f for f in os.listdir(no_graph__results__dirpath) if "Global-SHAP Important FeatureNames Test-Dataset" in f][0]
       no_graph__GlobalSHAP_TestDataset_csv__fpath = os.path.join(no_graph__results__dirpath,
                                                                no_graph__GlobalSHAP_TestDataset_csv__fname)
       
+      # ( Added by JY @ 2024-1-10)
+      graph_embedding__LocalSHAP_vals_TestDataset_csv__fname = [f for f in os.listdir(graph_embedding__results__dirpath) if "Local-SHAP values Test-Dataset" in f][0]
+      graph_embedding__LocalSHAP_vals_TestDataset_csv__fpath = os.path.join(graph_embedding__results__dirpath,
+                                                                            graph_embedding__LocalSHAP_vals_TestDataset_csv__fname)
+      no_graph__LocalSHAP_vals_TestDataset_csv__fname = [f for f in os.listdir(no_graph__results__dirpath) if "Local-SHAP values Test-Dataset" in f][0]
+      no_graph__LocalSHAP_vals_TestDataset_csv__fpath = os.path.join(no_graph__results__dirpath,
+                                                                     no_graph__LocalSHAP_vals_TestDataset_csv__fname)
+
+
       graph_embedding__GlobalSHAP_csv__fname = [f for f in os.listdir(graph_embedding__results__dirpath) if "Global-SHAP Importance.csv" in f][0]
       graph_embedding__GlobalSHAP_csv__fpath = os.path.join(graph_embedding__results__dirpath, graph_embedding__GlobalSHAP_csv__fname)
       no_graph__GlobalSHAP_csv__fname = [f for f in os.listdir(no_graph__results__dirpath) if "Global-SHAP Importance.csv" in f][0]
       no_graph__GlobalSHAP_csv__fpath = os.path.join(no_graph__results__dirpath,no_graph__GlobalSHAP_csv__fname)
 
-      graph_embedding__final_test_results_csv__fname = [f for f in os.listdir(graph_embedding__results__dirpath) if ("Global-SHAP" not in f) and ("WATERFALL" not in f) and ("png" not in f)][0]
+      # ( modified by JY @ 2024-1-10)
+      graph_embedding__final_test_results_csv__fname = [f for f in os.listdir(graph_embedding__results__dirpath) if ("Global-SHAP" not in f) and ("Local-SHAP" not in f) and ("WATERFALL" not in f) and ("png" not in f)][0]
       graph_embedding__final_test_results_csv__fpath = os.path.join(graph_embedding__results__dirpath, graph_embedding__final_test_results_csv__fname)
-      no_graph__final_test_results_csv__fname = [f for f in os.listdir(no_graph__results__dirpath) if ("Global-SHAP" not in f) and ("WATERFALL" not in f) and ("png" not in f)][0]
+      no_graph__final_test_results_csv__fname = [f for f in os.listdir(no_graph__results__dirpath) if ("Global-SHAP" not in f) and ("Local-SHAP" not in f) and ("WATERFALL" not in f) and ("png" not in f)][0]
       no_graph__final_test_results_csv__fpath = os.path.join(no_graph__results__dirpath, no_graph__final_test_results_csv__fname)
 
       # Prepare all dfs 
@@ -121,6 +128,10 @@ def get_materials_for_explanation_comparison(graph_embedding__mispredictions__di
       graph_embedding__GlobalSHAP_df = pd.read_csv(graph_embedding__GlobalSHAP_csv__fpath)
       no_graph__GlobalSHAP_df = pd.read_csv(no_graph__GlobalSHAP_csv__fpath)
 
+      # -- LocalSHAP values dataframes
+      graph_embedding__LocalSHAP_values_TestDataset_df = pd.read_csv(graph_embedding__LocalSHAP_vals_TestDataset_csv__fpath)
+      no_graph__LocalSHAP_values_TestDataset_csv__df = pd.read_csv(no_graph__LocalSHAP_vals_TestDataset_csv__fpath)
+
       # -- final test results dataframes
       graph_embedding__final_test_results_df = pd.read_csv(graph_embedding__final_test_results_csv__fpath)
       no_graph__final_test_results_df = pd.read_csv(no_graph__final_test_results_csv__fpath)
@@ -132,7 +143,12 @@ def get_materials_for_explanation_comparison(graph_embedding__mispredictions__di
          
          "graph_embedding__GlobalSHAP_df": graph_embedding__GlobalSHAP_df,
          "no_graph__GlobalSHAP_df": no_graph__GlobalSHAP_df,
-         
+
+         # ( Added by JY @ 2024-1-10)
+         "graph_embedding__LocalSHAP_values_TestDataset_df": graph_embedding__LocalSHAP_values_TestDataset_df,
+         "no_graph__LocalSHAP_values_TestDataset_csv__df": no_graph__LocalSHAP_values_TestDataset_csv__df,
+
+
          "graph_embedding__final_test_results_df": graph_embedding__final_test_results_df,
          "no_graph__final_test_results_df": no_graph__final_test_results_df,
 
@@ -162,7 +178,7 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
 
       # 1. Create directory for this trial's explanation comparisons
       EXPLANATION_COMPARISONS_DIRPATH = \
-         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS"
+         "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS"
       explanation_comparison_trial_dirpath = os.path.join(EXPLANATION_COMPARISONS_DIRPATH,
                                                          f"Explanation_Comparison___@_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}")
       
@@ -176,6 +192,11 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
          f.write(f"  { os.path.split(materials_for_explanation_comparison__dict['graph_embedding__results__dirpath'])[1] } ( f{materials_for_explanation_comparison__dict['graph_embedding__results__dirpath']} ) \n")
          f.write("    vs.\n")
          f.write(f"  { os.path.split(materials_for_explanation_comparison__dict['no_graph__results__dirpath'])[1] }  ( f{materials_for_explanation_comparison__dict['no_graph__results__dirpath']} )\n")
+
+
+      with open( os.path.join(explanation_comparison_trial_dirpath, "predictions_comparisons__dict.json"), "w" ) as f:
+         json.dump(predictions_comparisons__dict, f)
+
 
       # 3. Create 'explanation comparison' sub-directories for the following 4 categories:
       #      category-1: samples which both graph-embedding and no-graph mis-predicted
@@ -203,6 +224,14 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
 
       materials_for_explanation_comparison__dict["graph_embedding__final_test_results_df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"graph_embedding__final_test_results_df.csv"))
       materials_for_explanation_comparison__dict["no_graph__final_test_results_df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"no_graph__final_test_results_df.csv"))
+
+
+
+      # ( Added by JY @ 2024-1-10)
+      materials_for_explanation_comparison__dict["graph_embedding__LocalSHAP_values_TestDataset_df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"graph_embedding__LocalSHAP_values_TestDataset_df.csv"))
+      materials_for_explanation_comparison__dict["no_graph__LocalSHAP_values_TestDataset_csv__df"].to_csv(os.path.join(explanation_comparison_trial_dirpath,"no_graph__LocalSHAP_values_TestDataset_csv__df.csv"))
+
+
       # ==============================================================================================================
       # 5. Write out to produce explanations for each cateogry
 
@@ -218,6 +247,9 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
          index_columns = ["data_name", "ROW_IDENTIFIER", "SHAP_sum_of_feature_shaps", "SHAP_base_value", "predict_proba", "SUM"]
 
          # Extract from GlobalSHAP-TestDataset for comparison
+
+         if sample == "notepad++_context_menu": # since '++' causee a problem in str.contains()
+            sample = "notepad"
          graph_embedding__GlobalSHAP_TestDataset_df__row_of_interest = \
             graph_embedding__GlobalSHAP_TestDataset_df[ graph_embedding__GlobalSHAP_TestDataset_df['data_name'].str.contains(sample) ]
          
@@ -309,13 +341,11 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
          # JY @ 2023-12-28: TODO : could also saveout outputs in results_dict to explanation_comparision_savedir
          results_dict = get_sumShap_basevalue_predictprobas__and_saveout(sample, explanation_comparision_savedir )
 
-         try:
-            get_waterfallplots_and_copy(sample = sample, 
-                                       graph_embedding__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['graph_embedding__mispredictions__dirpath'],
-                                       no_graph__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['no_graph__mispredictions__dirpath'],
-                                       explanation_comparision_savedir= explanation_comparision_savedir)
-         except:
-             pass
+
+         get_waterfallplots_and_copy(sample = sample, 
+                                     graph_embedding__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['graph_embedding__mispredictions__dirpath'],
+                                     no_graph__waterfall_plots__dirpath = materials_for_explanation_comparison__dict['no_graph__mispredictions__dirpath'],
+                                     explanation_comparision_savedir= explanation_comparision_savedir)
 
 
          # (do this?) get manually feature values, and feature shaps

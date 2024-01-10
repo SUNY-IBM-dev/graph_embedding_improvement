@@ -827,12 +827,12 @@ if __name__ == '__main__':
                                  "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194347",
 
                                   ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                  default = ["Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149"])
    
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["search_on_all"] )
+                         default = ["final_test"] )
 
 
     # --------- specific to standard-message-passing 
