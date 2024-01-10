@@ -782,7 +782,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-2"])
+                        default = ["Dataset-Case-1"])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -827,7 +827,7 @@ if __name__ == '__main__':
                                  "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194347",
 
                                   ], 
-                                  default = ["Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149"])
+                                  default = ["Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125"])
    
     parser.add_argument("--search_on_train__or__final_test", 
                                  
@@ -1183,7 +1183,7 @@ if __name__ == '__main__':
          manual_space.append(
                {'bootstrap': False,
                'criterion': 'gini',
-               'max_depth': 15.0,
+               'max_depth': 15,
                'max_features': 'log2',
                'min_samples_leaf': 1,
                'min_samples_split': 2,
@@ -1199,7 +1199,7 @@ if __name__ == '__main__':
          manual_space.append(
                {'bootstrap': False,
                'criterion': 'gini',
-               'max_depth': 15.0,
+               'max_depth': 15,
                'max_features': 'sqrt',
                'min_samples_leaf': 1,
                'min_samples_split': 5,
@@ -1215,7 +1215,7 @@ if __name__ == '__main__':
          manual_space.append(
             {'bootstrap': False,
             'criterion': 'gini',
-            'max_depth': 15.0,
+            'max_depth': 15,
             'max_features': 'sqrt',
             'min_samples_leaf': 1,
             'min_samples_split': 2,
@@ -1264,7 +1264,7 @@ if __name__ == '__main__':
          manual_space.append(
             {'bootstrap': True,
             'criterion': 'gini',
-            'max_depth': 15.0,
+            'max_depth': 15,
             'max_features': None,
             'min_samples_leaf': 1,
             'min_samples_split': 2,
