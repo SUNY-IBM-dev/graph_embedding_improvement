@@ -40,11 +40,11 @@ import pprint
 if __name__ == "__main__":
 
    # dataset-1 explanation-comparison (graph-embedding vs. no-graph)
-   Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_145910"
+   # Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_145910"
 
 
    # dataset-2 explanation-comparison (graph-embedding vs. no-graph)
-   # Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_151611"
+   Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_151611"
 
 
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
    graph_embedding__Local_SHAP_vals_TestDataset.set_index('data_name', inplace = True)
 
    # -----------------------------------------------------------------------------------------------------------
-   # For analysis
+   # Data structures for Further Analysis
    #
 
 
@@ -150,10 +150,20 @@ if __name__ == "__main__":
    #                                    https://shap-lrjball.readthedocs.io/en/latest/api.html#plots
    # )
 
-   # This is an experiment; BE CAUTIOUS  cautious in interpretation.
-   feature_value_to_effect_mapping = {feature: {f"marginal_effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} )": [],
-                                                                      "positive_effect": [],
-                                                                      "negative_effect": []} 
+
+
+
+   # TODO -- This is an experiment; BE CAUTIOUS  cautious in interpretation. -- local-shap-and its extent
+   no_graph__feature_value_to_pushes_towards_direction = {feature: {f"push to Neither": [],
+                                                                      "pushes toward Benign": [],  # (data-name, shap, rank) -- when sorting use absolute value of local-shap
+                                                                                                   #  for easier sorting? 
+                                                                      "pushes toward Malware": []} 
+                                                                     for feature in features_to_check}
+   
+   graph_embedding__feature_value_to_pushes_towards_direction = {feature: {f"push to Neither": [],
+                                                                      "pushes toward Benign": [],  #  when sorting use absolute value of local-shap
+                                                                                                   #  for easier sorting? 
+                                                                      "pushes toward Malware": []} 
                                                                      for feature in features_to_check}
 
    # -----------------------------------------------------------------------------------------------------------
@@ -165,7 +175,7 @@ if __name__ == "__main__":
    print(f"non_marginal_effect__SUM_of_feature_shaps_diff__Threshold: {non_marginal_effect__SUM_of_feature_shaps_diff__Threshold}", flush=True)
 
 
-   for i,data_name in enumerate(data_names):
+   for i, data_name in enumerate(data_names):
       print("-"*50, flush = True)
       print(f"\n {i+1}. {data_name}\n", flush = True)
       
@@ -202,6 +212,57 @@ if __name__ == "__main__":
          data__no_graph__feature_rank = data__no_graph__sorted_absolute_local_shaps__descending_order__rankings.get_loc(feature)+1 # +1 since starts from 0 (top1 == index0)
          data__graph_embedding__feature_rank = data__graph_embedding__sorted_absolute_local_shaps__descending_order__rankings.get_loc(feature)+1
 
+
+         # --------------------------------------------------------------------------------------------------------------------------------------------------------
+         # JY @ 2024-1-11 : Experimental
+
+         if data__no_graph__local_SHAP_value < 0:
+                                                                                                # #  when sorting use absolute value of local-shap
+            no_graph__feature_value_to_pushes_towards_direction[feature]["pushes toward Benign"].append( { "data_name" : data_name, 
+                                                                                                           "local SHAP value": data__no_graph__local_SHAP_value,
+                                                                                                           "local feature rank": data__no_graph__feature_rank,
+                                                                                                           "feature value": data__no_graph__feature_value } )
+               
+         elif data__no_graph__local_SHAP_value > 0:
+
+            no_graph__feature_value_to_pushes_towards_direction[feature]["pushes toward Malware"].append( { "data_name" : data_name, 
+                                                                                                           "local SHAP value": data__no_graph__local_SHAP_value,
+                                                                                                           "local feature rank": data__no_graph__feature_rank,
+                                                                                                           "feature value": data__no_graph__feature_value } )
+
+         else:
+            no_graph__feature_value_to_pushes_towards_direction[feature]["pushes toward Neither"].append( { "data_name" : data_name, 
+                                                                                                           "local SHAP value": data__no_graph__local_SHAP_value,
+                                                                                                           "local feature rank": data__no_graph__feature_rank,
+                                                                                                           "feature value": data__no_graph__feature_value } )
+
+
+
+         if data__graph_embedding___local_SHAP_value < 0:
+                                                                                                # #  when sorting use absolute value of local-shap
+            graph_embedding__feature_value_to_pushes_towards_direction[feature]["pushes toward Benign"].append( 
+                                                                                                         { "data_name" : data_name, 
+                                                                                                           "local SHAP value": data__graph_embedding___local_SHAP_value,
+                                                                                                           "local feature rank": data__graph_embedding__feature_rank,
+                                                                                                           "feature value": data__graph_embedding___feature_value } )
+               
+         elif data__graph_embedding___local_SHAP_value > 0:
+
+            graph_embedding__feature_value_to_pushes_towards_direction[feature]["pushes toward Malware"].append( { "data_name" : data_name, 
+                                                                                                           "local SHAP value": data__graph_embedding___local_SHAP_value,
+                                                                                                           "local feature rank": data__graph_embedding__feature_rank,
+                                                                                                           "feature value": data__graph_embedding___feature_value } )
+
+         else:
+            graph_embedding__feature_value_to_pushes_towards_direction[feature]["pushes toward Neither"].append( { "data_name" : data_name, 
+                                                                                                           "local SHAP value": data__graph_embedding___local_SHAP_value,
+                                                                                                           "local feature rank": data__graph_embedding__feature_rank,
+                                                                                                           "feature value": data__graph_embedding___feature_value } )
+
+
+         
+
+         # --------------------------------------------------------------------------------------------------------------------------------------------------------
 
          # check if this feature is pushing toward the correct direction or not 
          # -- negative local-shap-value : push towards benign (blue-left-pointing-bar) 
@@ -285,10 +346,6 @@ if __name__ == "__main__":
             feature_level__graph_embedding_effect__cnt__dict[feature][f"marginal_effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} )"] += 1
             feature_level__graph_embedding_effect__samples__dict[feature][f"marginal_effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} )"].append( (data_name, local_shap__abs_diff) )
 
-            # experimental
-            feature_value_to_effect_mapping[feature][f"marginal_effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} )"].append( (data_name, 
-                                                                                                                                               data__graph_embedding___feature_value) )
-
          else: # non-marginal (noticeable) effect
 
             if label == "benign": 
@@ -298,17 +355,11 @@ if __name__ == "__main__":
                   feature_level__graph_embedding_effect__cnt__dict[feature]['positive_effect'] += 1
                   feature_level__graph_embedding_effect__samples__dict[feature]['positive_effect'].append( (data_name, local_shap__abs_diff) )
 
-                  # experimental
-                  feature_value_to_effect_mapping[feature][f"positive_effect"].append( (data_name, data__graph_embedding___feature_value) )
-
 
                elif data__no_graph__local_SHAP_value > data__graph_embedding___local_SHAP_value :
                   print(f"--> 'graph-embedding' had negative-effect with '{feature}', b/c less pushes towards 'Benign'", flush=True)
                   feature_level__graph_embedding_effect__cnt__dict[feature]['negative_effect'] += 1
                   feature_level__graph_embedding_effect__samples__dict[feature]['negative_effect'].append( (data_name, local_shap__abs_diff) )
-
-                  # experimental
-                  feature_value_to_effect_mapping[feature][f"negative_effect"].append( (data_name, data__graph_embedding___feature_value) )
 
             else: # if label == malware
 
@@ -317,8 +368,6 @@ if __name__ == "__main__":
                 feature_level__graph_embedding_effect__cnt__dict[feature]['positive_effect'] += 1
                 feature_level__graph_embedding_effect__samples__dict[feature]['positive_effect'].append( (data_name, local_shap__abs_diff) )
  
-                # experimental
-                feature_value_to_effect_mapping[feature][f"positive_effect"].append( (data_name, data__graph_embedding___feature_value) )
 
 
              elif data__graph_embedding___local_SHAP_value < data__no_graph__local_SHAP_value :
@@ -326,8 +375,6 @@ if __name__ == "__main__":
                 feature_level__graph_embedding_effect__cnt__dict[feature]['negative_effect'] += 1
                 feature_level__graph_embedding_effect__samples__dict[feature]['negative_effect'].append( (data_name, local_shap__abs_diff) )
 
-                # experimental
-                feature_value_to_effect_mapping[feature][f"negative_effect"].append( (data_name, data__graph_embedding___feature_value) )
 
 
 
@@ -443,16 +490,29 @@ if __name__ == "__main__":
    print("\n")
 
    # experimental : be cautious
-   feature_value_to_effect_mapping__sorted = {feature: {effect_category: sorted(list_of_tuples, key=lambda x: x[1], reverse=True) 
-                                                                             for effect_category, list_of_tuples in effect_dict.items()} 
-                                                                   for feature, effect_dict in feature_value_to_effect_mapping.items()}
 
    # maybe could plot it?
-   print(f"\n** FOR THE FOLLOWING, BE CAUTIOUS IN MAKING ANY CONCLUSIONS!\n(This is mapping of a single feature-value to effect; NOT TAKING INTO ACCOUNT the potential effects of feature-interactions or model(RF) non-linearity)", flush = True)
-   print(f"feature_value_to_effect_mapping__sorted:\n", flush=True)
-   pprint.pprint(feature_value_to_effect_mapping__sorted, indent=2)
+   print(f"\n** FOR THE FOLLOWING RESULTS, BE CONSERVATIVE IN MAKING ANY CONCLUSIONS!\n(This is mapping of a 'single feature-value' to its 'pushing direction and extent' (expressed by it's local SHAP value); THIS DOES NOT TAKE INTO ACCOUNT the potential effects of feature-interactions or model(RF) non-linearity)", flush = True)
+   print("--> Could extend/incorporate to 'shap_interaction_values' which TreeSHAP provides (e.g. can I get feature-value combinations with strongest joint-effect on pushing towards positive/negative? )\n", flush=True)
+
+   no_graph__feature_value_to_pushes_towards_direction__sorted = {feature: {direction_category: sorted(direction_dict, key=lambda x: abs(x['local SHAP value']), 
+                                                                                                              reverse=True) 
+                                                                         for direction_category, direction_dict in direction_dict.items()} 
+                                                                         for feature, direction_dict in no_graph__feature_value_to_pushes_towards_direction.items()}
+
+
+   graph_embedding__feature_value_to_pushes_towards_direction__sorted = {feature: {direction_category: sorted(direction_dict, key=lambda x: abs(x['local SHAP value']), 
+                                                                                                              reverse=True) 
+                                                                         for direction_category, direction_dict in direction_dict.items()} 
+                                                                         for feature, direction_dict in graph_embedding__feature_value_to_pushes_towards_direction.items()}
+
+   print(f"no_graph__feature_value_to_pushes_towards_direction__sorted:\n", flush=True)
+   pprint.pprint(no_graph__feature_value_to_pushes_towards_direction__sorted, indent=2)
    print("\n")
 
 
+   print(f"graph_embedding__feature_value_to_pushes_towards_direction__sorted:\n", flush=True)
+   pprint.pprint(graph_embedding__feature_value_to_pushes_towards_direction__sorted, indent=2)
+   print("\n")   
 
-
+   print()
