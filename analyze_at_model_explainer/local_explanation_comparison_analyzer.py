@@ -10,7 +10,7 @@ Automate the procedure for:
 
 MAIN QUESITON
 ** For each approach (no_graph, graph-embedding), 
-      For each feature of interest, across samples, 
+      For each feature of interest (or features), across samples, 
       what are the feature-values that are associated with 'pushing towards benign' and 'pushing towards malware'?"
 
 
@@ -25,7 +25,7 @@ This is mainly due to interactive effects across features
 i.e. varying contributions of features based on the context of other features within the sample
 
 THEREFORE, JUST TRY THIS BUT DONT TRUST IT TO MUCH 
-
+--> JY @ 2024-1-11: but can we still get some tendency?
 
 
 TODO -- Could count stuff (e.g. incidients of graph-embedding having positive effect for each feature)
@@ -35,6 +35,7 @@ TODO -- Could count stuff (e.g. incidients of graph-embedding having positive ef
 import os
 import pandas as pd
 from collections import defaultdict
+import pprint
 
 if __name__ == "__main__":
 
@@ -45,12 +46,26 @@ if __name__ == "__main__":
    # dataset-2 explanation-comparison (graph-embedding vs. no-graph)
    # Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_151611"
 
-   print(f"{os.path.split(Explanation_comparison_dirpath)[1]}", flush= True)
 
 
    # None or 'list with more than 1 element' are acceptable
    features_of_interest = ["file", "thread", "registry", "network", "process"]
    samples_of_interest = None
+
+
+   # JY @ 2024-1-11: More specifically, for example, if graph-embedding-local-shap-value is 0.005 and no-graph-local-SHAP-value is 0.004, 
+   #                 would it be fair to consider graph-embedding had a positive effect? 
+   #                 That small increase (0.001) with graph-embedding could be due to some randomness coming from RF or SHAP-computation.
+   #                 Even if it is from graph-embedding, the effect is too marginal. 
+   #                 - We want to focus on cases, where graph-embedding likely brought a noticeable (non-marginal) positive or negative effect.
+   #                   Therefore, set a threshold. In Waterfall-point, it shows up to 2 decimal points, so 0.01 or 0.005 might be fair. 
+   non_marginal_effect__local_shap_diff__Threshold = 0.01
+
+   # JY @ 2024-1-11: similar story for 'sum-of-feature-shaps difference'
+   #                 could set the difference-threshold a little higher here compared to the 'local shap difference threshold' ,
+   #                 since there is cumulative-effect of local-shap-differences takes place, given this is the 'sum' of feature-shaps
+   non_marginal_effect__SUM_of_feature_shaps_diff__Threshold = 0.05
+
 
 
    # -------------------------------------------------------------
@@ -61,6 +76,9 @@ if __name__ == "__main__":
    graph_embedding__GlobalSHAP_TestDataset = pd.read_csv( os.path.join(Explanation_comparison_dirpath, "graph_embedding__GlobalSHAP_TestDataset_df.csv") )
    graph_embedding__Local_SHAP_vals_TestDataset = pd.read_csv( os.path.join(Explanation_comparison_dirpath, "graph_embedding__LocalSHAP_values_TestDataset_df.csv") )
    # -------------------------------------------------------------
+
+
+
 
    # check stuff
 
@@ -102,17 +120,50 @@ if __name__ == "__main__":
    no_graph__Local_SHAP_vals_TestDataset.set_index('data_name', inplace = True)
    graph_embedding__Local_SHAP_vals_TestDataset.set_index('data_name', inplace = True)
 
-   print(f"\nfeatures_to_check:\n{features_to_check}\n\n", flush=True)
    # -----------------------------------------------------------------------------------------------------------
-   # BUT NEED TO BE CAREFUL HERE, IS IT TRIVIALLY POSITIVE OR REALLY POSITIVE
-   feature_level__graph_embedding_effect__cnt__dict = {feature: defaultdict(int) for feature in features_to_check}
+   # For analysis
+   #
 
-   sample_level__graph_embedding_effect__cnt__dict = defaultdict(int)
 
    prediction_changed_by_graph_embedding__cnt = 0
 
+   feature_level__graph_embedding_effect__cnt__dict = {feature: defaultdict(int) for feature in features_to_check}
+   sample_level__graph_embedding_effect__cnt__dict = defaultdict(int)
+
+   # for some more info
+   feature_level__graph_embedding_effect__samples__dict = {feature: {f"marginal_effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} )": [],
+                                                                      "positive_effect": [],
+                                                                      "negative_effect": []} 
+                                                                     for feature in features_to_check}
+
+   sample_level__graph_embedding_effect__samples__dict = {f"marginal_effect ( abs. < {non_marginal_effect__SUM_of_feature_shaps_diff__Threshold} )": [],
+                                                           "positive_effect": [],
+                                                           "negative_effect": []}
+
+   # TODO @ 2024-1-11 --
+   # Attempt associating feature-values to 'push-towards-benign' or 'push-towards-malware'
+   # Yes, there is an issue as interaction-effect and/or model-nonlinearity can play role
+   # -> But can I still get feature-value-combinations that are likely to 'push towards benign' or 'push towards malware'?
+   #    look into shap functionalities (heatmap etc  --  
+   #                                    https://shap-lrjball.readthedocs.io/en/latest/generated/shap.TreeExplainer.html
+   #                                    https://shap-lrjball.readthedocs.io/en/latest/generated/shap.explainers.other.TreeGain.html#shap.explainers.other.TreeGain
+   #                                    https://shap-lrjball.readthedocs.io/en/latest/api.html#plots
+   # )
+
+   # This is an experiment; BE CAUTIOUS  cautious in interpretation.
+   feature_value_to_effect_mapping = {feature: {f"marginal_effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} )": [],
+                                                                      "positive_effect": [],
+                                                                      "negative_effect": []} 
+                                                                     for feature in features_to_check}
+
    # -----------------------------------------------------------------------------------------------------------
    # Now automate for analysis
+
+   print(f"{os.path.split(Explanation_comparison_dirpath)[1]}", flush= True)
+   print(f"\nfeatures_to_check:\n{features_to_check}\n\n", flush=True)
+   print(f"non_marginal_effect__local_shap_diff__Threshold: {non_marginal_effect__local_shap_diff__Threshold}", flush=True)
+   print(f"non_marginal_effect__SUM_of_feature_shaps_diff__Threshold: {non_marginal_effect__SUM_of_feature_shaps_diff__Threshold}", flush=True)
+
 
    for i,data_name in enumerate(data_names):
       print("-"*50, flush = True)
@@ -226,34 +277,58 @@ if __name__ == "__main__":
          # Compare the local-shap-values of 'no_graph' and 'graph_embedding', 
          # Basically, here write code to automate the visual 'side by side' comparison of two waterfall-plots 
 
-         if label == "benign": 
 
-             if data__no_graph__local_SHAP_value < data__graph_embedding___local_SHAP_value:
-                print(f"--> 'graph-embedding' had positive-effect with '{feature}', b/c more pushes towards 'Benign'", flush=True)
-                feature_level__graph_embedding_effect__cnt__dict[feature]['positive_effect'] += 1
+         local_shap__abs_diff = abs(data__no_graph__local_SHAP_value - data__graph_embedding___local_SHAP_value)
 
-             elif data__no_graph__local_SHAP_value > data__graph_embedding___local_SHAP_value :
-                print(f"--> 'graph-embedding' had negative-effect with '{feature}', b/c less pushes towards 'Benign'", flush=True)
-                feature_level__graph_embedding_effect__cnt__dict[feature]['negative_effect'] += 1
+         if local_shap__abs_diff < non_marginal_effect__local_shap_diff__Threshold:
+            print(f"--> 'graph-embedding' had marginal effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} local-shap-difference ) with '{feature}'.")
+            feature_level__graph_embedding_effect__cnt__dict[feature][f"marginal_effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} )"] += 1
+            feature_level__graph_embedding_effect__samples__dict[feature][f"marginal_effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} )"].append( (data_name, local_shap__abs_diff) )
 
-             else:
-                print(f"--> 'graph-embedding' had ZERO-effect with '{feature}'.")
-                feature_level__graph_embedding_effect__cnt__dict[feature]['zero_effect'] += 1
+            # experimental
+            feature_value_to_effect_mapping[feature][f"marginal_effect ( abs. < {non_marginal_effect__local_shap_diff__Threshold} )"].append( (data_name, 
+                                                                                                                                               data__graph_embedding___feature_value) )
+
+         else: # non-marginal (noticeable) effect
+
+            if label == "benign": 
+   
+               if data__no_graph__local_SHAP_value < data__graph_embedding___local_SHAP_value:
+                  print(f"--> 'graph-embedding' had positive-effect with '{feature}', b/c more pushes towards 'Benign'", flush=True)
+                  feature_level__graph_embedding_effect__cnt__dict[feature]['positive_effect'] += 1
+                  feature_level__graph_embedding_effect__samples__dict[feature]['positive_effect'].append( (data_name, local_shap__abs_diff) )
+
+                  # experimental
+                  feature_value_to_effect_mapping[feature][f"positive_effect"].append( (data_name, data__graph_embedding___feature_value) )
 
 
-         else: # if malware
+               elif data__no_graph__local_SHAP_value > data__graph_embedding___local_SHAP_value :
+                  print(f"--> 'graph-embedding' had negative-effect with '{feature}', b/c less pushes towards 'Benign'", flush=True)
+                  feature_level__graph_embedding_effect__cnt__dict[feature]['negative_effect'] += 1
+                  feature_level__graph_embedding_effect__samples__dict[feature]['negative_effect'].append( (data_name, local_shap__abs_diff) )
+
+                  # experimental
+                  feature_value_to_effect_mapping[feature][f"negative_effect"].append( (data_name, data__graph_embedding___feature_value) )
+
+            else: # if label == malware
 
              if data__graph_embedding___local_SHAP_value > data__no_graph__local_SHAP_value:
                 print(f"--> 'graph-embedding' had positive-effect with '{feature}', b/c it more pushes towards 'Malware'", flush=True)
                 feature_level__graph_embedding_effect__cnt__dict[feature]['positive_effect'] += 1
+                feature_level__graph_embedding_effect__samples__dict[feature]['positive_effect'].append( (data_name, local_shap__abs_diff) )
+ 
+                # experimental
+                feature_value_to_effect_mapping[feature][f"positive_effect"].append( (data_name, data__graph_embedding___feature_value) )
+
 
              elif data__graph_embedding___local_SHAP_value < data__no_graph__local_SHAP_value :
                 print(f"--> 'graph-embedding' had negative-effect with '{feature}', b/c it less pushes towards 'Malware'", flush=True)
                 feature_level__graph_embedding_effect__cnt__dict[feature]['negative_effect'] += 1
+                feature_level__graph_embedding_effect__samples__dict[feature]['negative_effect'].append( (data_name, local_shap__abs_diff) )
 
-             else:
-                print(f"--> 'graph-embedding' had ZERO-effect with '{feature}'.")
-                feature_level__graph_embedding_effect__cnt__dict[feature]['zero_effect'] += 1
+                # experimental
+                feature_value_to_effect_mapping[feature][f"negative_effect"].append( (data_name, data__graph_embedding___feature_value) )
+
 
 
          print("^---- CHECK the degree of effect, by comparing 'local-shap-values' and 'contribution-ranks'", flush=True)
@@ -288,31 +363,41 @@ if __name__ == "__main__":
       print(f"'no_graph'  -->  Sum-of-Feature-Shaps : {no_graph__data__SHAP_sum_of_feature_shaps}  |  Base-value: {no_graph__SHAP_base_value}  |  Prediction:  {no_graph__prediction}  |  Label: {label}", flush = True)         
       print(f"'graph-emb' -->  Sum-of-Feature-Shaps : {graph_embedding__data__SHAP_sum_of_feature_shaps}  |  Base-value: {graph_embedding__SHAP_base_value}  |  Prediction:  {graph_embedding__prediction}  |  Label: {label}", flush = True)  
 
-      if label == "benign": 
-         if no_graph__data__SHAP_sum_of_feature_shaps < graph_embedding__data__SHAP_sum_of_feature_shaps:
-            print(f"--> 'graph-embedding' had positive-effect, at sample-level, b/c more pushes towards 'Benign'", flush=True)
-            sample_level__graph_embedding_effect__cnt__dict['positive_effect'] += 1
 
-         elif no_graph__data__SHAP_sum_of_feature_shaps > graph_embedding__data__SHAP_sum_of_feature_shaps :
-            print(f"--> 'graph-embedding' had negative-effect, at sample-level, b/c less pushes towards 'Benign'", flush=True)
-            sample_level__graph_embedding_effect__cnt__dict['negative_effect'] += 1
+      sum_of_feature_shaps__abs_diff = abs(no_graph__data__SHAP_sum_of_feature_shaps - graph_embedding__data__SHAP_sum_of_feature_shaps)
 
-         else:
-            print(f"--> 'graph-embedding' had ZERO-effect, at sample-level.")
-            sample_level__graph_embedding_effect__cnt__dict['zero_effect'] += 1
+      if sum_of_feature_shaps__abs_diff < non_marginal_effect__SUM_of_feature_shaps_diff__Threshold:
+         print(f"--> 'graph-embedding' had marginal-effect ( abs. < {non_marginal_effect__SUM_of_feature_shaps_diff__Threshold} sum-of-feature-shaps difference ), at sample-level.")
+         sample_level__graph_embedding_effect__cnt__dict[f"marginal_effect ( abs. < {non_marginal_effect__SUM_of_feature_shaps_diff__Threshold} )"] += 1
+         sample_level__graph_embedding_effect__samples__dict[f"marginal_effect ( abs. < {non_marginal_effect__SUM_of_feature_shaps_diff__Threshold} )"].append( (data_name, sum_of_feature_shaps__abs_diff) )
 
-      else: # if malware
-         if graph_embedding__data__SHAP_sum_of_feature_shaps > no_graph__data__SHAP_sum_of_feature_shaps:
-            print(f"--> 'graph-embedding' had positive-effect, at sample-level, b/c more pushes towards 'Malware'", flush=True)
-            sample_level__graph_embedding_effect__cnt__dict['positive_effect'] += 1
 
-         elif graph_embedding__data__SHAP_sum_of_feature_shaps < no_graph__data__SHAP_sum_of_feature_shaps :
-            print(f"--> 'graph-embedding' had negative-effect, at sample-level, b/c less pushes towards 'Malware'", flush=True)
-            sample_level__graph_embedding_effect__cnt__dict['negative_effect'] += 1
+      else: # non-marginal (noticeable) effect
 
-         else:
-            print(f"--> 'graph-embedding' had ZERO-effect, at sample-level.")
-            sample_level__graph_embedding_effect__cnt__dict['zero_effect'] += 1
+         if label == "benign": 
+
+            if no_graph__data__SHAP_sum_of_feature_shaps < graph_embedding__data__SHAP_sum_of_feature_shaps:
+               print(f"--> 'graph-embedding' had positive-effect, at sample-level, b/c more pushes towards 'Benign'", flush=True)
+               sample_level__graph_embedding_effect__cnt__dict['positive_effect'] += 1
+               sample_level__graph_embedding_effect__samples__dict['positive_effect'].append( (data_name, sum_of_feature_shaps__abs_diff)  )
+
+            elif no_graph__data__SHAP_sum_of_feature_shaps > graph_embedding__data__SHAP_sum_of_feature_shaps :
+               print(f"--> 'graph-embedding' had negative-effect, at sample-level, b/c less pushes towards 'Benign'", flush=True)
+               sample_level__graph_embedding_effect__cnt__dict['negative_effect'] += 1
+               sample_level__graph_embedding_effect__samples__dict['negative_effect'].append( (data_name, sum_of_feature_shaps__abs_diff) )
+
+         else: # if malware
+
+            if graph_embedding__data__SHAP_sum_of_feature_shaps > no_graph__data__SHAP_sum_of_feature_shaps:
+               print(f"--> 'graph-embedding' had positive-effect, at sample-level, b/c more pushes towards 'Malware'", flush=True)
+               sample_level__graph_embedding_effect__cnt__dict['positive_effect'] += 1
+               sample_level__graph_embedding_effect__samples__dict['positive_effect'].append( (data_name, sum_of_feature_shaps__abs_diff) )
+
+            elif graph_embedding__data__SHAP_sum_of_feature_shaps < no_graph__data__SHAP_sum_of_feature_shaps :
+               print(f"--> 'graph-embedding' had negative-effect, at sample-level, b/c less pushes towards 'Malware'", flush=True)
+               sample_level__graph_embedding_effect__cnt__dict['negative_effect'] += 1
+               sample_level__graph_embedding_effect__samples__dict['negative_effect'].append( (data_name, sum_of_feature_shaps__abs_diff) )
+
 
       print(f"Prediction-Changed? {no_graph__prediction != graph_embedding__prediction}", flush=True)
       if no_graph__prediction != graph_embedding__prediction:   
@@ -324,16 +409,49 @@ if __name__ == "__main__":
    # BUT NEED TO BE CAREFUL HERE, IS IT TRIVIALLY POSITIVE OR REALLY POSITIVE
    prediction_changed_by_graph_embedding__cnt
 
-   sample_level__graph_embedding_effect__cnt__dict
    feature_level__graph_embedding_effect__cnt__dict
+   sample_level__graph_embedding_effect__cnt__dict
+   
 
-   print()
+   feature_level__graph_embedding_effect__samples__dict__sorted = {feature: {effect_category: sorted(list_of_tuples, key=lambda x: x[1], reverse=True) 
+                                                                             for effect_category, list_of_tuples in effect_dict.items()} 
+                                                                   for feature, effect_dict in feature_level__graph_embedding_effect__samples__dict.items()}
+                                                         
+   sample_level__graph_embedding_effect__samples__dict__sorted = { k: sorted(v, key = lambda x: x[1], reverse=True) for k,v in sample_level__graph_embedding_effect__samples__dict.items() }
+   
 
+   print("="*150, flush=True)
+   print("="*150, flush=True)
+   print("\n[ Additional info ]:\n")
 
+   print(f"prediction_changed_by_graph_embedding__cnt: {prediction_changed_by_graph_embedding__cnt}\n", flush=True)
+   
+   print(f"feature_level__graph_embedding_effect__cnt__dict:\n", flush=True)
+   pprint.pprint(feature_level__graph_embedding_effect__cnt__dict, indent=2)
+   print("\n")
 
+   print(f"sample_level__graph_embedding_effect__cnt__dict:\n", flush=True)
+   pprint.pprint(sample_level__graph_embedding_effect__cnt__dict, indent=2)
+   print("\n")
 
+   print(f"feature_level__graph_embedding_effect__samples__dict__sorted:\n", flush=True)
+   pprint.pprint(feature_level__graph_embedding_effect__samples__dict__sorted, indent=2)
+   print("\n")
 
+   print(f"sample_level__graph_embedding_effect__samples__dict__sorted:\n", flush=True)
+   pprint.pprint(sample_level__graph_embedding_effect__samples__dict__sorted, indent=2)
+   print("\n")
 
+   # experimental : be cautious
+   feature_value_to_effect_mapping__sorted = {feature: {effect_category: sorted(list_of_tuples, key=lambda x: x[1], reverse=True) 
+                                                                             for effect_category, list_of_tuples in effect_dict.items()} 
+                                                                   for feature, effect_dict in feature_value_to_effect_mapping.items()}
+
+   # maybe could plot it?
+   print(f"\n** FOR THE FOLLOWING, BE CAUTIOUS IN MAKING ANY CONCLUSIONS!\n(This is mapping of a single feature-value to effect; NOT TAKING INTO ACCOUNT the potential effects of feature-interactions or model(RF) non-linearity)", flush = True)
+   print(f"feature_value_to_effect_mapping__sorted:\n", flush=True)
+   pprint.pprint(feature_value_to_effect_mapping__sorted, indent=2)
+   print("\n")
 
 
 
