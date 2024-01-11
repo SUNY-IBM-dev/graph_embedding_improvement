@@ -26,20 +26,24 @@ i.e. varying contributions of features based on the context of other features wi
 
 THEREFORE, JUST TRY THIS BUT DONT TRUST IT TO MUCH 
 
+
+
+TODO -- Could count stuff (e.g. incidients of graph-embedding having positive effect for each feature)
+
 '''
 
 import os
 import pandas as pd
-
+from collections import defaultdict
 
 if __name__ == "__main__":
 
    # dataset-1 explanation-comparison (graph-embedding vs. no-graph)
-   # Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_145910"
+   Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_145910"
 
 
    # dataset-2 explanation-comparison (graph-embedding vs. no-graph)
-   Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_151611"
+   # Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_151611"
 
    print(f"{os.path.split(Explanation_comparison_dirpath)[1]}", flush= True)
 
@@ -99,12 +103,20 @@ if __name__ == "__main__":
    graph_embedding__Local_SHAP_vals_TestDataset.set_index('data_name', inplace = True)
 
    print(f"\nfeatures_to_check:\n{features_to_check}\n\n", flush=True)
+   # -----------------------------------------------------------------------------------------------------------
+   # BUT NEED TO BE CAREFUL HERE, IS IT TRIVIALLY POSITIVE OR REALLY POSITIVE
+   feature_level__graph_embedding_effect__cnt__dict = {feature: defaultdict(int) for feature in features_to_check}
 
+   sample_level__graph_embedding_effect__cnt__dict = defaultdict(int)
+
+   prediction_changed_by_graph_embedding__cnt = 0
+
+   # -----------------------------------------------------------------------------------------------------------
    # Now automate for analysis
 
-   for data_name in data_names:
+   for i,data_name in enumerate(data_names):
       print("-"*50, flush = True)
-      print(f"\n {data_name}\n", flush = True)
+      print(f"\n {i+1}. {data_name}\n", flush = True)
       
       for feature in features_to_check:
 
@@ -202,10 +214,10 @@ if __name__ == "__main__":
 
          # ----------------------------------------------------------------------------------------------------------------------------
          # start outputting analysis -- 1 : output for each approach
-
+         print(f"* Feature-level analysis ( {data_name} : {feature} ):")
          print(f"'no_graph'  :  '{feature}' feature with value '{data__no_graph__feature_value}'  pushes towards '{no_graph__pushes_towards}',  the '{no_graph__pushing_towards_correct_direction}' direction  with local-shap-value '{data__no_graph__local_SHAP_value}',  the 'top {data__no_graph__feature_rank}-th feature' for prediction", flush = True)         
          print(f"'graph-emb' :  '{feature}' feature with value '{data__graph_embedding___feature_value}'  pushes towards '{graph_embedding_pushes_towards}',  the '{graph_embedding__pushing_towards_correct_direction}' direction  with local-shap-value '{data__graph_embedding___local_SHAP_value}',  the 'top {data__graph_embedding__feature_rank}-th' feature for prediction", flush = True)
-
+         
 
 
          # ----------------------------------------------------------------------------------------------------------------------------
@@ -217,22 +229,34 @@ if __name__ == "__main__":
          if label == "benign": 
 
              if data__no_graph__local_SHAP_value < data__graph_embedding___local_SHAP_value:
-                print(f"--> 'graph-embedding' had positive-effect, b/c more pushes towards 'Benign'", flush=True)
+                print(f"--> 'graph-embedding' had positive-effect with '{feature}', b/c more pushes towards 'Benign'", flush=True)
+                feature_level__graph_embedding_effect__cnt__dict[feature]['positive_effect'] += 1
+
              elif data__no_graph__local_SHAP_value > data__graph_embedding___local_SHAP_value :
-                print(f"--> 'graph-embedding' had negative-effect, b/c less pushes towards 'Benign'", flush=True)
+                print(f"--> 'graph-embedding' had negative-effect with '{feature}', b/c less pushes towards 'Benign'", flush=True)
+                feature_level__graph_embedding_effect__cnt__dict[feature]['negative_effect'] += 1
+
              else:
-                print(f"--> 'graph-embedding' had ZERO-effect.")
-             print("^---- CHECK the degree of effect, by comparing 'local-shap-values' and 'contribution-ranks'", flush=True)
+                print(f"--> 'graph-embedding' had ZERO-effect with '{feature}'.")
+                feature_level__graph_embedding_effect__cnt__dict[feature]['zero_effect'] += 1
+
 
          else: # if malware
 
              if data__graph_embedding___local_SHAP_value > data__no_graph__local_SHAP_value:
-                print(f"--> 'graph-embedding' had positive-effect, b/c it more pushes towards 'Malware'", flush=True)
+                print(f"--> 'graph-embedding' had positive-effect with '{feature}', b/c it more pushes towards 'Malware'", flush=True)
+                feature_level__graph_embedding_effect__cnt__dict[feature]['positive_effect'] += 1
+
              elif data__graph_embedding___local_SHAP_value < data__no_graph__local_SHAP_value :
-                print(f"--> 'graph-embedding' had negative-effect, b/c it less pushes towards 'Malware'", flush=True)
+                print(f"--> 'graph-embedding' had negative-effect with '{feature}', b/c it less pushes towards 'Malware'", flush=True)
+                feature_level__graph_embedding_effect__cnt__dict[feature]['negative_effect'] += 1
+
              else:
-                print("--> 'graph-embedding' had ZERO-effect.")
-             print("^---- CHECK the degree of effect, by comparing 'local-shap-values' and 'contribution-ranks'", flush=True)
+                print(f"--> 'graph-embedding' had ZERO-effect with '{feature}'.")
+                feature_level__graph_embedding_effect__cnt__dict[feature]['zero_effect'] += 1
+
+
+         print("^---- CHECK the degree of effect, by comparing 'local-shap-values' and 'contribution-ranks'", flush=True)
          print("\n")
 
       # Also could consider sum-of-shaps, here to see overall impact of 'graph-embedding' on this sample, instead of being specific to a feature 
@@ -246,27 +270,64 @@ if __name__ == "__main__":
       no_graph__data__SHAP_sum_of_feature_shaps = no_graph__GlobalSHAP_TestDataset.loc[data_name,'SHAP_sum_of_feature_shaps']
       graph_embedding__data__SHAP_sum_of_feature_shaps = graph_embedding__GlobalSHAP_TestDataset.loc[data_name,'SHAP_sum_of_feature_shaps']
 
+      # If sum-of-feature-shap is greater than base-value , the prediction is "Malware" here, 
+      # --- baseline is the threshold for model considering sample as 'Malware' 
+      if no_graph__data__SHAP_sum_of_feature_shaps > no_graph__SHAP_base_value:
+         no_graph__prediction = "Malware"
+      else:
+         no_graph__prediction = "Benign"
 
-      # if label == "benign": 
-
-      #    if data__no_graph__local_SHAP_value < data__graph_embedding___local_SHAP_value:
-      #       print(f"--> 'graph-embedding' had positive-effect, b/c more pushes towards 'Benign'", flush=True)
-      #    elif data__no_graph__local_SHAP_value > data__graph_embedding___local_SHAP_value :
-      #       print(f"--> 'graph-embedding' had negative-effect, b/c less pushes towards 'Benign'", flush=True)
-      #    else:
-      #       print(f"--> 'graph-embedding' had ZERO-effect.")
-      #    print("^---- CHECK the degree of effect, by comparing 'local-shap-values' and 'contribution-ranks'", flush=True)
-
-      #    # print(f"On sample-level {(data_name)}, ")
-
-      # else: # if malware
+      if graph_embedding__data__SHAP_sum_of_feature_shaps > graph_embedding__SHAP_base_value:
+         graph_embedding__prediction = "Malware"
+      else:
+         graph_embedding__prediction = "Benign"
 
 
+
+      print(f"* Sample-level analysis ( {data_name} ):")
+      print(f"'no_graph'  -->  Sum-of-Feature-Shaps : {no_graph__data__SHAP_sum_of_feature_shaps}  |  Base-value: {no_graph__SHAP_base_value}  |  Prediction:  {no_graph__prediction}  |  Label: {label}", flush = True)         
+      print(f"'graph-emb' -->  Sum-of-Feature-Shaps : {graph_embedding__data__SHAP_sum_of_feature_shaps}  |  Base-value: {graph_embedding__SHAP_base_value}  |  Prediction:  {graph_embedding__prediction}  |  Label: {label}", flush = True)  
+
+      if label == "benign": 
+         if no_graph__data__SHAP_sum_of_feature_shaps < graph_embedding__data__SHAP_sum_of_feature_shaps:
+            print(f"--> 'graph-embedding' had positive-effect, at sample-level, b/c more pushes towards 'Benign'", flush=True)
+            sample_level__graph_embedding_effect__cnt__dict['positive_effect'] += 1
+
+         elif no_graph__data__SHAP_sum_of_feature_shaps > graph_embedding__data__SHAP_sum_of_feature_shaps :
+            print(f"--> 'graph-embedding' had negative-effect, at sample-level, b/c less pushes towards 'Benign'", flush=True)
+            sample_level__graph_embedding_effect__cnt__dict['negative_effect'] += 1
+
+         else:
+            print(f"--> 'graph-embedding' had ZERO-effect, at sample-level.")
+            sample_level__graph_embedding_effect__cnt__dict['zero_effect'] += 1
+
+      else: # if malware
+         if graph_embedding__data__SHAP_sum_of_feature_shaps > no_graph__data__SHAP_sum_of_feature_shaps:
+            print(f"--> 'graph-embedding' had positive-effect, at sample-level, b/c more pushes towards 'Malware'", flush=True)
+            sample_level__graph_embedding_effect__cnt__dict['positive_effect'] += 1
+
+         elif graph_embedding__data__SHAP_sum_of_feature_shaps < no_graph__data__SHAP_sum_of_feature_shaps :
+            print(f"--> 'graph-embedding' had negative-effect, at sample-level, b/c less pushes towards 'Malware'", flush=True)
+            sample_level__graph_embedding_effect__cnt__dict['negative_effect'] += 1
+
+         else:
+            print(f"--> 'graph-embedding' had ZERO-effect, at sample-level.")
+            sample_level__graph_embedding_effect__cnt__dict['zero_effect'] += 1
+
+      print(f"Prediction-Changed? {no_graph__prediction != graph_embedding__prediction}", flush=True)
+      if no_graph__prediction != graph_embedding__prediction:   
+         prediction_changed_by_graph_embedding__cnt += 1
 
       print("-"*50, flush = True)
 
+   # JY @ 2024-1-10
+   # BUT NEED TO BE CAREFUL HERE, IS IT TRIVIALLY POSITIVE OR REALLY POSITIVE
+   prediction_changed_by_graph_embedding__cnt
 
+   sample_level__graph_embedding_effect__cnt__dict
+   feature_level__graph_embedding_effect__cnt__dict
 
+   print()
 
 
 
