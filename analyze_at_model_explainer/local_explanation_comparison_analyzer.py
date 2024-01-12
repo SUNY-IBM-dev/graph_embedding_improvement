@@ -40,11 +40,11 @@ import pprint
 if __name__ == "__main__":
 
    # dataset-1 explanation-comparison (graph-embedding vs. no-graph)
-   # Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_145910"
+   Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_145910"
 
 
    # dataset-2 explanation-comparison (graph-embedding vs. no-graph)
-   Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_151611"
+   # Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_151611"
 
 
 
@@ -495,24 +495,36 @@ if __name__ == "__main__":
    print(f"\n** FOR THE FOLLOWING RESULTS, BE CONSERVATIVE IN MAKING ANY CONCLUSIONS!\n(This is mapping of a 'single feature-value' to its 'pushing direction and extent' (expressed by it's local SHAP value); THIS DOES NOT TAKE INTO ACCOUNT the potential effects of feature-interactions or model(RF) non-linearity)", flush = True)
    print("--> Could extend/incorporate to 'shap_interaction_values' which TreeSHAP provides (e.g. can I get feature-value combinations with strongest joint-effect on pushing towards positive/negative? )\n", flush=True)
 
-   no_graph__feature_value_to_pushes_towards_direction__sorted = {feature: {direction_category: sorted(direction_dict, key=lambda x: abs(x['local SHAP value']), 
+   no_graph__feature_value_to_pushes_towards_direction__sorted_by_localshsap = {feature: {direction_category: sorted(direction_dict, key=lambda x: abs(x['local SHAP value']), 
                                                                                                               reverse=True) 
-                                                                         for direction_category, direction_dict in direction_dict.items()} 
-                                                                         for feature, direction_dict in no_graph__feature_value_to_pushes_towards_direction.items()}
+                                                                               for direction_category, direction_dict in direction_dict.items()} 
+                                                                               for feature, direction_dict in no_graph__feature_value_to_pushes_towards_direction.items()}
 
 
-   graph_embedding__feature_value_to_pushes_towards_direction__sorted = {feature: {direction_category: sorted(direction_dict, key=lambda x: abs(x['local SHAP value']), 
+   graph_embedding__feature_value_to_pushes_towards_direction__sorted_by_localshsap = {feature: {direction_category: sorted(direction_dict, key=lambda x: abs(x['local SHAP value']), 
                                                                                                               reverse=True) 
-                                                                         for direction_category, direction_dict in direction_dict.items()} 
-                                                                         for feature, direction_dict in graph_embedding__feature_value_to_pushes_towards_direction.items()}
+                                                                                       for direction_category, direction_dict in direction_dict.items()} 
+                                                                                       for feature, direction_dict in graph_embedding__feature_value_to_pushes_towards_direction.items()}
 
-   print(f"no_graph__feature_value_to_pushes_towards_direction__sorted:\n", flush=True)
-   pprint.pprint(no_graph__feature_value_to_pushes_towards_direction__sorted, indent=2)
+
+   no_graph__feature_value_to_pushes_towards_direction__sorted_by_local_rank = {feature: {direction_category: sorted(direction_dict, key=lambda x: x["local feature rank"])                                                                                                               
+                                                                                          for direction_category, direction_dict in direction_dict.items()} 
+                                                                                          for feature, direction_dict in no_graph__feature_value_to_pushes_towards_direction.items()}
+
+
+   graph_embedding__feature_value_to_pushes_towards_direction__sorted_by_local_rank = {feature:  {direction_category: sorted(direction_dict, key=lambda x: x["local feature rank"])  
+                                                                                       for direction_category, direction_dict in direction_dict.items()} 
+                                                                                       for feature, direction_dict in graph_embedding__feature_value_to_pushes_towards_direction.items()}
+
+
+
+   print(f"no_graph__feature_value_to_pushes_towards_direction__sorted_by_local_rank:\n", flush=True)
+   pprint.pprint(no_graph__feature_value_to_pushes_towards_direction__sorted_by_local_rank, indent=2)
    print("\n")
 
 
-   print(f"graph_embedding__feature_value_to_pushes_towards_direction__sorted:\n", flush=True)
-   pprint.pprint(graph_embedding__feature_value_to_pushes_towards_direction__sorted, indent=2)
+   print(f"graph_embedding__feature_value_to_pushes_towards_direction__sorted_by_local_rank:\n", flush=True)
+   pprint.pprint(graph_embedding__feature_value_to_pushes_towards_direction__sorted_by_local_rank, indent=2)
    print("\n")   
 
    print()
