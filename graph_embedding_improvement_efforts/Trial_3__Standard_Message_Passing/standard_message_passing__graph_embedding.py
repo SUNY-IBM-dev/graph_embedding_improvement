@@ -1116,7 +1116,7 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
 
-       if graph_embedding_option == "standard_message_passing_graph_embedding":
+       if "standard_message_passing_graph_embedding" in graph_embedding_option:
          run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__uW_{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
          run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
@@ -1127,7 +1127,7 @@ if __name__ == '__main__':
 
 
     if search_on_train__or__final_test == "final_test":
-       if graph_embedding_option == "standard_message_passing_graph_embedding":
+       if "standard_message_passing_graph_embedding" in graph_embedding_option:
          run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__uW_{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
          run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
@@ -1147,45 +1147,62 @@ if __name__ == '__main__':
       #PW: Dataset-Case-1 
       "Dataset-Case-1": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/train",
+         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/train",
+         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case1/train",
+
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/train"
+         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/train"
+         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case2/train"
+
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/train",
+         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/train",
+         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case1/train",
+
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/train"
+         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/train"
+         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case2/train"
+
+
     }
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/test",
+         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/test",
+         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case1/test",
+
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/test"
+         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/test"
+         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case2/test"
+
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/test",
+         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/test",
+         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case1/test",
+
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/test"
+         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/test"
+         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case2/test"
+
     }
 
     _num_classes = 2  # number of class labels and always binary classification.
@@ -1710,8 +1727,8 @@ if __name__ == '__main__':
                                                                                                                   update_weight = update_weight
                                                                                                                 )
         nodetype_names = ["file", "registry", "network", "process", "thread"] 
-        feature_names = nodetype_names + taskname_colnames + [f"adhoc_pattern_{i}" for i in range(len(train_dataset__standard_message_passing_dict[list(train_dataset__standard_message_passing_dict.keys())[0]][0]) -\
-                                                               len(taskname_colnames) - len(nodetype_names))]
+        feature_names = nodetype_names + taskname_colnames + [f"adhoc_pattern_{i}" for i in range( len(train_dataset__standard_message_passing_dict[list(train_dataset__standard_message_passing_dict.keys())[0]]) -\
+                                                              len(taskname_colnames) - len(nodetype_names))]
         X = pd.DataFrame(train_dataset__standard_message_passing_dict).T
 
 
@@ -1784,8 +1801,9 @@ if __name__ == '__main__':
                                                                                                                            update_weight = update_weight
                                                                                                                          )
             nodetype_names = ["file", "registry", "network", "process", "thread"] 
-            feature_names = nodetype_names + taskname_colnames + [f"adhoc_pattern_{i}" for i in range(len(final_test_dataset__standard_message_passing_dict[list(final_test_dataset__standard_message_passing_dict.keys())[0]][0]) -\
-                                                               len(taskname_colnames) - len(nodetype_names))]
+            feature_names = nodetype_names + taskname_colnames + [f"adhoc_pattern_{i}" for i in range( len(final_test_dataset__standard_message_passing_dict[list(final_test_dataset__standard_message_passing_dict.keys())[0]]) -\
+                                                                  len(taskname_colnames) - len(nodetype_names))]
+
             final_test_X = pd.DataFrame(final_test_dataset__standard_message_passing_dict).T
 
          elif graph_embedding_option == "no_graph_structure__event_1gram_nodetype_5bit":
