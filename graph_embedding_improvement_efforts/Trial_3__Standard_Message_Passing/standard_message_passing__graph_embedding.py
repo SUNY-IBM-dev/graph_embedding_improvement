@@ -768,6 +768,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
 
 
 def get__standard_message_passing_graph_embedding_Adhoc__dict( dataset : list, 
+                                                               dim_node : int = 35, 
                                                                n_hops : int = 1,
                                                                neighborhood_aggr : str = "sum", 
                                                                pool : str = "sum",
@@ -902,7 +903,7 @@ def get__standard_message_passing_graph_embedding_Adhoc__dict( dataset : list,
                                                                       # state of the graph of previous hop,
                                                                       # not by the graph that's being updated real-time in this hop.
             
-            graph_data_x_first_36_bits = graph_data__from_previous_hop.x[:,:36]  # corresponds to node-attributes 
+            graph_data_x_first_35_bits = graph_data__from_previous_hop.x[:,:dim_node]  # corresponds to node-attributes 
             
             
             for node_idx in range( graph_data.x.shape[0] ):
@@ -951,7 +952,7 @@ def get__standard_message_passing_graph_embedding_Adhoc__dict( dataset : list,
                unique__source_nodes_of_incoming_edges_to_this_node = torch.unique( source_nodes_of_incoming_edges_to_this_node )
                # node-attributes of 'unique' (for handling duplicate neighboring-nodes) incoming nodes
                # (i.e. node-level messages) # 
-               node_level_messages = graph_data_x_first_36_bits[ unique__source_nodes_of_incoming_edges_to_this_node ]
+               node_level_messages = graph_data_x_first_35_bits[ unique__source_nodes_of_incoming_edges_to_this_node ]
 
                ''' First perform neighborhood aggregation for edge-feats and node-feats separately,
                    as the latter has considered unique incoming nodes to evade "duplicate neighboring nodes"
@@ -1015,7 +1016,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        default = ["Dataset-Case-2"])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -1147,30 +1148,30 @@ if __name__ == '__main__':
       #PW: Dataset-Case-1 
       "Dataset-Case-1": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
-         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/train",
-         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case1/train",
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/train",
+         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case1/train",
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
-         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/train"
-         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case2/train"
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/train"
+         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case2/train"
 
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
-         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/train",
-         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case1/train",
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/train",
+         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case1/train",
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
-         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/train"
-         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case2/train"
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/train"
+         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case2/train"
 
 
     }
@@ -1178,37 +1179,37 @@ if __name__ == '__main__':
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
-         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/test",
-         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case1/test",
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/test",
+         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case1/test",
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
-         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/test"
-         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case2/test"
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/test"
+         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case2/test"
 
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
-         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/test",
-         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case1/test",
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/test",
+         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case1/test",
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
          #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
-         # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/test"
-         "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case2/test"
+         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/test"
+         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case2/test"
 
     }
 
     _num_classes = 2  # number of class labels and always binary classification.
 
     if graph_embedding_option == "standard_message_passing_graph_embedding__adhoc_node_features":
-        _dim_node = 36 #46   # num node features ; the #feats    
+        _dim_node = 35 #46   # num node features ; the #feats    
     else:
         _dim_node = 5 #46   # num node features ; the #feats
 
@@ -1721,6 +1722,7 @@ if __name__ == '__main__':
     # added by JY @ 2024-1-13
     elif graph_embedding_option == "standard_message_passing_graph_embedding__adhoc_node_features":
         train_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding_Adhoc__dict( dataset= train_dataset,
+                                                                                                                  dim_node = _dim_node,
                                                                                                                   n_hops= n_hops,
                                                                                                                   neighborhood_aggr= neighborhood_aggregation,
                                                                                                                   pool= pool_option, 
@@ -1795,6 +1797,7 @@ if __name__ == '__main__':
          # added by JY @ 2024-1-13
          elif graph_embedding_option == "standard_message_passing_graph_embedding__adhoc_node_features":
             final_test_dataset__standard_message_passing_dict = get__standard_message_passing_graph_embedding_Adhoc__dict( dataset= final_test_dataset,
+                                                                                                                           dim_node = _dim_node,                                                                                                                  
                                                                                                                            n_hops= n_hops,
                                                                                                                            neighborhood_aggr= neighborhood_aggregation,
                                                                                                                            pool= pool_option,
