@@ -637,7 +637,7 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                                                                       # not by the graph that's being updated real-time in this hop.
             
             graph_data_x_first_5_bits = graph_data__from_previous_hop.x[:,:5] # corresponds to node-attributes 
-            
+            graph_data_x_After_5_bits = graph_data__from_previous_hop.x[:, 5:] # corresponds to edge-level attributes accumulated into the node's embedding
             
             for node_idx in range( graph_data.x.shape[0] ):
                print(f"{cnt} / {len(dataset)}: {graph_data.name} | {n+1} hop | {node_idx+1} / {graph_data.x.shape[0]} : message passing for node", flush = True)
@@ -668,9 +668,6 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
 
 
 
-               # ---------------------------------------------------------------------------------------------
-               # edge-attributes of incoming edges to this node (i.e. edge-level messages)
-               edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
 
                # ---------------------------------------------------------------------------------------------
                # Following is for handling "duplicate neighboring nodes" problem due to multi-graph
@@ -690,6 +687,18 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                    
                    Next, combine the separately aggregated node and edge level messages 
                '''
+
+
+               # ---------------------------------------------------------------------------------------------
+               # edge-attributes of incoming edges to this node (i.e. edge-level messages)
+               edge_level_messages__from_incoming_edges = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
+               edge_level_messages__from_incoming_nodes = graph_data_x_After_5_bits[ unique__source_nodes_of_incoming_edges_to_this_node ] # edge-level-messages that comes from the incoming node's embedding.
+
+               edge_level_messages = torch.cat((edge_level_messages__from_incoming_edges, 
+                                                edge_level_messages__from_incoming_nodes), dim=0)
+
+
+
 
                if neighborhood_aggr == "sum": neighborhood_aggr__func = torch.sum
                elif neighborhood_aggr == "mean": neighborhood_aggr__func = torch.mean

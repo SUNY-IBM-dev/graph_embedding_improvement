@@ -662,6 +662,10 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
          # JY @ 2023-12-28: Quite slow because doing 1 node by each, unlike in pytorch where parallel tensor operations are performed 
          for n in range(n_hops):
             
+
+            if n+1 == 2:
+               print()
+
             print(f"{n+1} hop", flush = True)
 
             graph_data__from_previous_hop = copy.deepcopy(graph_data) # Need a graph_data that does not mutate,
@@ -672,6 +676,9 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
             
             graph_data_x_first_5_bits = graph_data__from_previous_hop.x[:,:5] # corresponds to node-attributes 
             
+            graph_data_x_After_5_bits = graph_data__from_previous_hop.x[:, 5:] # corresponds to edge-level attributes accumulated into the node's embedding
+
+
             
             for node_idx in range( graph_data.x.shape[0] ):
                print(f"{cnt} / {len(dataset)}: {graph_data.name} | {n+1} hop | {node_idx+1} / {graph_data.x.shape[0]} : message passing for node", flush = True)
@@ -703,11 +710,6 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
 
 
 
-
-               # ---------------------------------------------------------------------------------------------
-               # edge-attributes of incoming edges to this node (i.e. edge-level messages)
-               edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
-
                # ---------------------------------------------------------------------------------------------
                # Following is for handling "duplicate neighboring nodes" problem due to multi-graph
                # - Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
@@ -726,6 +728,17 @@ def get__standard_message_passing_graph_embedding__dict( dataset : list,
                    
                    Next, combine the separately aggregated node and edge level messages 
                '''
+
+
+               # ---------------------------------------------------------------------------------------------
+               # edge-attributes of incoming edges to this node (i.e. edge-level messages)
+               edge_level_messages__from_incoming_edges = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
+
+               edge_level_messages__from_incoming_nodes = graph_data_x_After_5_bits[ unique__source_nodes_of_incoming_edges_to_this_node ] # edge-level-messages that comes from the incoming node's embedding.
+
+               edge_level_messages = torch.cat((edge_level_messages__from_incoming_edges, 
+                                                edge_level_messages__from_incoming_nodes), dim=0)
+
 
 
 
@@ -894,6 +907,9 @@ def get__standard_message_passing_graph_embedding_Adhoc__dict( dataset : list,
          '''
          # JY @ 2023-12-28: Quite slow because doing 1 node by each, unlike in pytorch where parallel tensor operations are performed 
          for n in range(n_hops):
+
+            if n+1 == 2:
+               print()
             
             print(f"{n+1} hop", flush = True)
 
@@ -905,6 +921,7 @@ def get__standard_message_passing_graph_embedding_Adhoc__dict( dataset : list,
             
             graph_data_x_first_35_bits = graph_data__from_previous_hop.x[:,:dim_node]  # corresponds to node-attributes 
             
+            graph_data_x_After_35_bits = graph_data__from_previous_hop.x[:, dim_node:] # corresponds to edge-level attributes accumulated into the node's embedding
             
             for node_idx in range( graph_data.x.shape[0] ):
                print(f"{cnt} / {len(dataset)}: {graph_data.name} | {n+1} hop | {node_idx+1} / {graph_data.x.shape[0]} : message passing for node", flush = True)
@@ -938,10 +955,6 @@ def get__standard_message_passing_graph_embedding_Adhoc__dict( dataset : list,
 
 
                # ---------------------------------------------------------------------------------------------
-               # edge-attributes of incoming edges to this node (i.e. edge-level messages)
-               edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
-
-               # ---------------------------------------------------------------------------------------------
                # Following is for handling "duplicate neighboring nodes" problem due to multi-graph
                # - Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
                unique_incoming_edges_to_this_node, _ = torch.unique( graph_data.edge_index[:, incoming_edges_to_this_node_idx ], 
@@ -953,6 +966,19 @@ def get__standard_message_passing_graph_embedding_Adhoc__dict( dataset : list,
                # node-attributes of 'unique' (for handling duplicate neighboring-nodes) incoming nodes
                # (i.e. node-level messages) # 
                node_level_messages = graph_data_x_first_35_bits[ unique__source_nodes_of_incoming_edges_to_this_node ]
+
+
+
+               # ---------------------------------------------------------------------------------------------
+               # edge-attributes of incoming edges to this node (i.e. edge-level messages)
+               edge_level_messages__from_incoming_edges = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
+
+               edge_level_messages__from_incoming_nodes = graph_data_x_After_35_bits[ unique__source_nodes_of_incoming_edges_to_this_node ] # edge-level-messages that comes from the incoming node's embedding.
+
+               edge_level_messages = torch.cat((edge_level_messages__from_incoming_edges, 
+                                                edge_level_messages__from_incoming_nodes), dim=0)
+
+
 
                ''' First perform neighborhood aggregation for edge-feats and node-feats separately,
                    as the latter has considered unique incoming nodes to evade "duplicate neighboring nodes"
@@ -1016,7 +1042,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-2"])
+                        default = ["Dataset-Case-1"])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -1061,18 +1087,21 @@ if __name__ == '__main__':
                                  "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__uW70p__2024_01_07_093936", # TUNING NOT DONE YET
                                  "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194347",
 
+                                 # Best tuned for Adhoc are the following: ==================================
+                                 "Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144",   
+
                                   ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                  default = ["Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125"])
    
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
 
     # --------- specific to standard-message-passing 
     parser.add_argument('-n', '--n_hops',  nargs = 1, type = int, 
-                        default = [1])
+                        default = [2])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
@@ -1095,7 +1124,8 @@ if __name__ == '__main__':
 
     # cmd args
     K = parser.parse_args().K[0]
-    model_cls = model_cls_map[ parser.parse_args().trad_model_cls[0] ]
+    model_choice = parser.parse_args().trad_model_cls[0]
+    model_cls = model_cls_map[ model_choice ]
     dataset_choice = parser.parse_args().dataset[0]
 
     n_hops = parser.parse_args().n_hops[0]
@@ -1118,9 +1148,9 @@ if __name__ == '__main__':
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
 
        if "standard_message_passing_graph_embedding" in graph_embedding_option:
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__uW_{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+         run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__uW_{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
+         run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
@@ -1129,9 +1159,9 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test == "final_test":
        if "standard_message_passing_graph_embedding" in graph_embedding_option:
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__uW_{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+         run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__uW{update_weight}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
+         run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
 
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/{run_identifier}"
@@ -1623,6 +1653,25 @@ if __name__ == '__main__':
          return manual_space  
 
 
+
+
+
+    def Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144():
+         manual_space = []
+         manual_space.append(
+         {'bootstrap': True,
+         'criterion': 'gini',
+         'max_depth': 9,
+         'max_features': None,
+         'min_samples_leaf': 3,
+         'min_samples_split': 2,
+         'n_estimators': 500,
+         'random_state': 99,
+         'split_shuffle_seed': 100}
+         )
+         return manual_space        
+
+
     # ====================================================================================================================================================================================
 
 
@@ -1675,6 +1724,9 @@ if __name__ == '__main__':
 
     elif search_space_option == "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194347":
          search_space = Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_06_194347()         
+
+    elif search_space_option == "Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144":
+         search_space = Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144()
 
     else:
         ValueError("Unavailable search-space option")

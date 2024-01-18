@@ -691,6 +691,15 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
             
             graph_data_x_first_5_bits = graph_data__from_previous_hop.x[:,:5] # corresponds to node-attributes 
             
+            graph_data_x_After_5_bits = graph_data__from_previous_hop.x[:,5:] # corresponds to edge-level attributes accumulated into the node's embedding
+
+
+
+
+
+
+
+
             
             for node_idx in range( graph_data.x.shape[0] ):
 
@@ -714,40 +723,6 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
                #                 then no need to do message-passing for this node
                if len(incoming_edges_to_this_node_idx) == 0:
                    continue
-
-               # ---------------------------------------------------------------------------------------------
-               # edge-attributes of incoming edges to this node (i.e. edge-level messages)
-
-               # edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
-
-               # JY @ 2024-1-2: Might be challenging to optimize this double-for-loop
-               
-               #edge_level_messages_nparray = np.array([]) # torch.Tensor() # https://discuss.pytorch.org/t/appending-to-a-tensor/2665/3
-               edge_level_messages = torch.empty((0, edge_feat_len))
-
-               for incoming_edge_idx in incoming_edges_to_this_node_idx:
-                  
-                  # need to be a list of string, instead of just string
-                  countvecotrizer_input = [ graph_data__from_previous_hop.edge_attr[ incoming_edge_idx ] ]
-
-                  edge_level_message__nparray = np.array([]) # torch.Tensor()
-
-                  for N, Ngram_countvectorizer in fitted_countvectorizers.items(): # TODO: Could be more robust about the order 
-                  
-                     edge_level_message__Ngram_portion = Ngram_countvectorizer.transform( countvecotrizer_input ).toarray()
-
-                     edge_level_message__nparray = np.append(edge_level_message__nparray, edge_level_message__Ngram_portion)
-                  
- 
-                  # JY @ 2024-1-2: so that can stack on 'edge_level_messages'
-                  edge_level_message = torch.Tensor(edge_level_message__nparray).view(1,-1) # for Size([1,edge_feat_len])
-                  edge_level_messages = torch.cat((edge_level_messages, edge_level_message), dim=0)                  
-
-
-
-
-
-
                # ---------------------------------------------------------------------------------------------
                ''' JY @ 2024-1-2 : Note that no longer multi-graph but simple-graph
                                    But can still use the following, since still applicable
@@ -772,6 +747,43 @@ def get__local_Ngram__standard_message_passing__graph_embedding__dict( dataset :
                    
                    Next, combine the separately aggregated node and edge level messages 
                '''
+               # ---------------------------------------------------------------------------------------------
+               # edge-attributes of incoming edges to this node (i.e. edge-level messages)
+
+               # edge_level_messages = graph_data__from_previous_hop.edge_attr[incoming_edges_to_this_node_idx][:,:-1]  # drop the time-scalar            
+
+               # JY @ 2024-1-2: Might be challenging to optimize this double-for-loop
+               
+               #edge_level_messages_nparray = np.array([]) # torch.Tensor() # https://discuss.pytorch.org/t/appending-to-a-tensor/2665/3
+               edge_level_messages__from_incoming_edges = torch.empty((0, edge_feat_len))
+
+               for incoming_edge_idx in incoming_edges_to_this_node_idx:
+                  
+                  # need to be a list of string, instead of just string
+                  countvecotrizer_input = [ graph_data__from_previous_hop.edge_attr[ incoming_edge_idx ] ]
+
+                  edge_level_message__nparray = np.array([]) # torch.Tensor()
+
+                  for N, Ngram_countvectorizer in fitted_countvectorizers.items(): # TODO: Could be more robust about the order 
+                  
+                     edge_level_message__Ngram_portion = Ngram_countvectorizer.transform( countvecotrizer_input ).toarray()
+
+                     edge_level_message__nparray = np.append(edge_level_message__nparray, edge_level_message__Ngram_portion)
+                  
+ 
+                  # JY @ 2024-1-2: so that can stack on 'edge_level_messages'
+                  edge_level_message__from_incoming_edge = torch.Tensor(edge_level_message__nparray).view(1,-1) # for Size([1,edge_feat_len])
+                  edge_level_messages__from_incoming_edges = torch.cat((edge_level_messages__from_incoming_edges, edge_level_message__from_incoming_edge), dim=0)                  
+
+
+
+
+               edge_level_messages__from_incoming_nodes = graph_data_x_After_5_bits[ unique__source_nodes_of_incoming_edges_to_this_node ] # edge-level-messages that comes from the incoming node's embedding.
+               edge_level_messages = torch.cat((edge_level_messages__from_incoming_edges, 
+                                                edge_level_messages__from_incoming_nodes), dim=0)
+
+
+
 
                if neighborhood_aggr == "sum": neighborhood_aggr__func = torch.sum
                elif neighborhood_aggr == "mean": neighborhood_aggr__func = torch.mean
@@ -822,7 +834,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-2"])
+                        default = ["Dataset-Case-1"])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -861,7 +873,7 @@ if __name__ == '__main__':
 
     # --------- specific to standard-message-passing 
     parser.add_argument('--n_hops',  nargs = 1, type = int, 
-                        default = [3])
+                        default = [2])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
