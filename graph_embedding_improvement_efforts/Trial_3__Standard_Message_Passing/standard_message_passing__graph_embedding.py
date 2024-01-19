@@ -1056,7 +1056,7 @@ if __name__ == '__main__':
                                   'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
                                   ], 
 
-                                  default = ["standard_message_passing_graph_embedding__adhoc_node_features"])
+                                  default = ["standard_message_passing_graph_embedding"])
 
     # ---------------------------------------------------------------------------------------------------
 
@@ -1091,12 +1091,12 @@ if __name__ == '__main__':
                                  "Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144",   
 
                                   ], 
-                                  default = ["Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125"])
+                                  default = ["RandomForest_searchspace_1"])
    
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     # --------- specific to standard-message-passing 
@@ -1177,62 +1177,54 @@ if __name__ == '__main__':
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       #PW: Dataset-Case-1 
       "Dataset-Case-1": \
-         #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/train",
-         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case1/train",
+         {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr", # dim-node == 5
+         "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/train"}, # dim-node == 35 (adhoc)
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/train"
-         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case2/train"
+        {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
+         "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/train"},
 
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/train",
-         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case1/train",
+      {"5":"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+       "35":"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/train"},
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/train"
-         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case2/train"
+      {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+       "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/train"},
 
 
     }
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-        # "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/test",
-         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case1/test",
+      {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+       "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/test"},
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/test"
-         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Benign_case2/test"
+         {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+          "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/test"},
 
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/test",
-         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case1/test",
+         {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+          "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/test"},
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         #"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"
-         "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/test"
-         # "/data/d1/jgwak1/SILKETW_DATASET_NEW/Malware_case2/test"
+         {"5":"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+          "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/test"},
 
     }
 
@@ -1248,10 +1240,10 @@ if __name__ == '__main__':
     _dim_edge = 62 #72    # (or edge_dim) ; num edge features
 
 
-    _benign_train_data_path = projection_datapath_Benign_Train_dict[dataset_choice]
-    _malware_train_data_path = projection_datapath_Malware_Train_dict[dataset_choice]
-    _benign_final_test_data_path = projection_datapath_Benign_Test_dict[dataset_choice]
-    _malware_final_test_data_path = projection_datapath_Malware_Test_dict[dataset_choice]
+    _benign_train_data_path = projection_datapath_Benign_Train_dict[dataset_choice][str(_dim_node)]
+    _malware_train_data_path = projection_datapath_Malware_Train_dict[dataset_choice][str(_dim_node)]
+    _benign_final_test_data_path = projection_datapath_Benign_Test_dict[dataset_choice][str(_dim_node)]
+    _malware_final_test_data_path = projection_datapath_Malware_Test_dict[dataset_choice][str(_dim_node)]
 
 
     print(f"dataset_choice: {dataset_choice}", flush=True)
