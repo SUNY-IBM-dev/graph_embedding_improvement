@@ -81,89 +81,260 @@ import time
 from sklearn.feature_extraction.text import CountVectorizer
 
 
+
+##############################################################################################################################
+# Explainer related (2023-12-20)
+
+import shap
+import matplotlib.pyplot as plt    
+
+
+
+# TODO -- make sure explanations are produced by this
+EventID_to_RegEventName_dict =\
+{
+"EventID(1)":"CreateKey", 
+"EventID(2)":"OpenKey",
+"EventID(3)":"DeleteKey", 
+"EventID(4)":"QueryKey", 
+"EventID(5)":"SetValueKey", 
+"EventID(6)":"DeleteValueKey", 
+"EventID(7)":"QueryValueKey",  
+"EventID(8)":"EnumerateKey", 
+"EventID(9)":"EnumerateValueKey", 
+"EventID(10)":"QueryMultipleValueKey",
+"EventID(11)":"SetinformationKey", 
+"EventID(13)":"CloseKey", 
+"EventID(14)":"QuerySecurityKey",
+"EventID(15)":"SetSecurityKey", 
+"Thisgroupofeventstrackstheperformanceofflushinghives": "RegPerfOpHiveFlushWroteLogFile",
+}
+
+def produce_SHAP_explanations(classification_model, 
+                              Test_dataset : pd.DataFrame,
+                              Train_dataset : pd.DataFrame,
+                              Explanation_Results_save_dirpath : str, 
+                              model_cls_name : str, 
+                              Test_SG_names : list,
+                              misprediction_subgraph_names : list,
+                              Predict_proba_dict : dict,
+                              N : int = 1,
+                              ):
+
+      # JY @ 2023-12-20: Integrate SHAP into this file based on:
+      #                  /data/d1/jgwak1/tabby/BASELINE_COMPARISONS/Sequential/RF+Ngrams/RFSVM_1gram_events_flattened_subgraph_only_psh.py
+      #                  /data/d1/jgwak1/tabby/CXAI_2023_Experiments/Run_Explainers/SHAP_LIME__Ngram.py (*)   
+
+      # =============================================================================================================================
+      # First convert "EventID(<N>)" to its corresponding 
+      Train_dataset.rename(columns = EventID_to_RegEventName_dict, inplace = True)
+      Test_dataset.rename(columns = EventID_to_RegEventName_dict, inplace = True)
+
+      # =============================================================================================================================
+      # SHAP-Global 
+      if N == 2: check_additivity = False
+      else: check_additivity = True # default
+
+      # https://shap-lrjball.readthedocs.io/en/latest/generated/shap.TreeExplainer.html
+      shap_explainer = shap.TreeExplainer(classification_model)
+ 
+      shap_values = shap_explainer.shap_values( np.array(Test_dataset.drop(columns=['data_name']).values), 
+                                                check_additivity=check_additivity) 
+      f = plt.figure()
+
+      if "RandomForestClassifier" in model_cls_name:
+            shap.summary_plot(shap_values = shap_values[1], # class-1 (positive class ; malware)
+                              features = Test_dataset.drop(columns=['data_name']).values, 
+                              feature_names = list(Test_dataset.drop(columns=['data_name']).columns),      # pipeline[0] == our countvectorizer (n-gram)
+                              plot_type = "bar")
+            model_resultX = pd.DataFrame(shap_values[1], columns = list(Test_dataset.drop(columns=['data_name']).columns))
+
+      elif "GradientBoostingClassifier" in model_cls_name:
+            shap.summary_plot(shap_values = shap_values, # class-? (positive class ; ?)
+                           features = Test_dataset.drop(columns=['data_name']).values, 
+                           feature_names = list(Test_dataset.drop(columns=['data_name']).columns),      # pipeline[0] == our countvectorizer (n-gram)
+                           plot_type = "bar")                
+            model_resultX = pd.DataFrame(shap_values, columns = list(Test_dataset.drop(columns=['data_name']).columns))
+
+      f.savefig( os.path.join(Explanation_Results_save_dirpath, 
+                              f"{N}_gram_SHAP_Global_Interpretability_Summary_BarPlot_Push_Towards_Malware_Features.png"), 
+                              bbox_inches='tight', dpi=600)
+
+
+      # TODO: Important: Get a feature-importance from shap-values
+      # https://stackoverflow.com/questions/65534163/get-a-feature-importance-from-shap-values
+
+      vals = np.abs(model_resultX.values).mean(0)
+      shap_importance = pd.DataFrame(list(zip(list(Test_dataset.drop(columns=['data_name']).columns), vals)),
+                                     columns=['col_name','feature_importance_vals']) # Later could make use of the "feature_importance_vals" if needed.
+      shap_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
+      shap_importance.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Importance.csv"))
+
+      # JY @ 2023-12-21: Need to get "dataname" here
+
+      Global_Important_featureIndex_featureName = dict(zip(shap_importance.reset_index()['index'], shap_importance.reset_index()['col_name']))
+      Global_Important_featureNames = [ v for k,v in Global_Important_featureIndex_featureName.items() ]
+      # Save Global-First20Important Features "Train dataset"
+      Global_Important_Features_Train_dataset = Train_dataset[ Global_Important_featureNames ]
+      
+      Train_dataset__data_name_column = Train_dataset['data_name']  # added by JY @ 2023-12-21
+      
+      Global_Important_Features_Train_dataset = Global_Important_Features_Train_dataset.assign(SUM = Global_Important_Features_Train_dataset.sum(axis=1)) 
+      Global_Important_Features_Train_dataset = pd.concat([Train_dataset__data_name_column, Global_Important_Features_Train_dataset], axis = 1) # added by JY @ 2023-12-21
+
+      # added by JY @ 2023-12-21
+      def append_prefix(value, prefix): return prefix + value if not value.startswith('malware') else value      
+      Global_Important_Features_Train_dataset['data_name'] = Global_Important_Features_Train_dataset['data_name'].apply(lambda x: append_prefix(x, "benign_"))
+      Global_Important_Features_Train_dataset.sort_values(by = "data_name", inplace = True)
+      Global_Important_Features_Train_dataset.set_index("data_name", inplace = True)
+
+      Global_Important_Features_Train_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Train-Dataset.csv"))
+
+      # Save Global-First20Important Features "Test dataset"
+      Global_Important_Features_Test_dataset = Test_dataset[ Global_Important_featureNames ] 
+
+      Test_dataset__data_name_column = Test_dataset['data_name']  # added by JY @ 2023-12-21
+
+      Global_Important_Features_Test_dataset = Global_Important_Features_Test_dataset.assign(SUM = Global_Important_Features_Test_dataset.sum(axis=1)) # SUM column
+
+      Global_Important_Features_Test_dataset = pd.concat([Test_dataset__data_name_column, Global_Important_Features_Test_dataset], axis = 1) # added by JY @ 2023-12-21
+      Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
+      Global_Important_Features_Test_dataset["predict_proba"] = pd.Series(Predict_proba_dict) # Added by JY @ 2023-12-21
+
+      # # Save Global-First20Important Features "ALL dataset" (After Integrating Train and Test)
+      # Global_Important_Features_All_dataset = pd.concat( [ Global_Important_Features_Train_dataset, Global_Important_Features_Test_dataset ] , axis = 0 )
+      # Global_Important_Features_All_dataset.sort_values(by="subgraph", inplace= True)
+      # Global_Important_Features_All_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames ALL-Dataset.csv"))
+
+
+
+      # =============================================================================================================================
+      # SHAP-Local (Waterfall-Plots)
+
+      WATERFALL_PLOTS_Local_Explanation_dirpath = os.path.join(Explanation_Results_save_dirpath, f"WATERFALL_PLOTS_Local-Explanation_{N}gram")
+      Correct_Predictions_WaterfallPlots_subdirpath = os.path.join(WATERFALL_PLOTS_Local_Explanation_dirpath, "Correct_Predictions")
+      Mispredictions_WaterfallPlots_subdirpath = os.path.join(WATERFALL_PLOTS_Local_Explanation_dirpath, "Mispredictions")
+
+      if not os.path.exists( WATERFALL_PLOTS_Local_Explanation_dirpath ): os.makedirs(WATERFALL_PLOTS_Local_Explanation_dirpath)
+      if not os.path.exists( Correct_Predictions_WaterfallPlots_subdirpath ): os.makedirs( Correct_Predictions_WaterfallPlots_subdirpath )
+      if not os.path.exists( Mispredictions_WaterfallPlots_subdirpath ): os.makedirs( Mispredictions_WaterfallPlots_subdirpath )
+
+
+      # Iterate through all tested-subgraphs
+      Test_dataset.set_index('data_name', inplace= True) # added by JY @ 2023-12-20
+
+      Global_Important_Features_Test_dataset['SHAP_sum_of_feature_shaps'] = None
+      Global_Important_Features_Test_dataset['SHAP_base_value'] = None
+
+      ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)'''
+      Local_SHAP_values_Test_dataset = pd.DataFrame(columns = Test_dataset.columns)
+
+      cnt = 0
+      for Test_SG_name in Test_SG_names:
+            cnt += 1
+            shap_explainer = shap.TreeExplainer(classification_model)
+
+            shap_values = shap_explainer.shap_values(X = Test_dataset.loc[Test_SG_name].values, 
+                                                     check_additivity=check_additivity)
+
+            # shap_values = shap_explainer(Test_dataset.loc[Test_SG_name])
+
+
+            # https://stackoverflow.com/questions/71751251/get-waterfall-plot-values-of-a-feature-in-a-dataframe-using-shap-package
+            # shap_values = shap_explainer(Test_dataset)
+            # exp = shap.Explanation(shap_values.values[:,:,1], 
+            #                         shap_values.base_values[:,1], 
+            #                    data=Test_dataset.values, 
+            #                 feature_names=Test_dataset.columns)            
+
+            if "RandomForestClassifier" in model_cls_name:
+               shap_values = shap_values[1]                  # extent to which a sample resembles a malware sample
+
+               base_value = shap_explainer.expected_value[1] #  base value represents the predicted probability of malware 
+                                                             #  class if we did not have any information of the feature values 
+                                                             #  of this sample
+            
+            elif "GradientBoostingClassifier" in model_cls_name:
+               shap_values = shap_values 
+               base_value = shap_explainer.expected_value # this is possibility in terms of benign
+
+
+            # https://shap.readthedocs.io/en/latest/generated/shap.Explanation.html
+            exp = shap.Explanation(values = shap_values, 
+                                   base_values = base_value, 
+                                   data=Test_dataset.loc[Test_SG_name].values, 
+                                   feature_names=Test_dataset.columns)    
+            plt.close()
+            # plt.xticks(fontsize=8)  # Adjust the fontsize to fit within the bars
+            # plt.rcParams['figure.constrained_layout.use'] = True
+            # plt.figure(figsize=(300, 300), dpi=80)
+            # plt.figure(layout="constrained")
+            # plt.figure(layout="tight")
+            waterfallplot_out = shap.plots.waterfall(exp, max_display=20, show=False) # go inside here # https://github.com/shap/shap/issues/3213
+            plt.tight_layout()
+
+            # https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/plots/waterfall.html
+            # https://medium.com/dataman-in-ai/the-shap-with-more-elegant-charts-bc3e73fa1c0c
+            # https://github.com/shap/shap/issues/1420
+            # https://github.com/shap/shap/issues/2470 <-- waterfall_legacy (X)
+            # https://github.com/shap/shap/issues/1420 <-- waterfall_legacy (X)
+            # https://stackoverflow.com/questions/71751251/get-waterfall-plot-values-of-a-feature-in-a-dataframe-using-shap-package <-- waterfall_legacy (X)
+            # shap.plots.waterfall(shap_values[0])
+            # https://github.com/shap/shap/blob/2262893cf441478418abac5fd8cdd38e436a867b/shap/plots/_waterfall.py#L321C107-L321C117
+
+            if Test_SG_name in misprediction_subgraph_names:
+               waterfallplot_out.savefig( os.path.join(Mispredictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+            else:
+               waterfallplot_out.savefig( os.path.join(Correct_Predictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+
+
+            # Added by JY @ 2023-12-21 : For local shap of sample (SUM of all feature's shap values for the sample)
+            #                                                      ^-- corresponds to "f(x)" in Waterfall plot
+            Test_SG_Local_Shap = sum(shap_values)
+            Global_Important_Features_Test_dataset.loc[Test_SG_name,'SHAP_sum_of_feature_shaps'] = Test_SG_Local_Shap
+            Global_Important_Features_Test_dataset.loc[Test_SG_name, 'SHAP_base_value'] = base_value
+
+
+            ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)'''
+            # class-information? do it later in another file
+            Local_SHAP_values_Test_dataset = pd.concat([ Local_SHAP_values_Test_dataset, pd.DataFrame([ dict(zip(Test_dataset.columns, shap_values)) | {'data_name': Test_SG_name} ]) ], 
+                                                       axis = 0)
+
+
+
+            print(f"{cnt} / {len(Test_SG_names)} : SHAP-local done for {Test_SG_name}", flush=True)
+
+      # added by JY @ 2023-12-21
+      def append_prefix(value, prefix): return prefix + value if not value.startswith('malware') else value      
+
+      Global_Important_Features_Test_dataset.index = Global_Important_Features_Test_dataset.index.map(lambda x: append_prefix(x, "benign_"))
+      Global_Important_Features_Test_dataset.sort_index(inplace=True)
+
+      # Global_Important_Features_Test_dataset['data_name'] = Global_Important_Features_Test_dataset['data_name'].apply(lambda x: append_prefix(x, "benign_"))
+      # Global_Important_Features_Test_dataset.sort_values(by = "data_name", inplace = True)
+      # Global_Important_Features_Test_dataset.set_index("data_name", inplace = True)
+
+      Global_Important_Features_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Global-SHAP Important FeatureNames Test-Dataset.csv"))
+
+      ''' Added by JY @ 2024-1-10 for feature-value-level local explanation-comparison (for futher analysis of feature-value level patterns in malware vs. benign)
+          Note that here, negative SHAP values are ones that push towards benign-prediction
+      '''
+      Local_SHAP_values_Test_dataset.set_index("data_name", inplace = True)
+      Local_SHAP_values_Test_dataset.index = Local_SHAP_values_Test_dataset.index.map(lambda x: append_prefix(x, "benign_"))
+      Local_SHAP_values_Test_dataset.sort_index(inplace=True)
+      Local_SHAP_values_Test_dataset.to_csv(os.path.join(Explanation_Results_save_dirpath, f"{model_cls_name} {N}-gram Local-SHAP values Test-Dataset.csv"))
+
+
+      print("done", flush=True)
+
+      return 
+
+
+
+##############################################################################################################################
+
 #**********************************************************************************************************************************************************************
 
-taskname_colnames_old = [
-   # Based on "TN2int_Revert()" of "/data/d1/jgwak1/tabby/BASELINE_COMPARISONS/Sequential/RF+Ngrams/RFSVM_ngram_flattened_subgraph_only_psh.py"
-
-   "None", #0
-
-   'CLEANUP', #1
-   'CLOSE', #2
-   'CREATE', #3
-   'CREATENEWFILE', #4
-   'DELETEPATH',#5
-   'DIRENUM',#6
-   'DIRNOTIFY',#7
-   'FLUSH',#8
-   'FSCTL',#9
-   'NAMECREATE',#10
-   'NAMEDELETE',#11
-   'OPERATIONEND',#12
-   'QUERYINFO',#13
-   'QUERYINFORMATION',#14
-   'QUERYEA',#15
-   'QUERYSECURITY',#16
-   'READ',#17
-   'WRITE',#18
-   'SETDELETE',#19
-   'SETINFORMATION', #20
-   'PAGEPRIORITYCHANGE',#21
-   'IOPRIORITYCHANGE',#22
-   'CPUBASEPRIORITYCHANGE',#23
-   'IMAGEPRIORITYCHANGE',#24
-   'CPUPRIORITYCHANGE',#25
-   'IMAGELOAD',#26
-   'IMAGEUNLOAD',#27
-   'PROCESSSTOP',#28
-   'PROCESSSTART',#29
-   'PROCESSFREEZE',#30
-   'PSDISKIOATTRIBUTE',#31
-   'PSIORATECONTROL',#32 
-   'THREADSTART',#33
-   'THREADSTOP',#34
-   'THREADWORKONBEHALFUPDATE', #35
-   'JOBSTART',#36
-   'JOBTERMINATE',#37
-   'LOSTEVENT',#38
-   'PSDISKIOATTRIBUTION',#39
-   'RENAME',#40
-   'RENAMEPATH',#41
-   'THISGROUPOFEVENTSTRACKSTHEPERFORMANCEOFFLUSHINGHIVES',#42(index in final bit vector)
-
-   "UDPIP42_DatasentoverUDPprotocol",  #43
-   "UDPIP43_DatareceivedoverUDPprotocol", #44
-   "UDPIP49_UDPconnectionattemptfailed", #45
-
-   "TCPIP10_TCPIPDatasent",   # 46
-   "TCPIP11_TCPIPDatareceived", # 47
-   "TCPIP12_TCPIPConnectionattempted", # 48
-   "TCPIP13_TCPIPDisconnectissued", # 49
-   "TCPIP14_TCPIPDataretransmitted", # 50
-   "TCPIP15_TCPIPConnectionaccepted", # 51
-   "TCPIP16_TCPIPReconnectattempted", # 52
-   "TCPIP17_TCPIPTCPconnectionattemptfailed", # 53
-   "TCPIP18_TCPIPProtocolcopieddataonbehalfofuser", # 54
-
-   "REGISTRY32_CreateKey", # 55
-   "REGISTRY33_OpenKey", # 56
-   "REGISTRY34_DeleteKey", # 57
-   "REGISTRY35_QueryKey", # 58
-   "REGISTRY36_SetValueKey", # 59
-   "REGISTRY37_DeleteValueKey", # 60
-   "REGISTRY38_QueryValueKey", # 61
-   "REGISTRY39_EnumerateKey", # 62
-   "REGISTRY40_EnumerateValueKey", # 63
-   "REGISTRY41_QueryMultipleValueKey", # 64
-   "REGISTRY42_SetInformationKey", # 65
-   "REGISTRY43_FlushKey", # 66
-   "REGISTRY44_CloseKey", # 67
-   "REGISTRY45_QuerySecurityKey", # 68
-   "REGISTRY46_SetSecurityKey", # 69
-
-   "Else" # 70
-
-]
 
 taskname_colnames = [
     'None_or_empty', #0 (index 0) 
@@ -208,21 +379,21 @@ taskname_colnames = [
     #'PSDISKIOATTRIBUTION',#39
     'Rename',#34
     'Renamepath',#35
-    'Thisgroupofeventstrackstheperformanceofflushinghives',#36-------
-    'EventID(1)',#37
-    'EventID(2)',#38
-    'EventID(3)',#39
-    'EventID(4)',#40
-    'EventID(5)',#41
-    'EventID(6)',#42
-    'EventID(7)',#43
-    'EventID(8)',#44
-    'EventID(9)',#45
-    'EventID(10)',#46
-    'EventID(11)',#47
-    'EventID(13)',#48
-    'EventID(14)',#49
-    'EventID(15)',#50
+    'RegPerfOpHiveFlushWroteLogFile',#36------- "Thisgroupofeventstrackstheperformanceofflushinghives": "RegPerfOpHiveFlushWroteLogFile",
+    'CreateKey',#37 "EventID(1)":"CreateKey", 
+    'OpenKey',#38 "EventID(2)":"OpenKey",
+    'DeleteKey',#39 "EventID(3)":"DeleteKey", 
+    'QueryKey',#40 "EventID(4)":"QueryKey", 
+    'SetValueKey',#41 "EventID(5)":"SetValueKey", 
+    'DeleteValueKey',#42 "EventID(6)":"DeleteValueKey", 
+    'QueryValueKey',#43 "EventID(7)":"QueryValueKey",  
+    'EnumerateKey',#44 "EventID(8)":"EnumerateKey",  
+    'EnumerateValueKey',#45 "EventID(9)":"EnumerateValueKey", 
+    'QueryMultipleValueKey',#46 "EventID(10)":"QueryMultipleValueKey",
+    'SetinformationKey',#47 "EventID(11)":"SetinformationKey", 
+    'CloseKeys',#48 "EventID(13)":"CloseKey", 
+    'QuerySecurityKey',#49 "EventID(14)":"QuerySecurityKey",
+    'SetSecurityKey',#50 "EventID(15)":"SetSecurityKey", 
     'KERNEL_NETWORK_TASK_TCPIP/Datasent.', #51
     'KERNEL_NETWORK_TASK_TCPIP/Datareceived.',#52
     'KERNEL_NETWORK_TASK_TCPIP/Connectionattempted.',#53
@@ -244,18 +415,193 @@ taskname_colnames = [
 
 
 ##########################################################################################################################################################
+def pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( 
+                                                                                 dataset : list, 
+                                                                                 Ngram : int = 4,
+                                                                                 only_train_specified_Ngram = False,
+                                                                                  ) -> list:
+    
+      ''' TODO
+      start writing pretraining a n-gram countvectorizer on all thread-level event-sequences from every subgraph in entire training set, 
+      PRIOR to peforming graph-embedding generation (signal amplication) -- 
+      this is similar to what has been done in local ngram standard message passing -- 
+      and a reasonable compromiziation althoguh in K-fold CV hypeparameter tuning context strictly speaking should be fitting the countvectorizer of K-1 training-folds
+         -- but this will be too much
+
+      # refer to : https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/baee25391d90c9631e97f38fa84f1e13ba718cf5/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/local_ngram__standard_message_passing__graph_embedding.py#L1277
+         
+      '''
+
+      if Ngram <= 1:
+         ValueError("Ngram should be greater than 1 for this graph-embedding approach.\n-> AsiaCCS submission already handled thread-level 1gram event distirubtion")
+
+      pretrained_countvectorizers_list =[]
+
+      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
+
+
+      graph__to__thread_level_sorted_event_sequences_dict = dict() # Added by JY @ 2024-1-20
+
+
+      cnt = 1
+      for data in dataset:
+            
+            print(f"{cnt} / {len(dataset)}: {data.name}  |  in 'pretrain__countvectorizer_on_training_set__before_graph_embedding_generation()'", flush = True)
+
+            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
+            # if data.x.shape[1] != 5:
+            data_x_first5 = data.x[:,:5]
+
+            thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor ), dim=1), as_tuple=False).flatten().tolist()
+
+
+            graph__to__thread_level_sorted_event_sequences_dict[data.name] = []
+
+            for thread_node_idx in thread_node_indices:
+
+               edge_src_indices = data.edge_index[0]
+               edge_tar_indices = data.edge_index[1]
+
+               # which this node is a target-node (outgoing-edge w.r.t this node)
+               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
+               # which this node is a target-node (incoming-edge w.r.t this node)
+               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
+
+               # Following is to deal with edge-attr (event-dist & time-scalar) -------------------------------------------------------------------------------------
+               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
+               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
+
+
+
+               ''' JY @ 2024-1-20: Get thread-level event-sequence sorted by timestamps '''
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx = torch.cat([edge_attr_of_incoming_edges_from_thread_node_idx, 
+                                                                                   edge_attr_of_outgoing_edges_from_thread_node_idx],
+                                                                                   dim = 0)
+
+
+               timestamp_sorted_indices = torch.argsort(edge_attr_of_both_direction_edges_from_thread_node_idx[:, -1], descending=False)
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx__sorted = edge_attr_of_both_direction_edges_from_thread_node_idx[ timestamp_sorted_indices ]
+
+               taskname_indices = torch.nonzero(edge_attr_of_both_direction_edges_from_thread_node_idx__sorted[:,:-1], as_tuple=False)[:, -1]
+
+
+               # Replace tensor elements with corresponding string values efficiently
+               thread_sorted_event_sequence = [taskname_colnames[i] for i in taskname_indices]
+               graph__to__thread_level_sorted_event_sequences_dict[data.name].append( thread_sorted_event_sequence )
+   
+               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+            # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
+            cnt+=1
+
+      # Now apply countvectorizer
+      # https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/c14d7631f95a24d5e0c192d7075a184698af1e13/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/local_ngram__standard_message_passing__graph_embedding.py#L1277
+
+      thread_level_sorted_event_sequences__nested_list = [ list_of_thread_event_sequences for data_name, list_of_thread_event_sequences in graph__to__thread_level_sorted_event_sequences_dict.items() ]
+
+      def flatten_list(nested_list):
+         return [item for sublist in nested_list for item in sublist]
+
+      all_thread_level_sorted_event_lists = flatten_list( thread_level_sorted_event_sequences__nested_list )
+
+
+
+      # https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/c14d7631f95a24d5e0c192d7075a184698af1e13/N_gram_hyperparameter_tuning/n_gram_hypeparam_tuning.py#L958
+      # for compatiblity with countvectorizer
+      # [ 'Threadstart Create Write Create Threadstop',
+      #   'Threadstart OpenKey Create CloseKey Close Open Threadstop',
+      #     ... ]
+      if only_train_specified_Ngram:
+         # Only fit for the specified Ngram countvectorizer
+         #     e.g. If N == 4, then drop all event-sequences that have less than 4 events, 
+         #          because since can't fit a 4gram countvectorizer out of such evnet-sequences.
+         all_thread_level_sorted_event_str_sequences = \
+            [ ' '.join(thread_sorted_event_list) for thread_sorted_event_list in all_thread_level_sorted_event_lists\
+              if len(thread_sorted_event_list) >= Ngram ]
+
+         print(f"Ngram: {Ngram}", flush=True)
+         countvectorizer = CountVectorizer(ngram_range=(Ngram, Ngram),
+                                           max_df= 1.0,
+                                           min_df= 1,
+                                           max_features= None)   
+         countvectorizer.fit( all_thread_level_sorted_event_str_sequences )
+
+         print(f"Fitted {Ngram}-gram countvectorizer", flush=True)
+
+
+         pretrained_countvectorizers_list.append( countvectorizer )
+
+
+      else:
+         # Fit multiple countvectorizers, to account for event-sequences that have less than than the number of specified Ngram
+         #     e.g. Observed a good number of threads having small number of events (some have only 1; such as threadstop)
+         #          To account for such cases, not only fit countvectorzier for specified Ngram, 
+         #          but fit Ngram countvecotrizer, N-1 gram countvecotrizer, .. , 1 gram countvecotrizer.
+
+         for N in list(range( Ngram, 0, -1)):
+
+            # if N > 1:
+            #    # max_df and min_df here are necessary and values are conventionally used ones
+            #    # necessity is because , say, 61 C 4 will result in 61! / (61-4)! * 4! which is unreasonably large, 
+            #    # so necesary to filter out features based on frequency 
+            #    # intuition is meaningful ngram features should not appear too little or too frequent
+            #    countvectorizer = CountVectorizer(ngram_range=(N, N), 
+            #                                     max_df= 0.3, 
+            #                                     min_df= 10, 
+            #                                     max_features= None )  # ngram [use 4-gram or 8-gram] 
+            # else:
+            #    # N = 1 <-- we don't want to drop any 1-gram features since we don't have feature-space too big problem
+            #    #           Following does not ignore any n-gram feautres
+            #    countvectorizer = CountVectorizer(ngram_range=(N, N),
+            #                                        max_df= 1.0,
+            #                                        min_df= 1,
+            #                                        max_features= None)
+
+            print(f"N: {N}", flush=True)
+
+            all_thread_level_sorted_event_str_sequences = \
+               [ ' '.join(thread_sorted_event_list) for thread_sorted_event_list in all_thread_level_sorted_event_lists\
+               if len(thread_sorted_event_list) >= N ]
+
+            countvectorizer = CountVectorizer(ngram_range=(Ngram, Ngram),
+                                              max_df= 1.0,
+                                              min_df= 1,
+                                              max_features= None)   
+            countvectorizer.fit( all_thread_level_sorted_event_str_sequences )
+            print(f"Fitted {N}-gram countvectorizer", flush=True)
+
+            pretrained_countvectorizers_list.append( countvectorizer )
+
+
+      
+
+
+
+      return pretrained_countvectorizers_list
+
+
+
+
+
+
+
 ##########################################################################################################################################################
 # Signal-Amplification Function (Thread-level Event-Dist. 1gram + Adjacent Node's Node-Type 5Bit)
 #PW: Thread node embedding by aggregating one hop neighbour nodes
 
 # JY @ 2024-1-20: thread-level N>1 gram events + nodetype-5bits
-def get_thread_level_N_gram_events_adjacent_5bit_dist_dict( dataset : list, pool : str = "sum" ):
-      
+def get_thread_level_N_gram_events_adjacent_5bit_dist_dict( 
+                                                            pretrained_Ngram_countvectorizer_list : list, # TODO        
+                                                            dataset : list, 
+                                                            pool : str = "sum",
 
-      file_node_tensor = torch.tensor([1, 0, 0, 0, 0])
-      reg_node_tensor = torch.tensor([0, 1, 0, 0, 0])
-      net_node_tensor = torch.tensor([0, 0, 1, 0, 0])
-      proc_node_tensor = torch.tensor([0, 0, 0, 1, 0])
+                                                              ):
+      
+      ''' JY @ 2024-1-20 : Implement this '''
+
+
       thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
 
       data_dict = dict()
@@ -269,10 +615,6 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict( dataset : list, pool
             # if data.x.shape[1] != 5:
             data_x_first5 = data.x[:,:5]
 
-            file_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, file_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            reg_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, reg_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            net_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, net_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-            proc_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, proc_node_tensor), dim=1), as_tuple=False).flatten().tolist()
             thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
 
             # which this node is a source-node (outgoing-edge w.r.t this node)
@@ -296,10 +638,7 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict( dataset : list, pool
                edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
                edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
 
-               edge_attr_of_incoming_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_incoming_edges_from_thread_node_idx[:,:-1], dim = 0)
-               edge_attr_of_outgoing_edges_from_thread_node_idx_sum = torch.sum(edge_attr_of_outgoing_edges_from_thread_node_idx[:,:-1], dim = 0)
-               edge_attr_of_both_direction_edges_from_thread_node_idx_sum = torch.add(edge_attr_of_incoming_edges_from_thread_node_idx_sum, 
-                                                                                      edge_attr_of_outgoing_edges_from_thread_node_idx_sum)
+
                
                data_thread_node_both_direction_edges_edge_attrs = torch.cat(( data_thread_node_both_direction_edges_edge_attrs,
                                                                               edge_attr_of_both_direction_edges_from_thread_node_idx_sum.unsqueeze(0) ), dim = 0)
@@ -461,16 +800,24 @@ if __name__ == '__main__':
     parser.add_argument('--N', nargs = 1, type = int, 
                         default = [4])  # Added by JY @ 2024-1-20
 
+
+    parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
+                        default = [False])  # Added by JY @ 2024-1-20
+
+
+
    # ==================================================================================================================================
 
     # cmd args
     K = parser.parse_args().K[0]
-    model_choice = parser.parse_args().trad_model_cls[0]
-    model_cls = model_cls_map[ parser.parse_args().trad_model_cls[0] ]
+    model_choice = parser.parse_args().model_choice[0]
+    model_cls = model_cls_map[ model_choice ]
     dataset_choice = parser.parse_args().dataset[0]
 
     graph_embedding_option = parser.parse_args().graph_embedding_option[0]
     pool_option = parser.parse_args().pool_option[0]
+    Ngram = parser.parse_args().N[0] # for n-gram
+    only_train_specified_Ngram = parser.parse_args().only_train_specified_Ngram[0]
 
     search_space_option = parser.parse_args().search_space_option[0]
     search_on_train__or__final_test = parser.parse_args().search_on_train__or__final_test[0] 
@@ -487,7 +834,7 @@ if __name__ == '__main__':
       #  else:
       #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
-       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
@@ -500,7 +847,7 @@ if __name__ == '__main__':
       #  else:
       #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
-       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/{run_identifier}"
        final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
@@ -577,10 +924,10 @@ if __name__ == '__main__':
     #PW: 5 and 62 (61 taskname + 1 timestamp) based on new silketw
     _dim_edge = 62 #72    # (or edge_dim) ; num edge features
 
-    _benign_train_data_path = projection_datapath_Benign_Train_dict[dataset_choice]
-    _malware_train_data_path = projection_datapath_Malware_Train_dict[dataset_choice]
-    _benign_final_test_data_path = projection_datapath_Benign_Test_dict[dataset_choice]
-    _malware_final_test_data_path = projection_datapath_Malware_Test_dict[dataset_choice]
+    _benign_train_data_path = projection_datapath_Benign_Train_dict[dataset_choice][str(_dim_node)]
+    _malware_train_data_path = projection_datapath_Malware_Train_dict[dataset_choice][str(_dim_node)]
+    _benign_final_test_data_path = projection_datapath_Benign_Test_dict[dataset_choice][str(_dim_node)]
+    _malware_final_test_data_path = projection_datapath_Malware_Test_dict[dataset_choice][str(_dim_node)]
 
 
     print(f"dataset_choice: {dataset_choice}", flush=True)
@@ -854,8 +1201,17 @@ if __name__ == '__main__':
 
    # Now apply signal-amplification here (here least conflicts with existing code.)
     if graph_embedding_option == "thread_level__N>1_grams_events__nodetype_5bit":
-         train_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( dataset= train_dataset,
-                                                                                                                     pool = pool_option )
+         
+         pretrained_Ngram_countvectorizer_list = pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( Ngram = Ngram,
+                                                                                                                               dataset= train_dataset,
+                                                                                                                               only_train_specified_Ngram = only_train_specified_Ngram 
+                                                                                                                            )
+
+
+         train_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                        dataset= train_dataset,
+                                                                                                        pool = pool_option,
+                                                                                                          )
 
 
          nodetype_names = ["file", "registry", "network", "process", "thread"] 
@@ -1294,3 +1650,33 @@ if __name__ == '__main__':
 
 
 
+
+            # Added by JY @ 2023-12-21
+            Predict_proba_dict = dict()
+            final_test_X___ = final_test_X.set_index("data_name")
+            for data_name, data in list(zip(final_test_X___.index, final_test_X___.values)):
+               # prints out "X does not have valid feature names, but RandomForestClassifier was fitted with feature names" which is FINE
+               # correctness checked
+               Predict_proba_dict[data_name] = model.predict_proba(data.reshape(1,-1)).tolist()
+
+
+
+            # Added by JY @ 2023-12-20
+            Test_SG_names = final_test_X['data_name']
+            triplets = list(zip(Test_SG_names, preds, final_test_y_))
+            wrong_answer_incidients = [x for x in triplets if x[1] != x[2]] # if pred != true
+            misprediction_subgraph_names = [wrong_answer_incident[0] for wrong_answer_incident in wrong_answer_incidients]
+
+
+            # Added by JY @ 2023-12-20
+            produce_SHAP_explanations(
+                           N = 1,
+                           classification_model = model,
+                           Test_dataset = final_test_X,
+                           Train_dataset = X,
+                           Explanation_Results_save_dirpath = this_results_dirpath, 
+                           model_cls_name = model_cls_name, 
+                           Test_SG_names = Test_SG_names,
+                           misprediction_subgraph_names = misprediction_subgraph_names,
+                           Predict_proba_dict = Predict_proba_dict
+                           )
