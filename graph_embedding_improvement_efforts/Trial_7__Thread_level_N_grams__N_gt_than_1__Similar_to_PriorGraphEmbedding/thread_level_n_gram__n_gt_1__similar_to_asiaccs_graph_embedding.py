@@ -76,6 +76,11 @@ from argparse import ArgumentParser
 import pprint
 from collections import defaultdict
 import time
+
+
+from sklearn.feature_extraction.text import CountVectorizer
+
+
 #**********************************************************************************************************************************************************************
 
 taskname_colnames_old = [
@@ -450,6 +455,11 @@ if __name__ == '__main__':
                                   
                          #default = ["search_on_train"] )
                          default = ["final_test"] )
+
+
+    # --------- For Thread-level N-gram
+    parser.add_argument('--N', nargs = 1, type = int, 
+                        default = [4])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 
