@@ -1,0 +1,12 @@
+- JY @ 2024-1-20:
+  
+  Based on PriorGraphEmbedding code (which used thread-level event-type(1-gram) features and max/mean pool) code,
+  implement thread-level N>1 gram + 'sum-pool or mean-pool' might make more sense. 
+
+      - Prof Guanhua said he thinks thread-level N>1gram makes sense, in terms of domain knolwedge.
+
+  ALSO, can think about capturing with potential effects across threads.
+     - I think this could dealt by the "Global" N-gram (global temporal information),
+       as it mixes events regardless of thread then computes N-gram.
+
+     - Or, for processes with multiple processes, may could consider mixing events from threads that belong to the SAME process. 
