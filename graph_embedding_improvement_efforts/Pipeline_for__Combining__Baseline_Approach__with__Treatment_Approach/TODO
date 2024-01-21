@@ -1,0 +1,16 @@
+JY @ 2024-1-21
+
+-- Put Baseline model as the starting-point for model-improvement.
+   Add extra features on top of baseline-features (e.g. glboal N-gram features, simple-count features),
+   instead of replacing or removing the baseline-features from the beginning.
+
+-- TODO : Write a pipeline that allows different combinations (e.g. concat, weighted-concat) 
+          between different pairs of baseline-features and treatment features 
+          (e.g. simple-count-basleine-fetures X thread-level-ngram-features 
+                OR global-N-gram-baseline-fetures X thread-level-ngram-features
+                OR simple-count-baseline-features X standard-message-passing-features)
+
+           This is for efficiency in experiments.
+           New treatment or baseline approach can be incorporated by either importing or copying over the function.
+           (e.g. get_thread_level_N_gram_events_adjacent_5bit_dist_dict() from Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/thread_level_n_gram__n_gt_1__similar_to_asiaccs_graph_embedding.py) 
+            
