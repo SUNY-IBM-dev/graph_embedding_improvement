@@ -10,7 +10,7 @@ JY @ 2024-1-21
                 OR global-N-gram-baseline-fetures X thread-level-ngram-features
                 OR simple-count-baseline-features X standard-message-passing-features)
 
-           This is for efficiency in experiments.
+           This is for efficiency in such experiments (to avoid writing a whole new main file for each combination of baseline and treatment)
            New treatment or baseline approach can be incorporated by either importing or copying over the function.
            (e.g. get_thread_level_N_gram_events_adjacent_5bit_dist_dict() from Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/thread_level_n_gram__n_gt_1__similar_to_asiaccs_graph_embedding.py) 
             
