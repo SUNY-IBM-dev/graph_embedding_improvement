@@ -601,7 +601,7 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict(
                                                             pretrained_Ngram_countvectorizer_list : list, # TODO        
                                                             dataset : list, 
                                                             pool : str = "sum",
-                                                      
+
                                                               ):
       
       ''' JY @ 2024-1-20 : Implement this '''
@@ -671,10 +671,10 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict(
                thread_all_Ngram_counts__appended_nparray = np.array([]) # torch.Tensor()
                for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
                   # If multiple countvectorizers, supposed to start from 1gram to Ngram
-                  print(f"pretrained_Ngram_countvectorizer.ngram_range: {pretrained_Ngram_countvectorizer.ngram_range}", flush= True)
+                  #print(f"pretrained_Ngram_countvectorizer.ngram_range: {pretrained_Ngram_countvectorizer.ngram_range}", flush= True)
                   thread_Ngram_counts__portion = pretrained_Ngram_countvectorizer.transform( [ thread_sorted_event_str_sequence ] ).toarray() # needs to be in a list
                   thread_all_Ngram_counts__appended_nparray = np.append(thread_all_Ngram_counts__appended_nparray, thread_Ngram_counts__portion )           
-               print("\n")
+               #print("\n")
 
                # JY @ 2024-1-20: so that can stack on 'data_thread_level_all_Ngram_features' for all thread's Ngram features within this subgrpah(data)
                thread_all_Ngram_counts__appended_tensor = torch.Tensor(thread_all_Ngram_counts__appended_nparray).view(1,-1) # for Size([1,edge_feat_len])
@@ -772,7 +772,7 @@ if __name__ == '__main__':
                         choices= ['Dataset-Case-1',
                                   'Dataset-Case-2' # try
                                   ], 
-                        default = ['Dataset-Case-1'])
+                        default = ['Dataset-Case-2'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -817,7 +817,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     # --------- For Thread-level N-gram
@@ -826,7 +826,7 @@ if __name__ == '__main__':
 
 
     parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
-                        default = [False])  # Added by JY @ 2024-1-20
+                        default = [True])  # Added by JY @ 2024-1-20
 
 
 
@@ -858,7 +858,7 @@ if __name__ == '__main__':
       #  else:
       #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
-       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{Ngram}gram__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
@@ -871,7 +871,7 @@ if __name__ == '__main__':
       #  else:
       #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
-       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{Ngram}gram__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/{run_identifier}"
        final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
@@ -1239,9 +1239,11 @@ if __name__ == '__main__':
 
 
          nodetype_names = ["file", "registry", "network", "process", "thread"] 
+         Ngram_edge_feature_names = []
+         for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+             Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
 
-         # JY @ 2024-1-20: Need to correct this based on N>1gram features
-         feature_names = nodetype_names + taskname_colnames # yes this order is correct
+         feature_names = nodetype_names + Ngram_edge_feature_names # yes this order is correct
          X = pd.DataFrame(train_dataset__signal_amplified_dict).T
 
 
@@ -1262,11 +1264,20 @@ if __name__ == '__main__':
         # Also prepare for final-test dataset, to later test the best-fitted models on test-set
          # Now apply signal-amplification here (here least conflicts with existing code.)
          if graph_embedding_option == "thread_level__N>1_grams_events__nodetype_5bit":
-               final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( dataset= final_test_dataset )
-               nodetype_names = ["file", "registry", "network", "process", "thread"] 
+               final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                                   dataset= final_test_dataset,
+                                                                                                                   pool = pool_option,
+                                                                                                                  )
+
                
-               # JY @ 2024-1-20: Need to correct this based on N>1gram features               
-               feature_names = nodetype_names + taskname_colnames # yes this order is correct
+
+               nodetype_names = ["file", "registry", "network", "process", "thread"] 
+               Ngram_edge_feature_names = []
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+               feature_names = nodetype_names + Ngram_edge_feature_names # yes this order is correct               
+         
+               
                final_test_X = pd.DataFrame(final_test_dataset__signal_amplified_dict).T               
 
 
