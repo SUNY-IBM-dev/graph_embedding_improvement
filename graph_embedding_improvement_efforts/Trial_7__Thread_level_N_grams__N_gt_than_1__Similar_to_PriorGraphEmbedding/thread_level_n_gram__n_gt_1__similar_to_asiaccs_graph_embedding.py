@@ -521,7 +521,7 @@ def pretrain__countvectorizer_on_training_set__before_graph_embedding_generation
             [ ' '.join(thread_sorted_event_list) for thread_sorted_event_list in all_thread_level_sorted_event_lists\
               if len(thread_sorted_event_list) >= Ngram ]
 
-         print(f"Ngram: {Ngram}", flush=True)
+         print(f"Specified Ngram: {Ngram} | only_train_specified_Ngram: {only_train_specified_Ngram}", flush=True)
          countvectorizer = CountVectorizer(ngram_range=(Ngram, Ngram),
                                            max_df= 1.0,
                                            min_df= 1,
@@ -539,8 +539,9 @@ def pretrain__countvectorizer_on_training_set__before_graph_embedding_generation
          #     e.g. Observed a good number of threads having small number of events (some have only 1; such as threadstop)
          #          To account for such cases, not only fit countvectorzier for specified Ngram, 
          #          but fit Ngram countvecotrizer, N-1 gram countvecotrizer, .. , 1 gram countvecotrizer.
+         print(f"Specified Ngram: {Ngram} | only_train_specified_Ngram: {only_train_specified_Ngram}", flush=True)
 
-         for N in list(range( Ngram, 0, -1)):
+         for N in list(range(1, Ngram+1)):
 
             # if N > 1:
             #    # max_df and min_df here are necessary and values are conventionally used ones
@@ -559,13 +560,17 @@ def pretrain__countvectorizer_on_training_set__before_graph_embedding_generation
             #                                        min_df= 1,
             #                                        max_features= None)
 
-            print(f"N: {N}", flush=True)
 
             all_thread_level_sorted_event_str_sequences = \
                [ ' '.join(thread_sorted_event_list) for thread_sorted_event_list in all_thread_level_sorted_event_lists\
                if len(thread_sorted_event_list) >= N ]
 
-            countvectorizer = CountVectorizer(ngram_range=(Ngram, Ngram),
+            if len(all_thread_level_sorted_event_str_sequences) == 0:
+                print(f"None of the thread-level event-sequences have length greater or equal than {N} -- so continue")
+                # this is very unlikely though
+                continue
+
+            countvectorizer = CountVectorizer(ngram_range=(N, N),
                                               max_df= 1.0,
                                               min_df= 1,
                                               max_features= None)   
@@ -596,7 +601,7 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict(
                                                             pretrained_Ngram_countvectorizer_list : list, # TODO        
                                                             dataset : list, 
                                                             pool : str = "sum",
-
+                                                      
                                                               ):
       
       ''' JY @ 2024-1-20 : Implement this '''
@@ -609,20 +614,20 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict(
       cnt = 1
       for data in dataset:
             
-            print(f"{cnt} / {len(dataset)}: {data.name}\n", flush = True)
+            print(f"{cnt} / {len(dataset)}: {data.name} -- generate graph-embedding", flush = True)
 
             # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
             # if data.x.shape[1] != 5:
             data_x_first5 = data.x[:,:5]
-
             thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
 
             # which this node is a source-node (outgoing-edge w.r.t this node)
-            
-            data_thread_node_incoming_edges_edge_attrs = torch.tensor([])
-            data_thread_node_outgoing_edges_edge_attrs = torch.tensor([])
-            data_thread_node_both_direction_edges_edge_attrs = torch.tensor([])
+  
+
+
             data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.tensor([]) # Added by JY @ 2023-07-19
+
+            data_thread_level_all_Ngram_features = torch.tensor([]) # Added by JY @ 2023-01-20
 
             for thread_node_idx in thread_node_indices:
 
@@ -639,12 +644,46 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict(
                edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
 
 
-               
-               data_thread_node_both_direction_edges_edge_attrs = torch.cat(( data_thread_node_both_direction_edges_edge_attrs,
-                                                                              edge_attr_of_both_direction_edges_from_thread_node_idx_sum.unsqueeze(0) ), dim = 0)
-               # -------------------------------------------------------------------------------------------------------------------------------------------------------
 
-               # JY @ 2023-07-18: Now get all Adhoc identifier-pattern distributions of adjacent F/R/N t
+               ''' JY @ 2024-1-20: Get thread-level event-sequence sorted by timestamps '''
+               # Refered to : https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/thread_level_n_gram__n_gt_1__similar_to_asiaccs_graph_embedding.py#L483C1-L491C95
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx = torch.cat([edge_attr_of_incoming_edges_from_thread_node_idx, 
+                                                                                   edge_attr_of_outgoing_edges_from_thread_node_idx],
+                                                                                   dim = 0)
+
+
+               timestamp_sorted_indices = torch.argsort(edge_attr_of_both_direction_edges_from_thread_node_idx[:, -1], descending=False)
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx__sorted = edge_attr_of_both_direction_edges_from_thread_node_idx[ timestamp_sorted_indices ]
+
+               taskname_indices = torch.nonzero(edge_attr_of_both_direction_edges_from_thread_node_idx__sorted[:,:-1], as_tuple=False)[:, -1]
+
+
+               thread_sorted_event_list = [taskname_colnames[i] for i in taskname_indices]
+
+               thread_sorted_event_str_sequence = " ".join(thread_sorted_event_list) # for compabitiblity with countvecotrizer
+
+               # transform and get count -- https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#sklearn.feature_extraction.text.CountVectorizer.transform
+               # Refer to: https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/local_ngram__standard_message_passing__graph_embedding.py#L760C41-L760C72
+
+               # Get all Ngrams (N could be multiple, depending on 'only_train_specified_Ngram' parameter value)
+               thread_all_Ngram_counts__appended_nparray = np.array([]) # torch.Tensor()
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  # If multiple countvectorizers, supposed to start from 1gram to Ngram
+                  print(f"pretrained_Ngram_countvectorizer.ngram_range: {pretrained_Ngram_countvectorizer.ngram_range}", flush= True)
+                  thread_Ngram_counts__portion = pretrained_Ngram_countvectorizer.transform( [ thread_sorted_event_str_sequence ] ).toarray() # needs to be in a list
+                  thread_all_Ngram_counts__appended_nparray = np.append(thread_all_Ngram_counts__appended_nparray, thread_Ngram_counts__portion )           
+               print("\n")
+
+               # JY @ 2024-1-20: so that can stack on 'data_thread_level_all_Ngram_features' for all thread's Ngram features within this subgrpah(data)
+               thread_all_Ngram_counts__appended_tensor = torch.Tensor(thread_all_Ngram_counts__appended_nparray).view(1,-1) # for Size([1,edge_feat_len])
+               data_thread_level_all_Ngram_features = torch.cat((data_thread_level_all_Ngram_features, thread_all_Ngram_counts__appended_tensor), dim=0)                  
+
+
+
+               # ==============================================================================================================================================
+               # Node-level
 
                # But also need to consider the multi-graph aspect here. 
                # So here, do not count twice for duplicate adjacent nodes due to multigraph.
@@ -658,38 +697,23 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict(
                target_nodes_of_outgoing_edges_from_thread_node = unique_outgoing_edges_from_thread_node[1] # edge-target is index 1
                source_nodes_of_incoming_edges_to_thread_node = unique_incoming_edges_to_thread_node[0] # edge-src is index 0
 
-               # "5bit 
-               data__5bit = data.x[:,:5]
 
                #-- Option-1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
                # # Already handled multi-graph case, but how about the bi-directional edge case?
                # # For, T-->F and T<--F, information of F will be recorded twice."Dont Let it happen"
                unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
                                                                                                          source_nodes_of_incoming_edges_to_thread_node ] ) )
-               integrated_5bit_of_all_unique_adjacent_nodes_to_thread = torch.sum( data__5bit[unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_thread = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
                
                data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
-                                                                                          integrated_5bit_of_all_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
+                                                                                   integrated_5bit_of_all_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
                # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-               #-- Option-2 --------------------------------------------------------------------------------------------------------------------------------------------------------------
-               # # # Already handled multi-graph case, but how about the bi-directional edge case?
-               # # # For, T-->F and T<--F, information of F will be recorded twice. "Let it happen"
-               # non_unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
-               #                                                                                 source_nodes_of_incoming_edges_to_thread_node ] )
-               # integrated_5bit_of_all_non_unique_adjacent_nodes_to_thread = torch.sum( data__5bit[non_unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
-               
-               # data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
-               #                                                                      integrated_5bit_of_all_non_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
-
-
-
-               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
             # [ node-type5bit + N>gram events ]
-            thread_eventdist_adjacent_5bit_dist = torch.cat( [data_thread_node_all_unique_adjacent_nodes_5bit_dists, 
-                                                              data_thread_node_both_direction_edges_edge_attrs, 
-                                                                  ], dim = 1)
+            thread_level_N_gram_events_adjacent_5bit_dist = torch.cat( [data_thread_node_all_unique_adjacent_nodes_5bit_dists, 
+                                                                        data_thread_level_all_Ngram_features, 
+                                                                        ], dim = 1)
             
             
             
@@ -697,7 +721,7 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict(
             if pool == "sum": pool__func = torch.sum
             elif pool == "mean": pool__func = torch.mean
 
-            graph_embedding = pool__func(thread_eventdist_adjacent_5bit_dist, dim = 0)            
+            graph_embedding = pool__func(thread_level_N_gram_events_adjacent_5bit_dist, dim = 0)            
             
             
             
