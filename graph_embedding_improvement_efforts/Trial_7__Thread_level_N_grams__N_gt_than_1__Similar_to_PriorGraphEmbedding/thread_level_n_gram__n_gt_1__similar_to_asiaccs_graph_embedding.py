@@ -81,7 +81,10 @@ import time
 from sklearn.feature_extraction.text import CountVectorizer
 
 
-
+# TODO: Consider turning tensor operations to gpu-operations, for faster
+# https://pytorch.org/docs/stable/tensors.html
+# cuda0 = torch.device('cuda:0')
+# >>> torch.ones([2, 4], dtype=torch.float64, device=cuda0)
 ##############################################################################################################################
 # Explainer related (2023-12-20)
 
