@@ -1,0 +1,18 @@
+- JY @ 2024-1-22:
+  
+  All Baseline Approaches
+
+  Baseline-1: Counting node-types and event-types in the subgraph ("Simple counting")
+      - Included in Box document -- https://app.box.com/file/1417292586765?s=wn4qma2fvmaam5jzlmxvk6irmddi8s02
+
+  Baseline-2: Counting N>1 gram event-type features after flattening the subgraph ("Flattened graph N>1 gram event features") 
+      - Included in Box document -- https://app.box.com/file/1417292586765?s=wn4qma2fvmaam5jzlmxvk6irmddi8s02
+      - This is a "known" baseline.
+
+  Baseline-3:  Counting N>1 gram event-type features after flattening the subgraph + counting node-types 
+               ("Flattened graph N>1 gram event features + Simpe counting of node-types") 
+      - TODO: Add to Box document
+      - This is a more fair baseline for "Thread-level N>1gram approach" where it uses node-type counts as its feautres
+
+
+

@@ -788,8 +788,16 @@ if __name__ == '__main__':
                         choices= [
                                   'XGBoost_searchspace_1',
                                   'RandomForest_searchspace_1',
+
+                                  'Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True', # tuning-complete
+                                  'Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True', # prelim
+
+                                  'Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True', # prelim
+                                  'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True', # prelim
+
+
                                   ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                  default = ["Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True"])
 
 #PW: Why 10 Kfold? just common values
  # flatten vs no graph ?? is that only ML tuning differece??
@@ -820,7 +828,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
 
     # --------- For Thread-level N-gram
@@ -1170,6 +1178,79 @@ if __name__ == '__main__':
          return manual_space
 
 
+    def Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+      # RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202742
+      # -- tuning done
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': 20,
+            'max_features': 'log2',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 100,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
+         )
+
+         return manual_space
+
+
+    def Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+      # RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202813
+      # -- tuning NOT done
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': None,
+            'min_samples_leaf': 1,
+            'min_samples_split': 5,
+            'n_estimators': 200,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space
+      
+    def Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+      # RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202900
+      # -- tuning NOT done
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': 15,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 100,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
+         )
+
+         return manual_space
+      
+    def Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+      # RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202918
+      # -- tuning NOT done
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': None,
+            'min_samples_leaf': 5,
+            'min_samples_split': 2,
+            'n_estimators': 100,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
+         )
+
+         return manual_space
+            
+
     ####################################################################################################################################################
 
 
@@ -1186,6 +1267,25 @@ if __name__ == '__main__':
 
     elif search_space_option == "RandomForest_default_hyperparam":
        search_space = RandomForest_default_hyperparam()   
+
+    # -----------------------------------------------------------
+
+    elif search_space_option == 'Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True':
+       search_space = Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True()   
+
+    elif search_space_option == 'Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True':
+       search_space = Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True()   
+
+    elif search_space_option == 'Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True':
+       search_space = Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True()   
+
+    elif search_space_option == 'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True':
+       search_space = Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True()   
+
+    # -----------------------------------------------------------
+
+
+
 
 
     else:
@@ -1593,8 +1693,8 @@ if __name__ == '__main__':
          for hyperparam_set in search_space:
 
             # ---------------------------------------------------------------------------------------
-            if model_cls_name == 'sklearn.ensemble._gb.GradientBoostingClassifier'and\
-               'xgboost' in search_space_option.lower():
+            if model_cls_name == 'sklearn.ensemble._gb.GradientBoostingClassifier' or\
+               'xgboost' in search_space_option.lower() or 'xgb' in search_space_option.lower() :
 
                model = model_cls(
                                  n_estimators= hyperparam_set['n_estimators'], 
@@ -1609,8 +1709,8 @@ if __name__ == '__main__':
                                  )
 
 
-            elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier'and\
-               'randomforest' in search_space_option.lower():
+            elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier' or\
+               'randomforest' in search_space_option.lower() or 'rf' in search_space_option.lower() :
                model = model_cls(
                                  n_estimators= hyperparam_set['n_estimators'],
                                  criterion= hyperparam_set['criterion'], 
@@ -1622,14 +1722,6 @@ if __name__ == '__main__':
                                  random_state= hyperparam_set['random_state']
                                  )
 
-
-            elif model_cls_name == 'sklearn.linear_model._logistic.LogisticRegression'and\
-               'logistic' in search_space_option.lower():
-               model = model_cls()
-
-            elif model_cls_name == 'sklearn.svm' and\
-               'svm' in search_space_option:
-               model = model_cls()
 
             else:
                ValueError(f"{model_cls_name} is not supported", flush = True)

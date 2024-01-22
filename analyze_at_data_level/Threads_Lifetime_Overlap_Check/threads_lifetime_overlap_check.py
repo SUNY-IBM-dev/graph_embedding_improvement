@@ -275,10 +275,12 @@ def threads_lifetime_overlap_check( dataset : list,
 
             data_thread_taskname_timestamp_tuple_lists_fpath = os.path.join( thread_taskname_timestamp_tuple_lists_dirpath, f"{label}_{data_name}.txt" )
 
+            # Sorting by the length of each sublist in ascending order for easier reading of output
+            data__threads__taskname_timestamp__tuples = sorted(data__threads__taskname_timestamp__tuples, key=len)
             data__threads__taskname_timestamp__tuples__strings = [ str(x) for x in data__threads__taskname_timestamp__tuples ]
 
             with open(data_thread_taskname_timestamp_tuple_lists_fpath, 'w') as f:
-               
+               #json.dump(data__threads__taskname_timestamp__tuples__strings, jsonf, indent=1)
                for tuple_string in data__threads__taskname_timestamp__tuples__strings:
                   f.write(f"{tuple_string}\n\n")
             # -------------------------------------------------------------------
@@ -316,7 +318,7 @@ def threads_lifetime_overlap_check( dataset : list,
 
             # -------------------------------------------------------------------
             cnt+=1
-      return data_dict
+      return 
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 
@@ -342,7 +344,7 @@ if __name__ == '__main__':
                         choices= ['Dataset-Case-1',
                                   'Dataset-Case-2' # try
                                   ], 
-                        default = ['Dataset-Case-1'])
+                        default = ['Dataset-Case-2'])
 
 
 
@@ -452,6 +454,6 @@ if __name__ == '__main__':
     if not os.path.exists(this_results_dirpath):
       os.makedirs(this_results_dirpath)
 
-    train_dataset__signal_amplified_dict = threads_lifetime_overlap_check( dataset= entire_dataset,
-                                                                           results_dirpath = this_results_dirpath)
+    threads_lifetime_overlap_check( dataset= entire_dataset,
+                                    results_dirpath = this_results_dirpath)
 
