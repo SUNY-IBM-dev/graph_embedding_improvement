@@ -726,11 +726,16 @@ if __name__ == '__main__':
                         default = [6])  # Added by JY @ 2024-1-20
 
 
+
     # --------- JY @ 2024-1-23: For path resolve -- os.expanduser() also dependent on curr-dir, so better to do this way for now.
     parser.add_argument("--running_from_machine", 
                                  
                          choices= ["panther", "ocelot"], 
                          default = ["panther"] )
+    
+    parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
+                        default = [6])  # Added by JY @ 2024-1-20
+
 
    # ==================================================================================================================================
 
@@ -747,7 +752,7 @@ if __name__ == '__main__':
     search_on_train__or__final_test = parser.parse_args().search_on_train__or__final_test[0] 
 
     running_from_machine = parser.parse_args().running_from_machine[0] 
-
+    RF__n_jobs = parser.parse_args().RF__n_jobs[0] 
 
     # -----------------------------------------------------------------------------------------------------------------------------------
 
@@ -1269,7 +1274,7 @@ if __name__ == '__main__':
                                  random_state= hyperparam_set['random_state'],
 
 
-                                 n_jobs = -1
+                                 n_jobs = RF__n_jobs
                                  )
                                  # Added by JY @ 2024-1-23:
                                  #     "n_jobs" == This parameter is used to specify how many concurrent processes or threads should be used for routines that are parallelized with joblib.
