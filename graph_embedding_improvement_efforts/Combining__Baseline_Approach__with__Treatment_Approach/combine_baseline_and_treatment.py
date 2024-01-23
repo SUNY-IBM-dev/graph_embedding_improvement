@@ -119,7 +119,6 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('-k', '--K', nargs = 1, type = int, default = [10])  
 
-
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1',
                                   'Dataset-Case-2' # try
@@ -163,6 +162,8 @@ if __name__ == '__main__':
                                   ], 
                                   default = ["sum"])
 
+    parser.add_argument('--thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram', nargs = 1, type = bool, 
+                        default = [True])  # Added by JY @ 2024-1-20
 
     # --------- N-gram
     parser.add_argument('--baseline__N', nargs = 1, type = int, 
@@ -173,8 +174,7 @@ if __name__ == '__main__':
                         default = [4])  # Added by JY @ 2024-1-20
 
 
-    parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
-                        default = [True])  # Added by JY @ 2024-1-20
+
 
 
 
@@ -189,6 +189,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--combine_option', 
                         choices= ['concat',
+                                  'ensemble', # just an idea -- ensemble by averaging predict-proba of 2 models ? 
+                                              #                 ensemble by picking the model with higher confidnece?
                                   ], 
                                   default = ["concat"])
 
@@ -209,8 +211,10 @@ if __name__ == '__main__':
     graph_embedding_option = parser.parse_args().graph_embedding_option[0]
     graph_embedding__pool_option = parser.parse_args().graph_embedding__pool_option[0]
     graph_embedding__Ngram = parser.parse_args().graph_embedding__N[0] # for n-gram
-    only_train_specified_Ngram = parser.parse_args().only_train_specified_Ngram[0] # this is specific to graph-embedding's 'thread_level__N>1_grams_events__nodetype_5bit'
+    # -- parameters that are specific to graph-embedding
+    thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram = parser.parse_args().thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram[0] # this is specific to graph-embedding's 'thread_level__N>1_grams_events__nodetype_5bit'
 
+    # ---------------------------------------------------
     combine_option = parser.parse_args().combine_option[0]
 
     search_space_option = parser.parse_args().search_space_option[0]
