@@ -684,7 +684,7 @@ if __name__ == '__main__':
                         choices= ['Dataset-Case-1',
                                   'Dataset-Case-2' # try
                                   ], 
-                        default = ['Dataset-Case-1'])
+                        default = ['Dataset-Case-2'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -709,7 +709,7 @@ if __name__ == '__main__':
                                     "baseline_2__flattened_graph_Ngram_events",
                                     "baseline_3__flattened_graph_Ngram_events__node_type_counts",
                                   ], 
-                                  default = ["baseline_2__flattened_graph_Ngram_events"])
+                                  default = ["baseline_3__flattened_graph_Ngram_events__node_type_counts"])
 
 
     parser.add_argument("--search_on_train__or__final_test", 
@@ -718,12 +718,12 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     # --------- For Thread-level N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [4])  # Added by JY @ 2024-1-20
+                        default = [6])  # Added by JY @ 2024-1-20
 
 
    # ==================================================================================================================================

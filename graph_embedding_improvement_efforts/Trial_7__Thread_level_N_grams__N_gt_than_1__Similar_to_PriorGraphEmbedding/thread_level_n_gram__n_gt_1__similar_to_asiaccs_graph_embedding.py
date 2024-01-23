@@ -797,7 +797,7 @@ if __name__ == '__main__':
 
 
                                   ], 
-                                  default = ["Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True"])
+                                  default = ["RandomForest_searchspace_1"])
 
 #PW: Why 10 Kfold? just common values
  # flatten vs no graph ?? is that only ML tuning differece??
@@ -828,12 +828,12 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     # --------- For Thread-level N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [4])  # Added by JY @ 2024-1-20
+                        default = [6])  # Added by JY @ 2024-1-20
 
 
     parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 

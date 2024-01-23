@@ -791,10 +791,7 @@ if __name__ == '__main__':
                         
                         choices= [
                                   'temporally_correct_standard_message_passing_graph_embedding', # Added by JY @ 2023-12-27
-                                  # vs. (for now)
-                                  'no_graph_structure__event_1gram_nodetype_5bit', 
-                                  'no_graph_structure__event_1gram',
-                                  'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
+
                                   ], 
 
                                   default = ["temporally_correct_standard_message_passing_graph_embedding"])

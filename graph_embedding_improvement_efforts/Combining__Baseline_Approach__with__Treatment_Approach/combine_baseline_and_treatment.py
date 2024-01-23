@@ -14,11 +14,17 @@ from code.model import GIN
 from code.trainer import TrainModel
 '''
 
-sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Pipeline_for__Combining__Baseline_Approach__with__Treatment_Approach/source")
+sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/source")
 
 from source.dataprocessor_graphs import LoadGraphs
 from source.model import GIN
 from source.trainer_meng_ver import TrainModel
+
+sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach")
+from _baseline_graph_embedding_functions import *
+from _baseline_graph_embedding_functions import *
+from _explanation_functions import *
+
 
 from itertools import product
 import pandas as pd
@@ -26,14 +32,6 @@ from datetime import datetime
 
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GroupKFold, StratifiedGroupKFold
-
-
-
-sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Pipeline_for__Combining__Baseline_Approach__with__Treatment_Approach")
-
-from _baseline_graph_embedding_functions import *
-from _baseline_graph_embedding_functions import *
-from _explanation_functions import *
 
 
 
@@ -86,26 +84,6 @@ import pprint
 from collections import defaultdict
 import time
 
-
-
-
-
-
-##############################################################################################################################
-
-#**********************************************************************************************************************************************************************
-
-
-
-
-
-
-##########################################################################################################################################################
-# Signal-Amplification Function (Thread-level Event-Dist. 1gram + Adjacent Node's Node-Type 5Bit)
-#PW: Thread node embedding by aggregating one hop neighbour nodes
-
-##########################################################################################################################################################
-##########################################################################################################################################################
 
 
 #**********************************************************************************************************************************************************************
@@ -162,26 +140,41 @@ if __name__ == '__main__':
                                   ], 
                                   default = ["RandomForest_searchspace_1"])
 
-#PW: Why 10 Kfold? just common values
- # flatten vs no graph ?? is that only ML tuning differece??
+
+
+    parser.add_argument('-base_opt', '--baseline_option', 
+                        choices= [
+                                    "baseline_1__simple_counting",
+                                    "baseline_2__flattened_graph_Ngram_events",
+                                    "baseline_3__flattened_graph_Ngram_events__node_type_counts",
+                                  ], 
+                                  default = ["baseline_3__flattened_graph_Ngram_events__node_type_counts"])
+
    
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
                         choices= [
-                                 #  'thread_level__N_grams_events',
-
                                   'thread_level__N>1_grams_events__nodetype_5bit', 
-
-
-                                 #  'thread_level__N>1_grams_events__nodetype_5bit_and_Adhoc_Identifier',
-
                                   ], 
                                   default = ["thread_level__N>1_grams_events__nodetype_5bit"])
     
-    parser.add_argument('-pool_opt', '--pool_option', 
+    parser.add_argument('-graph_emb__pool_opt', '--graph_embedding__pool_option', 
                         choices= ['sum',
                                   'mean' # PW : also try
                                   ], 
                                   default = ["sum"])
+
+
+    # --------- N-gram
+    parser.add_argument('--baseline__N', nargs = 1, type = int, 
+                        default = [4])  # Added by JY @ 2024-1-20
+
+
+    parser.add_argument('--graph_embedding__N', nargs = 1, type = int, 
+                        default = [4])  # Added by JY @ 2024-1-20
+
+
+    parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
+                        default = [True])  # Added by JY @ 2024-1-20
 
 
 
@@ -194,13 +187,10 @@ if __name__ == '__main__':
                          default = ["search_on_train"] )
 
 
-    # --------- For Thread-level N-gram
-    parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [4])  # Added by JY @ 2024-1-20
-
-
-    parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
-                        default = [True])  # Added by JY @ 2024-1-20
+    parser.add_argument('--combine_option', 
+                        choices= ['concat',
+                                  ], 
+                                  default = ["concat"])
 
 
 
@@ -212,10 +202,16 @@ if __name__ == '__main__':
     model_cls = model_cls_map[ model_choice ]
     dataset_choice = parser.parse_args().dataset[0]
 
+    baseline_option = parser.parse_args().baseline_option[0] # for n-gram
+    baseline__Ngram = parser.parse_args().baseline__N[0] # for n-gram
+
+
     graph_embedding_option = parser.parse_args().graph_embedding_option[0]
-    pool_option = parser.parse_args().pool_option[0]
-    Ngram = parser.parse_args().N[0] # for n-gram
-    only_train_specified_Ngram = parser.parse_args().only_train_specified_Ngram[0]
+    graph_embedding__pool_option = parser.parse_args().graph_embedding__pool_option[0]
+    graph_embedding__Ngram = parser.parse_args().graph_embedding__N[0] # for n-gram
+    only_train_specified_Ngram = parser.parse_args().only_train_specified_Ngram[0] # this is specific to graph-embedding's 'thread_level__N>1_grams_events__nodetype_5bit'
+
+    combine_option = parser.parse_args().combine_option[0]
 
     search_space_option = parser.parse_args().search_space_option[0]
     search_on_train__or__final_test = parser.parse_args().search_on_train__or__final_test[0] 
