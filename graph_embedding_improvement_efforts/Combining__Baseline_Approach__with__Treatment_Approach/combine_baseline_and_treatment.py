@@ -175,9 +175,6 @@ if __name__ == '__main__':
 
 
 
-
-
-
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset
@@ -196,15 +193,14 @@ if __name__ == '__main__':
 
 
 
-    # --------- For Thread-level N-gram
-    parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [6])  # Added by JY @ 2024-1-20
-
-
-    parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
-                        default = [True])  # Added by JY @ 2024-1-20
-
-
+    # --------- JY @ 2024-1-23: For path resolve -- os.expanduser() also dependent on curr-dir, so better to do this way for now.
+    parser.add_argument("--running_from_machine", 
+                                 
+                         choices= ["panther", "ocelot"], 
+                         default = ["ocelot"] )
+    
+    parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
+                        default = [1])  # Added by JY @ 2024-1-20
    # ==================================================================================================================================
 
     # cmd args
@@ -219,17 +215,18 @@ if __name__ == '__main__':
 
     graph_embedding_option = parser.parse_args().graph_embedding_option[0]
     graph_embedding__pool_option = parser.parse_args().graph_embedding__pool_option[0]
+    # -- parameters that are specific to particular graph-embedding approaches
     graph_embedding__Ngram = parser.parse_args().graph_embedding__N[0] # for n-gram
-    # -- parameters that are specific to graph-embedding
     thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram = parser.parse_args().thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram[0] # this is specific to graph-embedding's 'thread_level__N>1_grams_events__nodetype_5bit'
 
-    # ---------------------------------------------------
     combine_option = parser.parse_args().combine_option[0]
+
+    # ---------------------------------------------------
 
     search_space_option = parser.parse_args().search_space_option[0]
     search_on_train__or__final_test = parser.parse_args().search_on_train__or__final_test[0] 
 
-
+    # ---------------------------------------------------
     running_from_machine = parser.parse_args().running_from_machine[0] 
     RF__n_jobs = parser.parse_args().RF__n_jobs[0]
 
@@ -245,26 +242,49 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
 
-      #  if "thread_level__N>1_grams_events__nodetype_5bit" in graph_embedding_option:
-      #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-      #  else:
-      #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
+       if "thread_level__N>1_grams_events__nodetype_5bit" in graph_embedding_option:
+         
+         if "ngram" in baseline_option:
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__Ngram}gram_OnlyN_{thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram}_{graph_embedding__pool_option}pool__+__{baseline_option}_{baseline__Ngram}gram__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
 
-       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{Ngram}gram__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-       this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/{run_identifier}"
+         else: # simple-counting
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__Ngram}gram_OnlyN_{thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram}_{graph_embedding__pool_option}pool__+__{baseline_option}__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
+       
+       else: # other possible graph-embedding approaches      
+
+         if "ngram" in baseline_option:
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__pool_option}pool__+__{baseline_option}_{baseline__Ngram}gram__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
+
+         else: # simple-counting
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__pool_option}pool__+__{baseline_option}__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
+
+
+       this_results_dirpath = f"{abs_path_to_tabby}/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)
 
 
     if search_on_train__or__final_test == "final_test":
-      #  if "thread_level__N>1_grams_events__nodetype_5bit" in graph_embedding_option:
-      #  run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-      #  else:
-      #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
-       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{Ngram}gram__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-       this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/{run_identifier}"
+       if "thread_level__N>1_grams_events__nodetype_5bit" in graph_embedding_option:
+         
+         if "ngram" in baseline_option:
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__Ngram}gram_OnlyN_{thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram}_{graph_embedding__pool_option}pool__+__{baseline_option}_{baseline__Ngram}gram__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
+
+         else: # simple-counting
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__Ngram}gram_OnlyN_{thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram}_{graph_embedding__pool_option}pool__+__{baseline_option}__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
+       
+       else: # other possible graph-embedding approaches      
+
+         if "ngram" in baseline_option:
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__pool_option}pool__+__{baseline_option}_{baseline__Ngram}gram__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
+
+         else: # simple-counting
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__pool_option}pool__+__{baseline_option}__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"       
+
+
+       this_results_dirpath = f"{abs_path_to_tabby}/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/RESULTS/{run_identifier}"
        final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)
