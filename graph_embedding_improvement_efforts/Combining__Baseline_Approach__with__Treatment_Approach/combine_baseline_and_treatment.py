@@ -22,7 +22,7 @@ from source.trainer_meng_ver import TrainModel
 
 sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach")
 from _baseline_graph_embedding_functions import *
-from _baseline_graph_embedding_functions import *
+from _treatment_graph_embedding_functions import *
 from _explanation_functions import *
 
 
@@ -636,73 +636,175 @@ if __name__ == '__main__':
 
 
 
-   # Now apply signal-amplification here (here least conflicts with existing code.)
+    ''' Get the 'graph_embedding__X' '''
     if graph_embedding_option == "thread_level__N>1_grams_events__nodetype_5bit":
          
-         pretrained_Ngram_countvectorizer_list = pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( Ngram = Ngram,
+         pretrained_Ngram_countvectorizer_list = pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( Ngram = graph_embedding__Ngram,
                                                                                                                                dataset= train_dataset,
-                                                                                                                               only_train_specified_Ngram = only_train_specified_Ngram 
+                                                                                                                               only_train_specified_Ngram = \
+                                                                                                                                 thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram 
                                                                                                                             )
 
+         graph_embedding__train_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( 
+                                                                                          pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                          dataset= train_dataset,
+                                                                                          pool = graph_embedding__pool_option
+                                                                                          )
 
-         train_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
-                                                                                                        dataset= train_dataset,
-                                                                                                        pool = pool_option,
-                                                                                                          )
 
 
-         nodetype_names = ["file", "registry", "network", "process", "thread"] 
+         graph_embedding__nodetype_names = ["file__graphemb", "registry__graphemb", "network__graphemb", "process__graphemb", "thread__graphemb"] 
          Ngram_edge_feature_names = []
          for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
              Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
 
-         feature_names = nodetype_names + Ngram_edge_feature_names # yes this order is correct
-         X = pd.DataFrame(train_dataset__signal_amplified_dict).T
+         graph_embedding__feature_names = graph_embedding__nodetype_names + [f"graphemb:  {feat}" for feat in Ngram_edge_feature_names] # yes this order is correct
+         graph_embedding__X = pd.DataFrame(graph_embedding__train_dataset__signal_amplified_dict).T
+         graph_embedding__X.columns = graph_embedding__feature_names
 
 
     else:
-         ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")                  
+         ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")    
+   
+   
+    ''' Get the 'baseline__X' '''
+    if baseline_option == "baseline_3__flattened_graph_Ngram_events__node_type_counts":
+         
+         train_dataset__baseline_approach_applied_dict, fitted_countvectorizer = get_baseline_3__flattened_graph_Ngram_events__node_type_counts_dict( dataset= train_dataset, 
+                                                                                                                                                      param2 = baseline__Ngram )
+ 
+         baseline__nodetype_names = ["file__baseline", "registry__baseline", "network__baseline", "process__baseline", "thread__baseline"] 
+         baseline__feature_names = baseline__nodetype_names + [f"baseline:  {feat}" for feat in fitted_countvectorizer.get_feature_names_out().tolist()]  # yes this order is correct
+         
+         baseline__X = pd.DataFrame(train_dataset__baseline_approach_applied_dict).T
+         baseline__X.columns = baseline__feature_names
+
+    elif baseline_option == "baseline_2__flattened_graph_Ngram_events":
+         train_dataset__baseline_approach_applied_dict, fitted_countvectorizer = get_baseline_2__flattened_graph_Ngram_events_dict( dataset= train_dataset,
+                                                                                                                                    param2= baseline__Ngram )
+
+         baseline__feature_names = [f"baseline:  {feat}" for feat in fitted_countvectorizer.get_feature_names_out().tolist()] # yes this order is correct
+         baseline__X = pd.DataFrame(train_dataset__baseline_approach_applied_dict).T
+         baseline__X.columns = baseline__feature_names
 
 
-    X.columns = feature_names
-    X.reset_index(inplace = True)
-    X.rename(columns = {'index':'data_name'}, inplace = True)
-    X.to_csv(os.path.join(this_results_dirpath,"X.csv"))
+    elif baseline_option == "baseline_1__simple_counting": 
+
+         train_dataset__baseline_approach_applied_dict = get_baseline_1__simple_counting_dict( dataset= train_dataset )
+
+         baseline__nodetype_names = ["file__baseline", "registry__baseline", "network__baseline", "process__baseline", "thread__baseline"]  
+         baseline__feature_names = baseline__nodetype_names +  [f"baseline:  {feat}" for feat in taskname_colnames] # yes this order is correct
+         baseline__X = pd.DataFrame(train_dataset__baseline_approach_applied_dict).T
+         baseline__X.columns = baseline__feature_names
+
+    else:
+         ValueError(f"Invalid baseline_option ({baseline_option})")
 
 
+
+    ''' Combine the baseline-approach and graph-embedding approach at data-level.
+        i.e. combine 'graph-embedding_X' and 'baseline__X' 
+    '''
+    if combine_option == "concat":
+
+         X = pd.merge(graph_embedding__X, baseline__X, 
+                     left_index=True, right_index=True,  # index is the data_name ; so outer-join by index
+                     how='outer')
+
+
+         X.reset_index(inplace = True)
+         X.rename(columns = {'index':'data_name'}, inplace = True)
+         X.to_csv(os.path.join(this_results_dirpath,"X.csv"))
+
+    else:
+         ValueError("'combine_option' other 'concat' not implemented yet")
 
     # =================================================================================================================================================
 
     if search_on_train__or__final_test == "final_test":
         # Also prepare for final-test dataset, to later test the best-fitted models on test-set
          # Now apply signal-amplification here (here least conflicts with existing code.)
-         if graph_embedding_option == "thread_level__N>1_grams_events__nodetype_5bit":
-               final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
-                                                                                                                   dataset= final_test_dataset,
-                                                                                                                   pool = pool_option,
-                                                                                                                  )
 
+         ''' Get the 'graph_embedding__final_test_X' '''
+         if graph_embedding_option == "thread_level__N>1_grams_events__nodetype_5bit":
                
 
-               nodetype_names = ["file", "registry", "network", "process", "thread"] 
+               graph_embedding__final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( 
+                                                                                                pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                dataset= final_test_dataset,
+                                                                                                pool = graph_embedding__pool_option
+                                                                                                )
+
+
+
+               graph_embedding__nodetype_names = ["file__graphemb", "registry__graphemb", "network__graphemb", "process__graphemb", "thread__graphemb"] 
                Ngram_edge_feature_names = []
                for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
                   Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
-               feature_names = nodetype_names + Ngram_edge_feature_names # yes this order is correct               
-         
-               
-               final_test_X = pd.DataFrame(final_test_dataset__signal_amplified_dict).T               
+
+               graph_embedding__feature_names = graph_embedding__nodetype_names + [f"graphemb:  {feat}" for feat in Ngram_edge_feature_names] # yes this order is correct
+               graph_embedding__final_test_X = pd.DataFrame(graph_embedding__final_test_dataset__signal_amplified_dict).T
+               graph_embedding__final_test_X.columns = graph_embedding__feature_names
 
 
          else:
-               ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")
+               ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")    
+         
+         
+         ''' Get the 'baseline__final_test_X' '''
+         if baseline_option == "baseline_3__flattened_graph_Ngram_events__node_type_counts":
+               
+               final_test_dataset__baseline_approach_applied_dict = get_baseline_3__flattened_graph_Ngram_events__node_type_counts_dict( dataset= final_test_dataset,
+                                                                                                                                          param2= fitted_countvectorizer )
+               
 
-         final_test_X.columns = feature_names
-         final_test_X.reset_index(inplace = True)
-         final_test_X.rename(columns = {'index':'data_name'}, inplace = True)
+               baseline__nodetype_names = ["file__baseline", "registry__baseline", "network__baseline", "process__baseline", "thread__baseline"] 
+               baseline__feature_names = baseline__nodetype_names + [f"baseline:  {feat}" for feat in fitted_countvectorizer.get_feature_names_out().tolist()] # yes this order is correct
+                        
+               baseline__final_test_X = pd.DataFrame(final_test_dataset__baseline_approach_applied_dict).T       
+               baseline__final_test_X.columns = baseline__feature_names
 
-         final_test_X.to_csv(os.path.join(this_results_dirpath,"final_test_X.csv"))
+         elif baseline_option == "baseline_2__flattened_graph_Ngram_events":
 
+               final_test_dataset__baseline_approach_applied_dict = get_baseline_2__flattened_graph_Ngram_events_dict( dataset= final_test_dataset,
+                                                                                                                        param2= fitted_countvectorizer )
+
+               baseline__feature_names = [f"baseline:  {feat}" for feat in fitted_countvectorizer.get_feature_names_out().tolist()]  # yes this order is correct
+               baseline__final_test_X= pd.DataFrame(final_test_dataset__baseline_approach_applied_dict).T
+               baseline__final_test_X.columns = baseline__feature_names
+
+
+         elif baseline_option == "baseline_1__simple_counting": 
+
+               final_test_dataset__baseline_approach_applied_dict = get_baseline_1__simple_counting_dict( dataset= final_test_dataset )
+
+               baseline__nodetype_names = ["file__baseline", "registry__baseline", "network__baseline", "process__baseline", "thread__baseline"] 
+               baseline__feature_names = baseline__nodetype_names + [f"baseline:  {feat}" for feat in taskname_colnames] # yes this order is correct
+               baseline__final_test_X= pd.DataFrame(final_test_dataset__baseline_approach_applied_dict).T
+               baseline__final_test_X.columns = baseline__feature_names
+
+         else:
+               ValueError(f"Invalid baseline_option ({baseline_option})")
+
+
+
+         ''' Combine the baseline-approach and graph-embedding approach at data-level.
+            i.e. combine 'graph-graph_embedding__final_test_X' and 'baseline__final_test_X' 
+         '''
+
+         if combine_option == "concat":
+
+            final_test_X = pd.merge(graph_embedding__final_test_X, baseline__final_test_X, 
+                                    left_index=True, right_index=True,  # index is the data_name ; so outer-join by index
+                                    how='outer')
+
+
+            final_test_X.reset_index(inplace = True)
+            final_test_X.rename(columns = {'index':'data_name'}, inplace = True)
+            final_test_X.to_csv(os.path.join(this_results_dirpath,"final_test_X.csv"))
+
+         else:
+             ValueError("'combine_option' other 'concat' not implemented yet")
 
          #--------------------------------------------------------------------------
      
