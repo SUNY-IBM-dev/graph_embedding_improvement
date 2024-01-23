@@ -123,7 +123,7 @@ if __name__ == '__main__':
                         choices= ['Dataset-Case-1',
                                   'Dataset-Case-2' # try
                                   ], 
-                        default = ['Dataset-Case-2'])
+                        default = ['Dataset-Case-1'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -717,8 +717,18 @@ if __name__ == '__main__':
                                  min_samples_leaf= hyperparam_set['min_samples_leaf'], 
                                  max_features= hyperparam_set['max_features'],
                                  bootstrap= hyperparam_set['bootstrap'],
-                                 random_state= hyperparam_set['random_state']
+                                 random_state= hyperparam_set['random_state'],
+
+                                 n_jobs = -1
                                  )
+                                 # Added by JY @ 2024-1-23:
+                                 #     "n_jobs" == This parameter is used to specify how many concurrent processes or threads should be used for routines that are parallelized with joblib.
+                                 #     The number of jobs to run in parallel. fit, predict, decision_path and apply are all parallelized over the trees.
+                                 #     -1 means using all processors
+                                 #     https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier.fit
+                                 #     https://scikit-learn.org/stable/glossary.html#term-n_jobs
+
+
 
 
             elif model_cls_name == 'sklearn.linear_model._logistic.LogisticRegression'and\
@@ -867,12 +877,12 @@ if __name__ == '__main__':
 
                   # train / record training time
                   train_start = datetime.now()
-                  model.fit(X = X_train, y = y_train)
+                  model.fit(X = X_train, y = y_train)                # fit doesn't have n_jobs
                   training_time =str( datetime.now() - train_start )
          
                   # test / record test-time
                   test_start = datetime.now()
-                  preds = model.predict(X = X_validation) # modified return-statement for trainer.train() for this.
+                  preds = model.predict(X = X_validation) 
                   
 
                   val_accuracy = sklearn.metrics.accuracy_score(y_true = y_validation, y_pred = preds)

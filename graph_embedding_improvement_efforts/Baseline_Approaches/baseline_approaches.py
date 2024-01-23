@@ -726,6 +726,12 @@ if __name__ == '__main__':
                         default = [6])  # Added by JY @ 2024-1-20
 
 
+    # --------- JY @ 2024-1-23: For path resolve -- os.expanduser() also dependent on curr-dir, so better to do this way for now.
+    parser.add_argument("--running_from_machine", 
+                                 
+                         choices= ["panther", "ocelot"], 
+                         default = ["panther"] )
+
    # ==================================================================================================================================
 
     # cmd args
@@ -740,8 +746,18 @@ if __name__ == '__main__':
     search_space_option = parser.parse_args().search_space_option[0]
     search_on_train__or__final_test = parser.parse_args().search_on_train__or__final_test[0] 
 
+    running_from_machine = parser.parse_args().running_from_machine[0] 
+
 
     # -----------------------------------------------------------------------------------------------------------------------------------
+
+    if running_from_machine == "ocelot":
+      abs_path_to_tabby = "/data/d1/jgwak1/tabby"
+    else: # ocelot
+      abs_path_to_tabby = "/home/jgwak1/tabby"
+
+
+
     model_cls_name = re.search(r"'(.*?)'", str(model_cls)).group(1)
 
 
@@ -752,7 +768,7 @@ if __name__ == '__main__':
       else: # baseline_1__simple_counting , where no need Ngram at all.
           run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{baseline_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
  
-      this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/{run_identifier}"
+      this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/{run_identifier}"
       experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
       if not os.path.exists(this_results_dirpath):
          os.makedirs(this_results_dirpath)
@@ -764,7 +780,7 @@ if __name__ == '__main__':
       else: # baseline_1__simple_counting , where no need Ngram at all.
           run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{baseline_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
  
-      this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/{run_identifier}"
+      this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/{run_identifier}"
       final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
       if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)
@@ -778,54 +794,54 @@ if __name__ == '__main__':
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       #PW: Dataset-Case-1 
       "Dataset-Case-1": \
-         {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr", # dim-node == 5
-         "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/train"}, # dim-node == 35 (adhoc)
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr", # dim-node == 5
+         "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case1/train"}, # dim-node == 35 (adhoc)
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-        {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
-         "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/train"},
+        {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
+         "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/train"},
 
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-      {"5":"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
-       "35":"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/train"},
+      {"5":f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+       "35":f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case1/train"},
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-      {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
-       "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/train"},
+      {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+       "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/train"},
 
 
     }
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-      {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
-       "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/test"},
+      {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+       "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case1/test"},
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
-          "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/test"},
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/test"},
 
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
-          "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/test"},
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case1/test"},
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         {"5":"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
-          "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/test"},
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/test"},
 
     }
 
@@ -1240,8 +1256,8 @@ if __name__ == '__main__':
                                  )
 
 
-            elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier'and\
-               'randomforest' in search_space_option.lower():
+            elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier' or\
+               'randomforest' in search_space_option.lower() or 'rf' in search_space_option.lower():
                model = model_cls(
                                  n_estimators= hyperparam_set['n_estimators'],
                                  criterion= hyperparam_set['criterion'], 
@@ -1250,8 +1266,18 @@ if __name__ == '__main__':
                                  min_samples_leaf= hyperparam_set['min_samples_leaf'], 
                                  max_features= hyperparam_set['max_features'],
                                  bootstrap= hyperparam_set['bootstrap'],
-                                 random_state= hyperparam_set['random_state']
+                                 random_state= hyperparam_set['random_state'],
+
+
+                                 n_jobs = -1
                                  )
+                                 # Added by JY @ 2024-1-23:
+                                 #     "n_jobs" == This parameter is used to specify how many concurrent processes or threads should be used for routines that are parallelized with joblib.
+                                 #     The number of jobs to run in parallel. fit, predict, decision_path and apply are all parallelized over the trees.
+                                 #     -1 means using all processors
+                                 #     https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier.fit
+                                 #     https://scikit-learn.org/stable/glossary.html#term-n_jobs
+
 
 
             elif model_cls_name == 'sklearn.linear_model._logistic.LogisticRegression'and\
@@ -1405,7 +1431,9 @@ if __name__ == '__main__':
          
                   # test / record test-time
                   test_start = datetime.now()
-                  preds = model.predict(X = X_validation) # modified return-statement for trainer.train() for this.
+                  # JY @ 2024-1-23: Consider for faster prediction in tuning when feat-dim is very large (e.g. 6-gram)? 
+                  #                 -- https://stackoverflow.com/questions/47390514/running-sk-learn-model-predict-with-python-multiprocessing?
+                  preds = model.predict(X = X_validation) # modified return-statement for trainer.train() for this. #
                   
 
                   val_accuracy = sklearn.metrics.accuracy_score(y_true = y_validation, y_pred = preds)
