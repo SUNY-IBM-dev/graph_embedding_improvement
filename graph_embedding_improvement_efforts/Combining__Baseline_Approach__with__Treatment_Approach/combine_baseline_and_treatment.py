@@ -173,7 +173,7 @@ if __name__ == '__main__':
     parser.add_argument('--graph_embedding__N', nargs = 1, type = int, 
                         default = [4])  # Added by JY @ 2024-1-20
 
-
+    # ------
 
     parser.add_argument("--search_on_train__or__final_test", 
                                  
@@ -181,13 +181,15 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
 
     parser.add_argument('--combine_option', 
                         choices= ['concat',
                                   'ensemble', # just an idea -- ensemble by averaging predict-proba of 2 models ? 
                                               #                 ensemble by picking the model with higher confidnece?
+                                              #   * Might be better to have a separate file for this.
+                                              #     ensembling best-tuned treatment and best-tuned baseline
                                   ], 
                                   default = ["concat"])
 
@@ -259,7 +261,7 @@ if __name__ == '__main__':
             run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__pool_option}pool__+__{baseline_option}__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
 
 
-       this_results_dirpath = f"{abs_path_to_tabby}/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/RESULTS/{run_identifier}"
+       this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)
@@ -284,7 +286,7 @@ if __name__ == '__main__':
             run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__pool_option}pool__+__{baseline_option}__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"       
 
 
-       this_results_dirpath = f"{abs_path_to_tabby}/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/RESULTS/{run_identifier}"
+       this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/RESULTS/{run_identifier}"
        final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
            os.makedirs(this_results_dirpath)

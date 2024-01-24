@@ -1,0 +1,194 @@
+Manual Analysis of 97 caldera-techniques that successfully run on our VM
+
+** NOTE: For some key-entities, we might also need to use regex.
+
+Key-entity information in the value of mapping 
+are the full-path/full-identifier OR can be 'substring'/partial-identifier  of the entity-of-interest
+
+Should all "\\" be "\"?
+
+-----------------------------------------------------------------------------------
+
+[ Straightforward by description/command -- Quite Confident Ones -- at least quite confident that events associated with these entities are at least 'part' of the caldera-technique's key-activities ; may not correspond to all of key-activity]
+
+{"atomic__t1070_004__defense-evasion__indicator_removal_on_host-_file_deletion__b0026f9a57639c049490a43d623d7695__trial_1": ["TeamViewer_54.log", "TeamViewer"]} // Not found in log-entries
+{"atomic__t1547_004__multiple__boot_or_logon_autostart_execution-_winlogon_helper_dll__92578413245a3418c9dc21dc5db784ff__trial_1": ["HKLM:\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\", "Userinit", "C:\\Windows\\System32\\cmd.exe"]}, // Not found in log-entries
+{"atomic__t1055_003__multiple__thread_execution_hijacking__6a64ea6e29cdb83d468a27d6f69960cb__trial_1": ["notepad.exe", "T1055.003\\bin\\InjectContext.exe", "InjectContext.exe"]}, // Found "notepad.exe" in log-entries
+{"atomic__t1003__credential-access__os_credential_dumping__18f31c311ac208802e88ab8d5af8603e__trial_1":["3389", "rundll32.exe", "comsvcs.dll", "svchost-exe.dmp"]}, // Not found in log-entries
+
+{"atomic__t1219__command-and-control__remote_access_software__aada5380e7d0a4c7b71f2a324d9d5327__trial_1":["AnyDesk.exe"]},  // Found in log-entries
+
+{"atomic__t1120__discovery__peripheral_device_discovery__7b9c7afaefa59aab759b49af0d699ac1__trial_1":["Win32_PnPEntity", "T1120_collection.txt"]},  // Not found in log-entries
+
+{"atomic__t1556_002__multiple__modify_authentication_process-_password_filter_dll__cc7f0eb8b9115b271eaaa42c9b6f3dca__trial_1": ["reg.exe", "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\", "AtomicRedTeamPWFilter.dll", "C:\\Windows\\System32"]}, // Found "reg.exe" and "Lsa" in log-entries
+
+{"atomic__t1090_001__command-and-control__proxy-_internal_proxy__b0eb5108debf92ed5707a964b2bf3481__trial_1":["netsh", "portproxy", "v4tov4", "1337", "127.0.0.1", "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\PortProxy", "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\PortProxy\\v4tov4"]}, // Not found in log-entries
+
+{"atomic__t1547_014__multiple__active_setup__7ad5840a79f3259965fa28835dda93c4__trial_1": ["HKCU:\SOFTWARE\Microsoft\Active Setup\Installed Components\{C9E9A340-D1F1-11D0-821E-444553540600}", "{C9E9A340-D1F1-11D0-821E-444553540600}", "C9E9A340-D1F1-11D0-821E-444553540600", "system32\\runonce.exe"]}, // Found "runonce.exe" and "C9E9A340-D1F1-11D0-821E-444553540600" in log-entries
+
+{"atomic__t1574_012__multiple__hijack_execution_flow-_cor_profiler__7179bb4957f1f7f3004ea70c714a8fb9__trial_1":
+["{09108e71-974c-4010-89cb-acf471ae9e2c}", "09108e71-974c-4010-89cb-acf471ae9e2c", "83f016_T1574.012x64.dll", "T1574.012x64.dll", "powershell"]}, // Not found in log-entries (except for powershell not count)
+
+{"atomic__t1547_004__multiple__boot_or_logon_autostart_execution-_winlogon_helper_dll__dc74af5b90b9cbb4dcfbcaaa3e412a5e__trial_1":["HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon", "explorer.exe", "C:\\Windows\\System32\\cmd.exe" ]},  // Found in log-entries
+
+{"atomic__t1547_004__multiple__boot_or_logon_autostart_execution-_winlogon_helper_dll__7cd5d1852fb4a534fa9b735288ca158f__trial_1":["HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon", "explorer.exe", "C:\\Windows\\System32\\cmd.exe" ]},  // Found in log-entries
+
+{"atomic__t1547_001__multiple__boot_or_logon_autostart_execution-_registry_run_keys_,_startup_folder__9b74d10b3164f13d357830d1a6ee334a__trial_1":["HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\socks5_powershell", "socks5_powershell", "powershell.exe"]}, // unable to find due to comma in index-name, need to change name or recollect with changed name
+
+{"atomic__t1562_001__defense-evasion__impair_defenses-_disable_or_modify_tools__43e3334362b140924f001b256b229ee5__trial_1":["HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender", "Windows Defender"]}, // Found in log-entries.
+
+{"atomic__t1547_001__multiple__boot_or_logon_autostart_execution-_registry_run_keys_,_startup_folder__acf646b22c5d2c2b1058feb7da1f3bdc__trial_1": ["reg.exe", "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager", "SessionManagerBackup.reg", "BootExecute" ]}, // unable to find due to comma in index-name, need to change name or recollect with changed name
+
+{"atomic__t1055_012__multiple__process_injection-_process_hollowing__557321faaf98c77b2b452cecd7b1de37__trial_1":["WINWORD.EXE", "winword.exe", "notepad.exe"]}, # only by description // Found "notepad.exe" in log-entries.
+
+{"atomic__t1134_001__multiple__access_token_manipulation-_token_impersonation,theft__81289b3d78d06c14b816f7644b1d9f8b__trial_1":["NSudoLG.exe"]}, # Was "NSudoLG.exe" really on the VM?  // unable to find due to comma in index-name, need to change name or recollect with changed name
+
+{"atomic__t1119__collection__automated_collection__0c7c18db582bff4d0da4b4f8fdb2be49__trial_1":["Temp", "T1119_powershell_collection", ".doc"]}, // Not found in log-entries
+
+{"atomic__t1547_006__multiple__boot_or_logon_autostart_execution-_kernel_modules_and_extensions__bdd0be771e2462e572e2ecfbe5bf2eb7__trial_1": ["system32\\Com", "comadmin.dat", "system32\\Com\\comadmin.dat"]}, # From the report, Snake's...  // Not found in log-entries
+
+{"atomic__t1070_004__defense-evasion__indicator_removal_on_host-_file_deletion__b0026f9a57639c049490a43d623d7695__trial_1",["TeamViewer_": "TeamViewer_54.log" ]}, // Not found in log-entries
+
+{"atomic__t1547_001__multiple__boot_or_logon_autostart_execution-_registry_run_keys_,_startup_folder__3c0760559a620aad7664cdf98f486127__trial_1":["HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce", "NextRun", "powershell.exe", "Discovery.bat"]}, // unable to find due to comma in index-name, need to change name or recollect with changed name
+
+{"atomic__t1547_004__multiple__boot_or_logon_autostart_execution-_winlogon_helper_dll__5c23188ed301af9f1b6b55d4f3f60b46__trial_1":["HKCU:\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", "Userinit", "Userinit.exe", "C:\\Windows\\System32\\cmd.exe"]}, // Not found in log-entries
+
+{"atomic__t1055_003__multiple__thread_execution_hijacking__6a64ea6e29cdb83d468a27d6f69960cb__trial_1":["notepad.exe", "InjectContext.exe"]}, # not sure how "InjectContext.exe" has run?  It seems $PathToAtomicsFolder is a network path? Need to check on VM but when caldera C2 control is established  // Found "notepad.exe" in log-entries.
+
+{"atomic__t1566_001__initial-access__phishing-_spearphishing_attachment__0a69420bec84b02bd47464f6835653b1__trial_1":["winword", "word", "WINWORD", "cmd.exe", "cmd", "8.8.8.8"]}, # based on description // // Not found in log-entries
+
+{"atomic__t1572__command-and-control__protocol_tunneling__f49909057fa568660a6f268b7261e446__trial_1":["ngrok.exe", "3889"]}, // Not found in log-entries
+
+{"atomic__t1548_002__multiple__abuse_elevation_control_mechanism-_bypass_user_account_control__64430e7597668877a832b9d1e379c9f2__trial_1":["HKCU:\\Software\\Classes\\AppX82a6gwre4fdg3bt635tn5ctqjf8msdd2\\Shell\\open\\command", "DelegateExecute", "WSReset.exe", "wsreset.exe"]}, // Found ALL in log-entries.
+
+{"atomic__t1112__defense-evasion__modify_registry__1296157a99b29c9a81fb1ce4eaf24cbd__trial_1":["HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet\\Settings\\ZoneMap\\ProtocolDefaults", "http", "https"]},
+
+{"atomic__t1562_001__defense-evasion__impair_defenses-_disable_or_modify_tools__392e12d6a466407e28d1bb51cf0729bb__trial_1":["HKLM:\\SOFTWARE\\Microsoft\\AMSI\\Providers\\{2781761E-28E0-4109-99FE-B9D127C57AFE}", "{2781761E-28E0-4109-99FE-B9D127C57AFE}"]}, // Found "2781761E-28E0-4109-99FE-B9D127C57AFE" in log-entries.
+ 
+{"atomic__t1112__defense-evasion__modify_registry__f4d3c5648b8d2fab9b061016eb91f478__trial_1":["HKLM:\\SOFTWARE\\Classes\\.wav\\OpenWithProgIds", "AtomicSnake"]}, # From the report, Snake's...
+// Not found in log-entries
+
+{"atomic__t1564_003__defense-evasion__hide_artifacts-_hidden_window__f1222384fe40cc71e7dea9d182014eaf__trial_1":["powershell.exe", "calc.exe"]}, // Found "calc.exe" in log-entries.
+
+
+{"atomic__t1548_002__multiple__abuse_elevation_control_mechanism-_bypass_user_account_control__e7d20e7f0087f8a4234c1d1b7a228bb0__trial_1":["HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System","ConsentPromptBehaviorAdmin"]}, // Found "ConsentPromptBehaviorAdmin" in log-entries.
+
+{"atomic__t1204_002__execution__user_execution-_malicious_file__705c4b9714ce06223e7d7038cd332808__trial_1":["winword.exe", "winword", "word", "art1204.bat", "calc.exe", "cmd.exe"]}, // Not found in log-entries
+
+{"atomic__t1649__credential-access__steal_or_forge_authentication_certificates__b41910e3770cff37dd642650f0d91672__trial_1":["atomic_certs.zip", "T1649\\certs", "Cert:\CurrentUser" ]}, // Not found in log-entries
+
+{"atomic__t1059_003__execution__command_and_scripting_interpreter-_windows_command_shell__942d94dff3cc494bacf5517e775321a7__trial_1":["cmd", "wordpad.exe", "T1059_003note.txt"]},  # this is an example of quite confident
+// Not found in log-entries
+
+{"atomic__t1204_002__execution__user_execution-_malicious_file__cde814c61dcd8b0fbeeb14f005c2432f__trial_1":["wscript.exe", "cmd.exe", "e:jscript", "art.jse"]}, // Not found in log-entries
+ 
+{"atomic__t1562_004__defense-evasion__impair_defenses-_disable_or_modify_system_firewall__34f398de2b04b96158b3bd25abaea5a7__trial_1":["f7ce09_AtomicTest.exe", "netsh" ]}, // Not found in log-entries
+
+{"atomic__t1204_002__execution__user_execution-_malicious_file__431121fe12b6fd82938a9a52526b3423__trial_1":["winword", "winword.exe", "art.jse", "cscript.exe", "wscript.exe"]},  // Not found in log-entries
+
+{"atomic__t1547_005__multiple__boot_or_logon_autostart_execution-_security_support_provider__bd9f08eb7c3215b8a6a7dd1af9ea406a__trial_1":[ "HKLM:\\System\\CurrentControlSet\\Control\\Lsa", "Security Packages", "Security Packages old", "AtomicTest.dll"]}, // Not found in log-entries
+
+{"atomic__t1219__command-and-control__remote_access_software__f1b3fca18d7465cd10e5a7477a3bf97d__trial_1":["LogMeInIgnition.msi","LMIIgnition.exe"]}, // Found "LMIIgnition.exe" in log-entries.
+
+{"atomic__t1070_004__defense-evasion__indicator_removal_on_host-_file_deletion__2413b013bc82d152765e2ac34601a327__trial_1":["\prefetch\", ".pf"]},  # Good example for file-extension matters   // Found both  "prefetch" and ".pf" in log-entries.
+
+{"atomic__t1055_002__multiple__process_injection-_portable_executable_injection__ca6a3f579181ea47b7d95779e8d8a79b__trial_1
+":["971b85_RedInjection.exe", "notepad.exe"]}, # Note sure if "971b85_RedInjection.exe" was actually on the VM -- why got status 0 and success on caldera-gui?  // Found both "971b85_RedInjection.exe" and "notepad.exe" in log-entries
+
+{"atomic__t1059_005__execution__command_and_scripting_interpreter-_visual_basic__f2131e45dbd95e3057bd3494b5aeed41__trial_1":["cscript.exe", "a771e6_sys_info.vbs", "T1059.005.out.txt"]}, // Found only "cscript.exe" in log entries
+
+{"atomic__t1548_002__multiple__abuse_elevation_control_mechanism-_bypass_user_account_control__c4c471259798dd6c7b0b56f716e12113__trial_1":["HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", "PromptOnSecureDesktop"]}, // Not found in log-entries.
+
+{"atomic__t1204_002__execution__user_execution-_malicious_file__ab1b50880382b06d48d3d23ad1786239__trial_1":["winword", "cmd.exe"]}, // Not found in log-entries
+
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+
+-----------------------------------------------------------------------------------
+
+[ Required work beyond description/command ]
+
+{"atomic__t1059_005__execution__command_and_scripting_interpreter-_visual_basic__42302f7d89c15f8070f83e743771d567__trial_1": []},
+{"atomic__t1087_002__discovery__account_discovery-_domain_account__613dc87cebac339d20973268e0bb1c0b__trial_1": []},
+{"atomic__t1027_006__defense-evasion__html_smuggling__a96a64caf38bca14cef902e999bb6b98__trial_1":[]},
+{"atomic__t1059_005__execution__command_and_scripting_interpreter-_visual_basic__42302f7d89c15f8070f83e743771d567__trial_1":[]},
+{"atomic__t1070_001__defense-evasion__indicator_removal_on_host-_clear_windows_event_logs__05f8b752dbccff102ef530103bd8e550__trial_1":[]},
+{"atomic__t1555_003__credential-access__credentials_from_password_stores-_credentials_from_web_browsers__5610bf38f44ad2da2ecb846ba776ecdc__trial_1":[]},
+{"atomic__t1115__collection__clipboard_data__abd5327a47c4994e2824f833eefe4250__trial_1":[]},
+{"atomic__t1059_005__execution__command_and_scripting_interpreter-_visual_basic__9c955a373154a7090d4b4396b561f5da__trial_1":[]},
+{"atomic__t1204_002__execution__user_execution-_malicious_file__98adc43648b0e4ea6e90a88ad5ae4b3d__trial_1":[]},
+{"atomic__t1070_003__defense-evasion__indicator_removal_on_host-_clear_command_history__adce11c81bb77ae74660c6c743a0442d__trial_1":["ConsoleHost_history.txt"]}, # good example  // Found in log-entries
+{"atomic__t1006__defense-evasion__direct_volume_access__80e752c5fc69a56ccb86bc90efc5eff6__trial_1": ["\\\\.\\C", "\\.\C"]},
+{"atomic__t1546_015__multiple__event_triggered_execution-_component_object_model_hijacking__d94bcdfc9d0f769b062e1960f7af6804__trial_1":["Explorer.EXE"", "explorer.exe", "Explorer", "explorer", "cmd.exe", "calc.exe", "C:\\windows\\system32" ]}, # "$o= [activator]::CreateInstance([type]::GetTypeFromCLSID("9BA05972-F6A8-11CF-A442-00A0C90A8F39"))" appears to correspond to "Explorer.EXE"   ## Another Good Example
+{"atomic__t1482__discovery__domain_trust_discovery__feb9647c55185e3b6045293fd26f6a5b__trial_1":[]}, # On current powershell process, will run "Get-ForestTrust" from "https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/f94a5d298a1b4c5dfb1f30a246d9c73d13b22888/Recon/PowerView.ps1" , but how to isolate "Get-ForestTrust" from noise?
+{"atomic__t1105__command-and-control__ingress_tool_transfer__a88b5c13a1d5d6bdf02b66bc73411f41__trial_1":["Atomic-license.txt"]},
+{"atomic__t1562_001__defense-evasion__impair_defenses-_disable_or_modify_tools__2e9acde621e7768a73c1b9a1157c444d__trial_1":["Cache\\{7489ba93-b668-447f-8401-7e57a6fe538d}\\WindowsSensor.exe", "CrowdStrike", "Falcon" ]}, # uninstall...
+{"atomic__t1087_002__discovery__account_discovery-_domain_account__9ccef9b46ce26850bb709a83d8e538ae__trial_1":["ADRecon.ps1"]}, // Not found in log-entries
+{"atomic__t1053_005__multiple__scheduled_task,job-_scheduled_task__920a251237fac2b70fe4d647aa16bfdd__trial_1":[]},
+{"atomic__t1055__multiple__process_injection__9999b5c073203122cbe5f1f5438cf637__trial_1":[]},
+{"atomic__t1219__command-and-control__remote_access_software__b6ebae300e5ff115e965cc9179d4f831__trial_1":["GoToAssist.exe"]}, # may not be able to get full activity of Invoke-WebRequest // Found in log-entries
+{"atomic__t1036__defense-evasion__masquerading__7575d3d5ae97ee568d49afbd0f878fe2__trial_1":["T1036", "cmd", ".pdf"]}, # since the description says it change .pdf to .dll, those pdf and changed dll should have the same name before "." (e.g. abc.pdf --> abc.dll) // Found "T1036" in log entries
+{"atomic__t1555__credential-access__credentials_from_password_stores__935e8026584b85192519c57d7080b048__trial_1":["windows-credentials.txt"]}, # activity of dumping might be captured , but what about activity of 'extracting' the credentials? // Not found in log-entries
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+
+
+-----------------------------------------------------------------------------------
+
+[ Hard / Not-Confidient in extracting key-entity from description/command : # ]
+
+{"atomic__t1070_003__defense-evasion__indicator_removal_on_host-_clear_command_history__18d69a8fd988d6b63f5307ce857723c9__trial_1": []},
+{"atomic__t1546_013__multiple__event_triggered_execution-_powershell_profile__49a7502f9c667aa3af9c87f6ab1e68b3__trial_1": []},
+{"atomic__t1112__defense-evasion__modify_registry__0424ccb447bfa66b94162266f55ecd52__trial_1": []},
+{"atomic__t1562_001__defense-evasion__impair_defenses-_disable_or_modify_tools__e0946bc3b8b888d6c4cdf3f023fe3c0b__trial_1":[]},
+{"atomic__t1562_001__defense-evasion__impair_defenses-_disable_or_modify_tools__c407315583b3a00d9a2e0c3c510f2c96__trial_1":[]},
+{"atomic__t1547_001__multiple__boot_or_logon_autostart_execution-_registry_run_keys_,_startup_folder__1f15ab22c39a9b6bb2bb0d77276dfcb3__trial_1":[]},
+{"atomic__t1036__defense-evasion__masquerading__bc456ce28da22e33b96257b6ae020391__trial_1",["System32\\cmd.exe", "SysWOW64\\cmd.exe", "cmd.exe"]},
+{"atomic__t1070_003__defense-evasion__indicator_removal_on_host-_clear_command_history__18d69a8fd988d6b63f5307ce857723c9__trial_1":[]},
+{"atomic__t1562_001__defense-evasion__impair_defenses-_disable_or_modify_tools__32047c4f30d4e65ebc9b22b9b8368bca__trial_1":[]},
+{"atomic__t1021_003__lateral-movement__remote_services-_distributed_component_object_model__68df771632fd6216858edd20458ee5bb__trial_1":["MMC20.application", "mmc20", "localhost", "c:\\windows\\system32\\calc.exe"]},
+{"atomic__t1074_001__collection__data_staged-_local_data_staging__4382d53f0f53399e72c728d019fffd77__trial_1",["Discovery.bat", "discovery.bat"]}, // Not found in log-entries.
+{"atomic__t1119__collection__automated_collection__344e7eaf650763e0d3e9f02e62c1cf4b__trial_1":["T1119_1.txt", "T1119_2.txt", "T1119_3.txt", "T1119_"]}, # small example of my doubts on events associatd with key-entitys == all events of key-activities ? I don't think so .   // Not found in log-entries
+{"atomic__t1033__discovery__system_owner,user_discovery__221d4ebcb41e708b6ee90c1c0369a969__trial_1":["CurrentUserObject.txt"]}, # small example of my doubts on events associatd with key-entitys == all events of key-activities ? I don't think so . // unable to find due to comma in index-name, need to change name or recollect with changed name
+{"atomic__t1197__multiple__bits_jobs__5a9be3b1696cc0cce8557f9596547e13__trial_1":["bitsadmin2_flag.ps1"]}, # small example of my doubts on events associatd with key-entitys == all events of key-activities ? I don't think so . // Not found in log-entries
+{"atomic__t1136_002__persistence__create_account-_domain_account__8a95e17c084e9a8bf41c69c73beeb0af__trial_1":[]},
+{"atomic__t1592_001__reconnaissance__gather_victim_host_information-_hardware__53861bc51eb67cb9775c95b9e02ad141__trial_1":[]},
+{"atomic__t1490__impact__inhibit_system_recovery__e90756bb6dcd21462dc4cc452661df91__trial_1":[]},
+{"atomic__t1546_013__multiple__event_triggered_execution-_powershell_profile__49a7502f9c667aa3af9c87f6ab1e68b3__trial_1":[]},
+{"atomic__t1113__collection__screen_capture__64569d9eb87191fc3cbf365a656e31ab__trial_1":["T1113.png"]}, // not found in log-entries
+
+{"atomic__t1036_003__defense-evasion__masquerading-_rename_system_utilities__4bb550aacec4efb190c72389677b7f4e__trial_1":["cmd.exe", "svchost.exe"]}, # the key-activity is "copying" which is done by the powershell
+{"atomic__t1033__discovery__system_owner,user_discovery__2bf75f949823305d3ea815c8e94e9ee3__trial_1":["CurrentactiveUser.txt"]},  // unable to find due to comma in index-name, need to change name or recollect with changed name
+{"atomic__t1105__command-and-control__ingress_tool_transfer__b0e28215c59037cc6cdb61b38615c32d__trial_1":["LICENSE.txt"]}, // Not found in log-entries
+{"atomic__t1070_003__defense-evasion__indicator_removal_on_host-_clear_command_history__df94858e92a23d274ac1d70133d9150f__trial_1":[]},
+{"atomic__t1087_002__discovery__account_discovery-_domain_account__613dc87cebac339d20973268e0bb1c0b__trial_1":[]}, # cannot know from command/description 
+{"atomic__t1562_001__defense-evasion__impair_defenses-_disable_or_modify_tools__34952e2eefd3066c5f574744e1734ca6__trial_1
+":[]},
+{"atomic__t1548_002__multiple__abuse_elevation_control_mechanism-_bypass_user_account_control__b473176c321f31824c909c73807caf92__trial_1":[]},
+{"atomic__t1106__execution__native_api__b262964145fa55e27265e7caa89b1169__trial_1":[]},
+{"atomic__t1562_001__defense-evasion__impair_defenses-_disable_or_modify_tools__f0fde90a3d59061b226197974e7dcbaa__trial_1":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+{"":[]},
+
+-----------------------------------------------------------------------------------

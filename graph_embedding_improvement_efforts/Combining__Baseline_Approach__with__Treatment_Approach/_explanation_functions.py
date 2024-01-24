@@ -7,6 +7,7 @@ import shap
 import matplotlib.pyplot as plt    
 import os
 import pandas as pd
+import numpy as np
 
 # TODO -- make sure explanations are produced by this
 EventID_to_RegEventName_dict =\
