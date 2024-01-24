@@ -74,8 +74,9 @@ import time
 
 # JY @ 2024-1-21 -- to save
 import matplotlib.pyplot as plt 
+import matplotlib.dates as mdates
 
-
+from itertools import cycle
 
 # TODO -- make sure explanations are produced by this
 EventID_to_RegEventName_dict =\
@@ -183,9 +184,11 @@ taskname_colnames = [
 
 ##########################################################################################################################################################
 def event_and_entity_level_artifactual_thread_investigation( dataset : list,
-                                                             results_dirpath : str  ):
+                                                             results_dirpath : str  ,
 
-
+                                                             processThread_grouped_events = True,
+                                                             processThread_grouped_events_EasyRead = True,
+                                                             thread_lifetime_horizontal_dotplots__with_More_Detail = True ):
       # ------------------------------------------------------------
       # JY @ 2024-1-21: To save out .
 
@@ -194,42 +197,42 @@ def event_and_entity_level_artifactual_thread_investigation( dataset : list,
       processThread_grouped_events_EasyRead_dirpath = os.path.join(results_dirpath, "processThread_grouped_events_EasyRead")
 
 
-      thread_lifetime_horizontal_dotplots_with_ThreadID__dirpath = os.path.join(results_dirpath, "thread_lifetime_horizontal_dotplots__with_ThreadID_info")
+      thread_lifetime_horizontal_dotplots__with_More_Detail__dirpath = os.path.join(results_dirpath, "thread_lifetime_horizontal_dotplots__with_More_Detail")
 
 
+      if processThread_grouped_events:
+         if not os.path.exists(processThread_grouped_events_dirpath):
+            os.makedirs(processThread_grouped_events_dirpath)
 
-      if not os.path.exists(processThread_grouped_events_dirpath):
-         os.makedirs(processThread_grouped_events_dirpath)
+            # results_dirpath 
+            # --> processThread_grouped_events_dirpath
+            #     ---> <subgraph-1 processThread_grouped_events_dirpath>.json
+            #     ---> <subgraph-2 processThread_grouped_events_dirpath>.json
+            #                 ....
+            # 
 
-         # results_dirpath 
-         # --> processThread_grouped_events_dirpath
-         #     ---> <subgraph-1 processThread_grouped_events_dirpath>.json
-         #     ---> <subgraph-2 processThread_grouped_events_dirpath>.json
-         #                 ....
-         # 
+      if processThread_grouped_events_EasyRead:
+         if not os.path.exists(processThread_grouped_events_EasyRead_dirpath):
+            os.makedirs(processThread_grouped_events_EasyRead_dirpath)
 
-
-      if not os.path.exists(processThread_grouped_events_EasyRead_dirpath):
-         os.makedirs(processThread_grouped_events_EasyRead_dirpath)
-
-         # results_dirpath 
-         # --> processThread_grouped_events_EasyRead_dirpath
-         #     ---> <subgraph-1 processThread_grouped_events_dirpath>.txt
-         #     ---> <subgraph-2 processThread_grouped_events_dirpath>.txt
-         #                 ....
-         # 
+            # results_dirpath 
+            # --> processThread_grouped_events_EasyRead_dirpath
+            #     ---> <subgraph-1 processThread_grouped_events_dirpath>.txt
+            #     ---> <subgraph-2 processThread_grouped_events_dirpath>.txt
+            #                 ....
+            
 
 
+      if thread_lifetime_horizontal_dotplots__with_More_Detail:
+         if not os.path.exists(thread_lifetime_horizontal_dotplots__with_More_Detail__dirpath):
+            os.makedirs(thread_lifetime_horizontal_dotplots__with_More_Detail__dirpath)
 
-      if not os.path.exists(thread_lifetime_horizontal_dotplots_with_ThreadID__dirpath):
-         os.makedirs(thread_lifetime_horizontal_dotplots_with_ThreadID__dirpath)
-
-         # results_dirpath 
-         # --> thread_lifetime_horizontal_dotplots_with_ThreadID__dirpath
-         #     ---> <subgraph-1 thread_lifetime_horizontal_dotplot>.png
-         #     ---> <subgraph-2 thread_lifetime_horizontal_dotplot>.png
-         #                 ....
-         # 
+            # results_dirpath 
+            # --> thread_lifetime_horizontal_dotplots__with_More_Detail__dirpath
+            #     ---> <subgraph-1 thread_lifetime_horizontal_dotplot>.png
+            #     ---> <subgraph-2 thread_lifetime_horizontal_dotplot>.png
+            #                 ....
+            # 
 
       # ------------------------------------------------------------
 
@@ -278,227 +281,94 @@ def event_and_entity_level_artifactual_thread_investigation( dataset : list,
 
             processThread_to_logentries_dict = group_log_entries_by_processThreads( subgraph_process_tree_all_log_entries__with_EntityInfo )
 
-            print()
+            if thread_lifetime_horizontal_dotplots__with_More_Detail:
+                processThread_to_logentries__with_events_order_information__dict = get__processThread_to_logentries__with_events_order_information( processThread_to_logentries_dict )
+
             # save it in an analysis friendly format (may be cross-check with threads-lifetime overlap check output?)
 
+            if processThread_grouped_events :
+               # save out a python dictionary (key : str, value :list ) to a json file, but dictionary to be sorted by key with smaller number lengths first, 
+               # so that when I write out the json file and view it, I see the ones with smaller length first 
+               for key, inner_dict in processThread_to_logentries_dict.items():
+                  sorted_inner_keys = sorted(inner_dict, key=lambda k: len(inner_dict[k]))
+                  processThread_to_logentries_dict[key] = {k: inner_dict[k] for k in sorted_inner_keys}
+               processThread_to_logentries_dict__fpath = os.path.join( processThread_grouped_events_dirpath, f"{label}_{index}.json" )
+               with open( processThread_to_logentries_dict__fpath , "w") as json_file:
+                  json.dump(processThread_to_logentries_dict, json_file) 
 
-            # save out a python dictionary (key : str, value :list ) to a json file, but dictionary to be sorted by key with smaller number lengths first, 
-            # so that when I write out the json file and view it, I see the ones with smaller length first 
-            for key, inner_dict in processThread_to_logentries_dict.items():
-               sorted_inner_keys = sorted(inner_dict, key=lambda k: len(inner_dict[k]))
-               processThread_to_logentries_dict[key] = {k: inner_dict[k] for k in sorted_inner_keys}
-            processThread_to_logentries_dict__fpath = os.path.join( processThread_grouped_events_dirpath, f"{label}_{index}.json" )
-            with open( processThread_to_logentries_dict__fpath , "w") as json_file:
-               json.dump(processThread_to_logentries_dict, json_file) 
-
-
-            # Save out EasyRead ver. of processThread_to_logentries_dict
-            processThread_grouped_events_EasyRead__fpath = os.path.join( processThread_grouped_events_EasyRead_dirpath, f"{label}_{index}.txt" )
-            with open( processThread_grouped_events_EasyRead__fpath , "w") as file:
-               for pid in processThread_to_logentries_dict.keys():
+            if processThread_grouped_events_EasyRead :
+               # Save out EasyRead ver. of processThread_to_logentries_dict
+               processThread_grouped_events_EasyRead__fpath = os.path.join( processThread_grouped_events_EasyRead_dirpath, f"{label}_{index}.txt" )
+               with open( processThread_grouped_events_EasyRead__fpath , "w") as file:
+                  for pid in processThread_to_logentries_dict.keys():
+                     file.write("==================================================\n")
+                     file.write(f"{pid}  ({len(processThread_to_logentries_dict[pid])} threads) :\n")
+                     file.write("-----------------------------------------------\n")
+                     for tid in processThread_to_logentries_dict[pid]: # already sorted by list-length in ascending order.
+                           file.write(f"  {tid}  ({len(processThread_to_logentries_dict[pid][tid])} events) :\n")
+                           for thread_log_entry_info in processThread_to_logentries_dict[pid][tid]:
+                              file.write(f"       {thread_log_entry_info}\n")
+                           file.write("-----------------------------------------------\n")
                   file.write("==================================================\n")
-                  file.write(f"{pid}  ({len(processThread_to_logentries_dict[pid])} threads) :\n")
-                  file.write("-----------------------------------------------\n")
-                  for tid in processThread_to_logentries_dict[pid]: # already sorted by list-length in ascending order.
-                        file.write(f"  {tid}  ({len(processThread_to_logentries_dict[pid][tid])} events) :\n")
-                        for thread_log_entry_info in processThread_to_logentries_dict[pid][tid]:
-                            file.write(f"       {thread_log_entry_info}\n")
-                        file.write("-----------------------------------------------\n")
-               file.write("==================================================\n")
 
+            if thread_lifetime_horizontal_dotplots__with_More_Detail :
+                  
 
-            # Save out thread_lifetime_horizontal_dotplots_with_ThreadID
-            fig, ax = plt.subplots(figsize=(10, 6))
-            plt.xlabel('Datetime')
+                  # Might need to work with normailzed ones ; might need to handle it in "group_log_entries_by_processThreads"
 
-            y_coord = 1
-            for pid in processThread_to_logentries_dict.keys():
 
-               for tid in processThread_to_logentries_dict[pid]: # already sorted by list-length in ascending order.
+                  #processThread_to_logentries__with_events_order_information__dict
 
-                     # get all sorted timestamps for this thread
-                     
-                     thread_descriptor = f"{pid}__{tid}"
-                     thread_sorted_event_timestamps = [datetime.strptime(log_entry["TimeStamp"], "%Y-%m-%d %H:%M:%S.%f") for log_entry in processThread_to_logentries_dict[pid][tid]]
 
-                     # Plot dots
-                     for i, event_datetime in enumerate(thread_sorted_event_timestamps):
-                        ax.scatter( x = event_datetime,  y = i, 
-                                    label=thread_descriptor, s=1)
-                        
-                        y_coord += 5
-                        
-                        print()
-               # # Set y-axis ticks and labels
-               # ax.set_yticks(range(len(data__threads__timestamps)))
-               # ax.set_yticklabels([f'Thread {i+1}' for i in range(len(data__threads__timestamps))])
+                  # data__threads__timestamps = [[tup[1] for tup in thread__taskname_timestamp__tuples] for thread__taskname_timestamp__tuples in data__threads__taskname_timestamp__tuples]
 
-               # # Set x-axis label
-               # ax.set_xlabel('Norm. Timestamps')
 
-                     # Add legend
-                     # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 
-            plt.tight_layout()
 
-                     # Show the plot
-            plt.savefig(os.path.join(thread_lifetime_horizontal_dotplots_with_ThreadID__dirpath, f"{label}_{index}.png"))
+                  # Save out thread_lifetime_horizontal_dotplots_with_ThreadID
+                  fig, ax = plt.subplots(figsize=(10, 6))
+                  #plt.xlabel('Datetime')
+                  color_cycle = cycle(['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'])
+                  y_coord = 0
+                  for_ylabels = []
+                  for pid in processThread_to_logentries__with_events_order_information__dict.keys():
 
+                     for tid in processThread_to_logentries__with_events_order_information__dict[pid]: # already sorted by list-length in ascending order.
 
+                           # get all sorted timestamps for this thread
+                           
+                           thread_descriptor = f"{pid}__{tid}"
+                           thread_sorted_event_timestamps = [ log_entry["normalized__event_order"] for log_entry in processThread_to_logentries__with_events_order_information__dict[pid][tid]]
+                           thread_dots_color = next(color_cycle)
+                           # Plot dots
+                           ax.scatter( x = thread_sorted_event_timestamps ,  y = [y_coord] * len(thread_sorted_event_timestamps), 
+                                          c = thread_dots_color,
+                                       label= thread_descriptor, 
+                                       s=1)
+                           print(thread_descriptor)
 
-            file.write("==================================================\n")               
+                           y_coord += 1 # for horizontal 
+                           for_ylabels.append(thread_descriptor) # confirmed to be correct with 'ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')'
+                  ax.set_xlabel('Norm. TimeStamp')
 
+                     # # Set y-axis ticks and labels
+                  ax.set_yticks(range(len(for_ylabels)))
+                  ax.set_yticklabels(for_ylabels)
 
+                     # # Set x-axis label
 
-# JY @ 2024-1-20: thread-level N>1 gram events + nodetype-5bits
+                  #Add legend
+                  # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 
-def threads_lifetime_overlap_check( dataset : list,
-                                    results_dirpath : str  ):
-      
-      # ------------------------------------------------------------
-      # JY @ 2024-1-21: To save out .
+                  plt.tight_layout()
 
-      thread_lifetime_horizontal_dotplots_dirpath = os.path.join(results_dirpath, "thread_lifetime_horizontal_dotplots")
-      thread_taskname_timestamp_tuple_lists_dirpath = os.path.join(results_dirpath, "thread_taskname_timestamp_tuple_lists")
+                           # Show the plot
+                  plt.savefig(os.path.join(thread_lifetime_horizontal_dotplots__with_More_Detail__dirpath, f"{label}_{index}.png")) # this does save out
 
-      if not os.path.exists(thread_lifetime_horizontal_dotplots_dirpath):
-         os.makedirs(thread_lifetime_horizontal_dotplots_dirpath)
 
-         # results_dirpath 
-         # --> thread_lifetime_horizontal_dotplots_dirpath
-         #     ---> <subgraph-1 thread_lifetime_horizontal_dotplot>.png
-         #     ---> <subgraph-2 thread_lifetime_horizontal_dotplot>.png
-         #                 ....
-         # 
 
 
-      if not os.path.exists(thread_taskname_timestamp_tuple_lists_dirpath):
-         os.makedirs(thread_taskname_timestamp_tuple_lists_dirpath)
 
-         # results_dirpath 
-         # --> thread_taskname_timestamp_tuple_lists_dirpath
-         #     ---> <subgraph-1 thread_taskname_timestamp_tuple_lists>.txt
-         #     ---> <subgraph-2 thread_taskname_timestamp_tuple_lists>.txt
-         #                 ....
-         # 
-
-
-      # ------------------------------------------------------------
-
-      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
-
-      data_dict = dict()
-
-      cnt = 1
-      for data in dataset:
-
-            # ----------------------------------------------------------------------------------            
-            if int(data.y) == 0:
-                label = "benign"
-            else:
-                label = "malware"
-
-            data_name = re.search(r'Processed_SUBGRAPH_P3_(.*?)\.pickle', data.name).group(1)
-            # ---------------------------------------------------------------------------------- 
-            
-            print(f"{cnt} / {len(dataset)}: {data.name} -- generate graph-embedding", flush = True)
-
-            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
-            # if data.x.shape[1] != 5:
-            data_x_first5 = data.x[:,:5]
-            thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
-
-            # which this node is a source-node (outgoing-edge w.r.t this node)
-
-            data__threads__taskname_timestamp__tuples = []
-
-            for thread_node_idx in thread_node_indices:
-
-               edge_src_indices = data.edge_index[0]
-               edge_tar_indices = data.edge_index[1]
-
-               # which this node is a target-node (outgoing-edge w.r.t this node)
-               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
-               # which this node is a target-node (incoming-edge w.r.t this node)
-               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
-
-               # Following is to deal with edge-attr (event-dist & time-scalar) -------------------------------------------------------------------------------------
-               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
-               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
-
-
-
-               ''' JY @ 2024-1-20: Get thread-level event-sequence sorted by timestamps '''
-               # Refered to : https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/thread_level_n_gram__n_gt_1__similar_to_asiaccs_graph_embedding.py#L483C1-L491C95
-
-               edge_attr_of_both_direction_edges_from_thread_node_idx = torch.cat([edge_attr_of_incoming_edges_from_thread_node_idx, 
-                                                                                   edge_attr_of_outgoing_edges_from_thread_node_idx],
-                                                                                   dim = 0)
-
-
-               timestamp_sorted_indices = torch.argsort(edge_attr_of_both_direction_edges_from_thread_node_idx[:, -1], descending=False)
-
-               edge_attr_of_both_direction_edges_from_thread_node_idx__sorted = edge_attr_of_both_direction_edges_from_thread_node_idx[ timestamp_sorted_indices ]
-
-               taskname_indices = torch.nonzero(edge_attr_of_both_direction_edges_from_thread_node_idx__sorted[:,:-1], as_tuple=False)[:, -1]
-
-               thread_sorted_event_list = [taskname_colnames[i] for i in taskname_indices]
-   
-               thread__taskname_timestamp__tuple = list(zip(thread_sorted_event_list, edge_attr_of_both_direction_edges_from_thread_node_idx__sorted[:,-1].tolist()))
-
-
-
-               data__threads__taskname_timestamp__tuples.append( thread__taskname_timestamp__tuple )
-
-            # -------------------------------------------------------------------
-            # 1. save the list "thread__taskname_timestamp__tuple"
-
-            data_thread_taskname_timestamp_tuple_lists_fpath = os.path.join( thread_taskname_timestamp_tuple_lists_dirpath, f"{label}_{data_name}.txt" )
-
-            # Sorting by the length of each sublist in ascending order for easier reading of output
-            data__threads__taskname_timestamp__tuples = sorted(data__threads__taskname_timestamp__tuples, key=len)
-            data__threads__taskname_timestamp__tuples__strings = [ str(x) for x in data__threads__taskname_timestamp__tuples ]
-
-            with open(data_thread_taskname_timestamp_tuple_lists_fpath, 'w') as f:
-               #json.dump(data__threads__taskname_timestamp__tuples__strings, jsonf, indent=1)
-               for tuple_string in data__threads__taskname_timestamp__tuples__strings:
-                  f.write(f"{tuple_string}\n\n")
-            # -------------------------------------------------------------------
-            # 2. save duration-horizontal bar-plots to a dir
-            data__threads__timestamps = [[tup[1] for tup in thread__taskname_timestamp__tuples] for thread__taskname_timestamp__tuples in data__threads__taskname_timestamp__tuples]
-
-
-            # Create a scatter plot
-            fig, ax = plt.subplots(figsize=(10, 6))
-
-            # Plot dots
-            for i, data__thread__timestamp in enumerate(data__threads__timestamps):
-               ax.scatter(data__thread__timestamp, 
-                          [i] * len(data__thread__timestamp), 
-                          label=f'Thread {i+1}', 
-                          s=1)
-
-            # Set y-axis ticks and labels
-            ax.set_yticks(range(len(data__threads__timestamps)))
-            ax.set_yticklabels([f'Thread {i+1}' for i in range(len(data__threads__timestamps))])
-
-            # Set x-axis label
-            ax.set_xlabel('Norm. Timestamps')
-
-            # Add legend
-            # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-
-            plt.tight_layout()
-
-            # Show the plot
-            plt.savefig(os.path.join(thread_lifetime_horizontal_dotplots_dirpath, f"{label}_{data_name}.png"))
-
-
-
-
-            # -------------------------------------------------------------------
-            cnt+=1
-      return 
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 
@@ -635,5 +505,8 @@ if __name__ == '__main__':
       os.makedirs(this_results_dirpath)
 
     event_and_entity_level_artifactual_thread_investigation( dataset= entire_dataset, 
-                                                             results_dirpath = this_results_dirpath)
+                                                             results_dirpath = this_results_dirpath,
+                                                             processThread_grouped_events = True,
+                                                             processThread_grouped_events_EasyRead = True,
+                                                             thread_lifetime_horizontal_dotplots__with_More_Detail = True)
 
