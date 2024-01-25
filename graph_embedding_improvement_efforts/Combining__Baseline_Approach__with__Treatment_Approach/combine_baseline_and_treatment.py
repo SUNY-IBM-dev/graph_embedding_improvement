@@ -123,7 +123,7 @@ if __name__ == '__main__':
                         choices= ['Dataset-Case-1',
                                   'Dataset-Case-2' # try
                                   ], 
-                        default = ['Dataset-Case-1'])
+                        default = ['Dataset-Case-2'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -181,7 +181,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     parser.add_argument('--combine_option', 
@@ -199,10 +199,10 @@ if __name__ == '__main__':
     parser.add_argument("--running_from_machine", 
                                  
                          choices= ["panther", "ocelot"], 
-                         default = ["ocelot"] )
+                         default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [6])  # Added by JY @ 2024-1-20
    # ==================================================================================================================================
 
     # cmd args

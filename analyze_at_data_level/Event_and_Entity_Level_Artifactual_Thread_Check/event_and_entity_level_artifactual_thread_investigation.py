@@ -300,12 +300,17 @@ def event_and_entity_level_artifactual_thread_investigation( dataset : list,
                # Save out EasyRead ver. of processThread_to_logentries_dict
                processThread_grouped_events_EasyRead__fpath = os.path.join( processThread_grouped_events_EasyRead_dirpath, f"{label}_{index}.txt" )
                with open( processThread_grouped_events_EasyRead__fpath , "w") as file:
-                  for pid in processThread_to_logentries_dict.keys():
+                  
+                  processes = list(processThread_to_logentries_dict.keys())
+
+                  file.write(f"{len(processes)} processes : {processes} \n")
+                  
+                  for pid in processes:
                      file.write("==================================================\n")
                      file.write(f"{pid}  ({len(processThread_to_logentries_dict[pid])} threads) :\n")
                      file.write("-----------------------------------------------\n")
                      for tid in processThread_to_logentries_dict[pid]: # already sorted by list-length in ascending order.
-                           file.write(f"  {tid}  ({len(processThread_to_logentries_dict[pid][tid])} events) :\n")
+                           file.write(f"     {pid}_{tid}  ({len(processThread_to_logentries_dict[pid][tid])} events) :\n")
                            for thread_log_entry_info in processThread_to_logentries_dict[pid][tid]:
                               file.write(f"       {thread_log_entry_info}\n")
                            file.write("-----------------------------------------------\n")
@@ -313,7 +318,6 @@ def event_and_entity_level_artifactual_thread_investigation( dataset : list,
 
             if thread_lifetime_horizontal_dotplots__with_More_Detail :
                   
-
                   # Might need to work with normailzed ones ; might need to handle it in "group_log_entries_by_processThreads"
 
 
@@ -394,10 +398,15 @@ if __name__ == '__main__':
                         choices= ['Dataset-Case-1',
                                   'Dataset-Case-2' # try
                                   ], 
-                        default = ['Dataset-Case-1'])
+                        default = ['Dataset-Case-2'])
 
+    running_from_machine = "panther"
 
-
+    # ---------------------------------------------------
+    if running_from_machine == "ocelot":
+      abs_path_to_tabby = "/data/d1/jgwak1/tabby"
+    else: # ocelot
+      abs_path_to_tabby = "/home/jgwak1/tabby"
 
    # ==================================================================================================================================
 
@@ -412,56 +421,57 @@ if __name__ == '__main__':
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       #PW: Dataset-Case-1 
       "Dataset-Case-1": \
-         {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr", # dim-node == 5
-         "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/train"}, # dim-node == 35 (adhoc)
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr", # dim-node == 5
+         "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case1/train"}, # dim-node == 35 (adhoc)
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-        {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
-         "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/train"},
+        {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
+         "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/train"},
 
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-      {"5":"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
-       "35":"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/train"},
+      {"5":f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+       "35":f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case1/train"},
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-      {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
-       "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/train"},
+      {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+       "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/train"},
 
 
     }
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-      {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
-       "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case1/test"},
+      {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+       "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case1/test"},
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
-          "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Benign_case2/test"},
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/test"},
 
     }
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         {"5": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
-          "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case1/test"},
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case1/test"},
 
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         {"5":"/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
-          "35": "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Malware_case2/test"},
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/test"},
 
     }
+
 
     _num_classes = 2  # number of class labels and always binary classification.
 
@@ -508,5 +518,5 @@ if __name__ == '__main__':
                                                              results_dirpath = this_results_dirpath,
                                                              processThread_grouped_events = True,
                                                              processThread_grouped_events_EasyRead = True,
-                                                             thread_lifetime_horizontal_dotplots__with_More_Detail = True)
+                                                             thread_lifetime_horizontal_dotplots__with_More_Detail = False)
 
