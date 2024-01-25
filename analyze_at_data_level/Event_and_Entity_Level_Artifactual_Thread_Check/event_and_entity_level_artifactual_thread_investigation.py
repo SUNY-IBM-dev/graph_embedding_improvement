@@ -27,26 +27,6 @@ from code.model import GIN
 from code.trainer import TrainModel
 '''
 
-# -----------------------------------------------------------------------------------------------------------------------------------------
-# Added by JY @ 2024-1-23:
-sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_data_level/Event_and_Entity_Level_Artifactual_Thread_Check")
-from case1_case2_data_processID_mapping import *
-all_index_to_root_pid_mappings = case1_benign_logs | case2_benign_logs | case1_malware_logs | case2_malware_logs
-from investigation_helper_functions import *
-
-from elasticsearch import Elasticsearch, helpers
-# -----------------------------------------------------------------------------------------------------------------------------------------
-
-
-sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_data_level/Event_and_Entity_Level_Artifactual_Thread_Check/source")
-
-from source.dataprocessor_graphs import LoadGraphs
-from source.model import GIN
-from source.trainer_meng_ver import TrainModel
-
-from itertools import product
-import pandas as pd
-from datetime import datetime
 
 
 #ETC
@@ -77,6 +57,10 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 from itertools import cycle
+from elasticsearch import Elasticsearch, helpers
+from itertools import product
+import pandas as pd
+from datetime import datetime
 
 # TODO -- make sure explanations are produced by this
 EventID_to_RegEventName_dict =\
@@ -408,6 +392,21 @@ if __name__ == '__main__':
     else: # ocelot
       abs_path_to_tabby = "/home/jgwak1/tabby"
 
+
+
+    # -----------------------------------------------------------------------------------------------------------------------------------------
+    # Added by JY @ 2024-1-23:
+    sys.path.append(f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/analyze_at_data_level/Event_and_Entity_Level_Artifactual_Thread_Check")
+    from case1_case2_data_processID_mapping import *
+    all_index_to_root_pid_mappings = case1_benign_logs | case2_benign_logs | case1_malware_logs | case2_malware_logs
+    from investigation_helper_functions import *
+
+    sys.path.append(f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/analyze_at_data_level/Event_and_Entity_Level_Artifactual_Thread_Check/source")
+    from source.dataprocessor_graphs import LoadGraphs
+    from source.model import GIN
+    from source.trainer_meng_ver import TrainModel
+
+
    # ==================================================================================================================================
 
     # cmd args
@@ -510,7 +509,7 @@ if __name__ == '__main__':
 
     # =================================================================================================================================================
     run_identifier = f"Event_and_Entity_Level_Artifactual_Thread_Check__{dataset_choice}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-    this_results_dirpath = f"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_data_level/Event_and_Entity_Level_Artifactual_Thread_Check/RESULTS/{run_identifier}"
+    this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/analyze_at_data_level/Event_and_Entity_Level_Artifactual_Thread_Check/RESULTS/{run_identifier}"
     if not os.path.exists(this_results_dirpath):
       os.makedirs(this_results_dirpath)
 
