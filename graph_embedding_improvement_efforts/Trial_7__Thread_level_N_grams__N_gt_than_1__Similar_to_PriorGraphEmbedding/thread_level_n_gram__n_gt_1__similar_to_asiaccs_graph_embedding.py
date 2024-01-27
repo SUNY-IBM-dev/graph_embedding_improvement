@@ -600,7 +600,7 @@ def pretrain__countvectorizer_on_training_set__before_graph_embedding_generation
 #PW: Thread node embedding by aggregating one hop neighbour nodes
 
 # JY @ 2024-1-20: thread-level N>1 gram events + nodetype-5bits
-def get_thread_level_N_gram_events_adjacent_5bit_dist_dict( 
+def get_thread_level_N_gram_events__nodetype5bit__dict( 
                                                             pretrained_Ngram_countvectorizer_list : list, # TODO        
                                                             dataset : list, 
                                                             pool : str = "sum",
@@ -733,6 +733,279 @@ def get_thread_level_N_gram_events_adjacent_5bit_dist_dict(
             # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
             cnt+=1
       return data_dict
+
+   # -----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# JY @ 2024-1-27: thread-level N>1 gram events + nodetype-5bits + FRNPeventCount
+def get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__dict( 
+                                                                          pretrained_Ngram_countvectorizer_list : list, # TODO        
+                                                                          dataset : list, 
+                                                                          pool : str = "sum",
+                                                                        ):
+      ''' JY @ 2024-1-27 : Implement this '''
+
+
+      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
+
+      data_dict = dict()
+
+      cnt = 1
+      for data in dataset:
+            
+            print(f"{cnt} / {len(dataset)}: {data.name} -- generate graph-embedding", flush = True)
+
+            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
+            # if data.x.shape[1] != 5:
+            data_x_first5 = data.x[:,:5]
+            thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+
+            # which this node is a source-node (outgoing-edge w.r.t this node)
+  
+
+
+            data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.tensor([]) # Added by JY @ 2023-07-19
+
+            data_thread_level_all_Ngram_features = torch.tensor([]) # Added by JY @ 2023-01-20
+
+            for thread_node_idx in thread_node_indices:
+
+               edge_src_indices = data.edge_index[0]
+               edge_tar_indices = data.edge_index[1]
+
+               # which this node is a target-node (outgoing-edge w.r.t this node)
+               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
+               # which this node is a target-node (incoming-edge w.r.t this node)
+               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
+
+               # Following is to deal with edge-attr (event-dist & time-scalar) -------------------------------------------------------------------------------------
+               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
+               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
+
+
+
+               ''' JY @ 2024-1-20: Get thread-level event-sequence sorted by timestamps '''
+               # Refered to : https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/thread_level_n_gram__n_gt_1__similar_to_asiaccs_graph_embedding.py#L483C1-L491C95
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx = torch.cat([edge_attr_of_incoming_edges_from_thread_node_idx, 
+                                                                                   edge_attr_of_outgoing_edges_from_thread_node_idx],
+                                                                                   dim = 0)
+
+
+               timestamp_sorted_indices = torch.argsort(edge_attr_of_both_direction_edges_from_thread_node_idx[:, -1], descending=False)
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx__sorted = edge_attr_of_both_direction_edges_from_thread_node_idx[ timestamp_sorted_indices ]
+
+               taskname_indices = torch.nonzero(edge_attr_of_both_direction_edges_from_thread_node_idx__sorted[:,:-1], as_tuple=False)[:, -1]
+
+
+               thread_sorted_event_list = [taskname_colnames[i] for i in taskname_indices]
+
+               thread_sorted_event_str_sequence = " ".join(thread_sorted_event_list) # for compabitiblity with countvecotrizer
+
+               # transform and get count -- https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#sklearn.feature_extraction.text.CountVectorizer.transform
+               # Refer to: https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/local_ngram__standard_message_passing__graph_embedding.py#L760C41-L760C72
+
+               # Get all Ngrams (N could be multiple, depending on 'only_train_specified_Ngram' parameter value)
+               thread_all_Ngram_counts__appended_nparray = np.array([]) # torch.Tensor()
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  # If multiple countvectorizers, supposed to start from 1gram to Ngram
+                  #print(f"pretrained_Ngram_countvectorizer.ngram_range: {pretrained_Ngram_countvectorizer.ngram_range}", flush= True)
+                  thread_Ngram_counts__portion = pretrained_Ngram_countvectorizer.transform( [ thread_sorted_event_str_sequence ] ).toarray() # needs to be in a list
+                  thread_all_Ngram_counts__appended_nparray = np.append(thread_all_Ngram_counts__appended_nparray, thread_Ngram_counts__portion )           
+               #print("\n")
+
+               # JY @ 2024-1-20: so that can stack on 'data_thread_level_all_Ngram_features' for all thread's Ngram features within this subgrpah(data)
+               thread_all_Ngram_counts__appended_tensor = torch.Tensor(thread_all_Ngram_counts__appended_nparray).view(1,-1) # for Size([1,edge_feat_len])
+               data_thread_level_all_Ngram_features = torch.cat((data_thread_level_all_Ngram_features, thread_all_Ngram_counts__appended_tensor), dim=0)                  
+
+
+
+               # ==============================================================================================================================================
+               # Node-level
+
+               # But also need to consider the multi-graph aspect here. 
+               # So here, do not count twice for duplicate adjacent nodes due to multigraph.
+               # Just need to get the distribution.
+               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
+               unique_outgoing_edges_from_thread_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_thread_node_idx ], dim=1, return_inverse=True)
+
+               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
+               unique_incoming_edges_to_thread_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_thread_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_thread_node = unique_outgoing_edges_from_thread_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_thread_node = unique_incoming_edges_to_thread_node[0] # edge-src is index 0
+
+
+               #-- Option-1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
+               # # Already handled multi-graph case, but how about the bi-directional edge case?
+               # # For, T-->F and T<--F, information of F will be recorded twice."Dont Let it happen"
+               unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
+                                                                                                         source_nodes_of_incoming_edges_to_thread_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_thread = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
+               
+               data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
+                                                                                   integrated_5bit_of_all_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
+               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+            # [ node-type5bit + N>gram events ]
+            thread_level_N_gram_events_adjacent_5bit_dist = torch.cat( [data_thread_node_all_unique_adjacent_nodes_5bit_dists, 
+                                                                        data_thread_level_all_Ngram_features, 
+                                                                        ], dim = 1)
+            
+            
+            
+            ''' JY @ 2024-1-20: Now "pool" all thead-node's embedding, to generate the "graph embedding". '''
+            if pool == "sum": pool__func = torch.sum
+            elif pool == "mean": pool__func = torch.mean
+
+            graph_embedding = pool__func(thread_level_N_gram_events_adjacent_5bit_dist, dim = 0)            
+            
+            
+            
+            data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*?)\.pickle', data.name).group(1) ] = graph_embedding.tolist()
+
+            # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
+            cnt+=1
+      return data_dict
+
+   # -----------------------------------------------------------------------------------------------------------------------------------------------------
+   
+# JY @ 2024-1-20: thread-level N>1 gram events + nodetype-5bits
+def get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__dict( 
+                                                            pretrained_Ngram_countvectorizer_list : list, # TODO        
+                                                            dataset : list, 
+                                                            pool : str = "sum",
+
+                                                              ):
+      
+      ''' JY @ 2024-1-20 : Implement this '''
+
+
+      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
+
+      data_dict = dict()
+
+      cnt = 1
+      for data in dataset:
+            
+            print(f"{cnt} / {len(dataset)}: {data.name} -- generate graph-embedding", flush = True)
+
+            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
+            # if data.x.shape[1] != 5:
+            data_x_first5 = data.x[:,:5]
+            thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+
+            # which this node is a source-node (outgoing-edge w.r.t this node)
+  
+
+
+            data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.tensor([]) # Added by JY @ 2023-07-19
+
+            data_thread_level_all_Ngram_features = torch.tensor([]) # Added by JY @ 2023-01-20
+
+            for thread_node_idx in thread_node_indices:
+
+               edge_src_indices = data.edge_index[0]
+               edge_tar_indices = data.edge_index[1]
+
+               # which this node is a target-node (outgoing-edge w.r.t this node)
+               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
+               # which this node is a target-node (incoming-edge w.r.t this node)
+               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
+
+               # Following is to deal with edge-attr (event-dist & time-scalar) -------------------------------------------------------------------------------------
+               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
+               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
+
+
+
+               ''' JY @ 2024-1-20: Get thread-level event-sequence sorted by timestamps '''
+               # Refered to : https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/thread_level_n_gram__n_gt_1__similar_to_asiaccs_graph_embedding.py#L483C1-L491C95
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx = torch.cat([edge_attr_of_incoming_edges_from_thread_node_idx, 
+                                                                                   edge_attr_of_outgoing_edges_from_thread_node_idx],
+                                                                                   dim = 0)
+
+
+               timestamp_sorted_indices = torch.argsort(edge_attr_of_both_direction_edges_from_thread_node_idx[:, -1], descending=False)
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx__sorted = edge_attr_of_both_direction_edges_from_thread_node_idx[ timestamp_sorted_indices ]
+
+               taskname_indices = torch.nonzero(edge_attr_of_both_direction_edges_from_thread_node_idx__sorted[:,:-1], as_tuple=False)[:, -1]
+
+
+               thread_sorted_event_list = [taskname_colnames[i] for i in taskname_indices]
+
+               thread_sorted_event_str_sequence = " ".join(thread_sorted_event_list) # for compabitiblity with countvecotrizer
+
+               # transform and get count -- https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#sklearn.feature_extraction.text.CountVectorizer.transform
+               # Refer to: https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/local_ngram__standard_message_passing__graph_embedding.py#L760C41-L760C72
+
+               # Get all Ngrams (N could be multiple, depending on 'only_train_specified_Ngram' parameter value)
+               thread_all_Ngram_counts__appended_nparray = np.array([]) # torch.Tensor()
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  # If multiple countvectorizers, supposed to start from 1gram to Ngram
+                  #print(f"pretrained_Ngram_countvectorizer.ngram_range: {pretrained_Ngram_countvectorizer.ngram_range}", flush= True)
+                  thread_Ngram_counts__portion = pretrained_Ngram_countvectorizer.transform( [ thread_sorted_event_str_sequence ] ).toarray() # needs to be in a list
+                  thread_all_Ngram_counts__appended_nparray = np.append(thread_all_Ngram_counts__appended_nparray, thread_Ngram_counts__portion )           
+               #print("\n")
+
+               # JY @ 2024-1-20: so that can stack on 'data_thread_level_all_Ngram_features' for all thread's Ngram features within this subgrpah(data)
+               thread_all_Ngram_counts__appended_tensor = torch.Tensor(thread_all_Ngram_counts__appended_nparray).view(1,-1) # for Size([1,edge_feat_len])
+               data_thread_level_all_Ngram_features = torch.cat((data_thread_level_all_Ngram_features, thread_all_Ngram_counts__appended_tensor), dim=0)                  
+
+
+
+               # ==============================================================================================================================================
+               # Node-level
+
+               # But also need to consider the multi-graph aspect here. 
+               # So here, do not count twice for duplicate adjacent nodes due to multigraph.
+               # Just need to get the distribution.
+               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
+               unique_outgoing_edges_from_thread_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_thread_node_idx ], dim=1, return_inverse=True)
+
+               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
+               unique_incoming_edges_to_thread_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_thread_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_thread_node = unique_outgoing_edges_from_thread_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_thread_node = unique_incoming_edges_to_thread_node[0] # edge-src is index 0
+
+
+               #-- Option-1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
+               # # Already handled multi-graph case, but how about the bi-directional edge case?
+               # # For, T-->F and T<--F, information of F will be recorded twice."Dont Let it happen"
+               unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
+                                                                                                         source_nodes_of_incoming_edges_to_thread_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_thread = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
+               
+               data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
+                                                                                   integrated_5bit_of_all_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
+               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+            # [ node-type5bit + N>gram events ]
+            thread_level_N_gram_events_adjacent_5bit_dist = torch.cat( [data_thread_node_all_unique_adjacent_nodes_5bit_dists, 
+                                                                        data_thread_level_all_Ngram_features, 
+                                                                        ], dim = 1)
+            
+            
+            
+            ''' JY @ 2024-1-20: Now "pool" all thead-node's embedding, to generate the "graph embedding". '''
+            if pool == "sum": pool__func = torch.sum
+            elif pool == "mean": pool__func = torch.mean
+
+            graph_embedding = pool__func(thread_level_N_gram_events_adjacent_5bit_dist, dim = 0)            
+            
+            
+            
+            data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*?)\.pickle', data.name).group(1) ] = graph_embedding.tolist()
+
+            # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
+            cnt+=1
+      return data_dict
+
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 
@@ -790,29 +1063,28 @@ if __name__ == '__main__':
                                   'RandomForest_searchspace_1',
 
                                   'Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True', # tuning-complete
-                                  'Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True', # prelim
+                                  'Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True', 
+                                  'Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True',
 
-                                  'Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True', # prelim
-                                  'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True', # prelim
+                                  'Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True', 
+                                  'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True', 
+                                  'Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True',
 
 
                                   ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                  default = ["Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True"])
 
 #PW: Why 10 Kfold? just common values
  # flatten vs no graph ?? is that only ML tuning differece??
    
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
                         choices= [
-                                 #  'thread_level__N_grams_events',
-
-                                  'thread_level__N>1_grams_events__nodetype_5bit', 
-
-
-                                 #  'thread_level__N>1_grams_events__nodetype_5bit_and_Adhoc_Identifier',
-
+                                  'thread_level__N>1_grams_events__nodetype5bit', 
+                                 
+                                  'thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount', # implemented at 2024-1-27
+                                  'thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount',  # implemented at 2024-1-27
                                   ], 
-                                  default = ["thread_level__N>1_grams_events__nodetype_5bit"])
+                                  default = ["thread_level__N>1_grams_events__nodetype5bit"])
     
     parser.add_argument('-pool_opt', '--pool_option', 
                         choices= ['sum',
@@ -828,12 +1100,12 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
 
     # --------- For Thread-level N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [6])  # Added by JY @ 2024-1-20
+                        default = [2])  # Added by JY @ 2024-1-20
 
 
     parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
@@ -848,7 +1120,7 @@ if __name__ == '__main__':
                          default = ["ocelot"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [7])  # Added by JY @ 2024-1-20
+                        default = [1])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 
@@ -880,7 +1152,7 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
 
-      #  if "thread_level__N>1_grams_events__nodetype_5bit" in graph_embedding_option:
+      #  if "thread_level__N>1_grams_events__nodetype5bit" in graph_embedding_option:
       #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
       #  else:
       #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
@@ -893,7 +1165,7 @@ if __name__ == '__main__':
 
 
     if search_on_train__or__final_test == "final_test":
-      #  if "thread_level__N>1_grams_events__nodetype_5bit" in graph_embedding_option:
+      #  if "thread_level__N>1_grams_events__nodetype5bit" in graph_embedding_option:
       #  run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
       #  else:
       #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
@@ -1215,7 +1487,7 @@ if __name__ == '__main__':
 
     def Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True() -> dict :
       # RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202813
-      # -- tuning NOT done
+      # -- tuning done
          manual_space = []
          manual_space.append(
             {'bootstrap': True,
@@ -1230,19 +1502,37 @@ if __name__ == '__main__':
          )
          return manual_space
       
+    def Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+      # -- tuning NOT done
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': 6,
+            'max_features': None,
+            'min_samples_leaf': 1,
+            'min_samples_split': 15,
+            'n_estimators': 100,
+            'random_state': 99,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space
+
+
+
     def Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True() -> dict :
       # RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202900
-      # -- tuning NOT done
+      # -- tuning done
          manual_space = []
          manual_space.append(
             {'bootstrap': False,
             'criterion': 'gini',
-            'max_depth': 15,
+            'max_depth': 20,
             'max_features': 'sqrt',
             'min_samples_leaf': 1,
             'min_samples_split': 2,
-            'n_estimators': 100,
-            'random_state': 42,
+            'n_estimators': 300,
+            'random_state': 99,
             'split_shuffle_seed': 100}
          )
 
@@ -1262,10 +1552,28 @@ if __name__ == '__main__':
             'n_estimators': 100,
             'random_state': 42,
             'split_shuffle_seed': 100}
+
          )
 
          return manual_space
             
+    def Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+      # -- tuning NOT done
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 15,
+            'n_estimators': 100,
+            'random_state': 0,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space
+
+
 
     ####################################################################################################################################################
 
@@ -1292,11 +1600,22 @@ if __name__ == '__main__':
     elif search_space_option == 'Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True':
        search_space = Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True()   
 
+    elif search_space_option == 'Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True':
+       search_space = Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True()   
+
+
     elif search_space_option == 'Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True':
        search_space = Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True()   
 
     elif search_space_option == 'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True':
        search_space = Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True()   
+
+    elif search_space_option == 'Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True':
+       search_space = Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True()   
+
+
+
+
 
     # -----------------------------------------------------------
 
@@ -1343,33 +1662,83 @@ if __name__ == '__main__':
 
 
    # Now apply signal-amplification here (here least conflicts with existing code.)
-    if graph_embedding_option == "thread_level__N>1_grams_events__nodetype_5bit":
+    if graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit":
          
          pretrained_Ngram_countvectorizer_list = pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( Ngram = Ngram,
                                                                                                                                dataset= train_dataset,
                                                                                                                                only_train_specified_Ngram = only_train_specified_Ngram 
-                                                                                                                            )
+                                                                                                                              )
 
 
-         train_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
-                                                                                                        dataset= train_dataset,
-                                                                                                        pool = pool_option,
-                                                                                                          )
+         train_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__dict( pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                    dataset= train_dataset,
+                                                                                                    pool = pool_option
+                                                                                                   )
 
 
          nodetype_names = ["file", "registry", "network", "process", "thread"] 
          Ngram_edge_feature_names = []
          for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
              Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
-
          feature_names = nodetype_names + Ngram_edge_feature_names # yes this order is correct
-         X = pd.DataFrame(train_dataset__signal_amplified_dict).T
 
+
+    elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount":
+        
+         pretrained_Ngram_countvectorizer_list = pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( Ngram = Ngram,
+                                                                                                                               dataset= train_dataset,
+                                                                                                                               only_train_specified_Ngram = only_train_specified_Ngram 
+                                                                                                                              )
+
+
+         train_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__dict( pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                                    dataset= train_dataset,
+                                                                                                                    pool = pool_option
+                                                                                                                   )
+
+         nodetype_names = ["file", "registry", "network", "process", "thread"] 
+         FRNP_event_count_features = ["file_event_cnt", "registry_event_cnt", "network_event_cnt", "process_event_cnt" ]
+
+         Ngram_edge_feature_names = []
+         for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+             Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+         # JY @ 2024-1-27
+         feature_names = nodetype_names + FRNP_event_count_features + \
+                         Ngram_edge_feature_names # yes this order is correct
+
+
+    elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount":
+
+         pretrained_Ngram_countvectorizer_list = pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( Ngram = Ngram,
+                                                                                                                               dataset= train_dataset,
+                                                                                                                               only_train_specified_Ngram = only_train_specified_Ngram 
+                                                                                                                              )
+
+
+         train_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__dict( 
+                                                                                                                    pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                                    dataset= train_dataset,
+                                                                                                                    pool = pool_option
+                                                                                                                   )
+
+         nodetype_names = ["file", "registry", "network", "process", "thread"] 
+         FRNP_event_count_features = ["file_event_cnt", "registry_event_cnt", "network_event_cnt", "process_event_cnt" ]
+         FRNP_incoming_and_outgoing_events_count_features = \
+                                    ["file_incoming_event_cnt", "registry_incoming_event_cnt", "network_incoming_event_cnt", "process_incoming_event_cnt",
+                                     "file_outgoing_event_cnt", "registry_outgoing_event_cnt", "network_outgoing_event_cnt", "process_incoming_event_cnt"]   
+
+         Ngram_edge_feature_names = []
+         for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+             Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+         # JY @ 2024-1-27
+         feature_names = nodetype_names + FRNP_event_count_features + FRNP_incoming_and_outgoing_events_count_features +\
+                         Ngram_edge_feature_names # yes this order is correct
 
     else:
          ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")                  
 
 
+    X = pd.DataFrame(train_dataset__signal_amplified_dict).T
     X.columns = feature_names
     X.reset_index(inplace = True)
     X.rename(columns = {'index':'data_name'}, inplace = True)
@@ -1382,13 +1751,12 @@ if __name__ == '__main__':
     if search_on_train__or__final_test == "final_test":
         # Also prepare for final-test dataset, to later test the best-fitted models on test-set
          # Now apply signal-amplification here (here least conflicts with existing code.)
-         if graph_embedding_option == "thread_level__N>1_grams_events__nodetype_5bit":
-               final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events_adjacent_5bit_dist_dict( pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
-                                                                                                                   dataset= final_test_dataset,
-                                                                                                                   pool = pool_option,
-                                                                                                                  )
-
-               
+         
+         if graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit":
+               final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__dict( pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                               dataset= final_test_dataset,
+                                                                                                               pool = pool_option
+                                                                                                             )
 
                nodetype_names = ["file", "registry", "network", "process", "thread"] 
                Ngram_edge_feature_names = []
@@ -1396,13 +1764,50 @@ if __name__ == '__main__':
                   Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
                feature_names = nodetype_names + Ngram_edge_feature_names # yes this order is correct               
          
-               
-               final_test_X = pd.DataFrame(final_test_dataset__signal_amplified_dict).T               
 
+         elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount":
+         
+               final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__dict( 
+                                                                                                               pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                               dataset= final_test_dataset,
+                                                                                                               pool = pool_option
+                                                                                                             )
+
+               nodetype_names = ["file", "registry", "network", "process", "thread"]
+               FRNP_event_count_features = ["file_event_cnt", "registry_event_cnt", "network_event_cnt", "process_event_cnt" ] 
+               Ngram_edge_feature_names = []
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+               feature_names = nodetype_names + FRNP_event_count_features + \
+                               Ngram_edge_feature_names # yes this order is correct       
+
+
+         elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount":
+
+               final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__dict( 
+                                                                                                               pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                               dataset= final_test_dataset,
+                                                                                                               pool = pool_option
+                                                                                                             )
+
+               nodetype_names = ["file", "registry", "network", "process", "thread"]
+               FRNP_event_count_features = ["file_event_cnt", "registry_event_cnt", "network_event_cnt", "process_event_cnt" ]
+               FRNP_incoming_and_outgoing_events_count_features = \
+                                    ["file_incoming_event_cnt", "registry_incoming_event_cnt", "network_incoming_event_cnt", "process_incoming_event_cnt",
+                                     "file_outgoing_event_cnt", "registry_outgoing_event_cnt", "network_outgoing_event_cnt", "process_incoming_event_cnt"]                 
+
+               Ngram_edge_feature_names = []
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+               feature_names = nodetype_names + FRNP_event_count_features + FRNP_incoming_and_outgoing_events_count_features + \
+                               Ngram_edge_feature_names # yes this order is correct       
 
          else:
                ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")
 
+
+
+         final_test_X = pd.DataFrame(final_test_dataset__signal_amplified_dict).T               
          final_test_X.columns = feature_names
          final_test_X.reset_index(inplace = True)
          final_test_X.rename(columns = {'index':'data_name'}, inplace = True)

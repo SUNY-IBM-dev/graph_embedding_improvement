@@ -136,8 +136,12 @@ if __name__ == '__main__':
                         choices= [
                                   'XGBoost_searchspace_1',
                                   'RandomForest_searchspace_1',
+
+
+                                  'Best_RF__Dataset_1__baseline3_4gram__threadlevel_4gram__concat',
+                                  'Best_RF__Dataset_2__baseline3_4gram__threadlevel_4gram__concat',
                                   ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                  default = ["Best_RF__Dataset_2__baseline3_4gram__threadlevel_4gram__concat"])
 
 
 
@@ -181,7 +185,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
 
     parser.add_argument('--combine_option', 
@@ -202,7 +206,7 @@ if __name__ == '__main__':
                          default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [6])  # Added by JY @ 2024-1-20
+                        default = [1])  # Added by JY @ 2024-1-20
    # ==================================================================================================================================
 
     # cmd args
@@ -246,7 +250,7 @@ if __name__ == '__main__':
 
        if "thread_level__N>1_grams_events__nodetype_5bit" in graph_embedding_option:
          
-         if "ngram" in baseline_option:
+         if "ngram" in baseline_option.lower():
             run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__Ngram}gram_OnlyN_{thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram}_{graph_embedding__pool_option}pool__+__{baseline_option}_{baseline__Ngram}gram__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
 
          else: # simple-counting
@@ -254,7 +258,7 @@ if __name__ == '__main__':
        
        else: # other possible graph-embedding approaches      
 
-         if "ngram" in baseline_option:
+         if "ngram" in baseline_option.lower():
             run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__pool_option}pool__+__{baseline_option}_{baseline__Ngram}gram__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
 
          else: # simple-counting
@@ -271,15 +275,15 @@ if __name__ == '__main__':
 
        if "thread_level__N>1_grams_events__nodetype_5bit" in graph_embedding_option:
          
-         if "ngram" in baseline_option:
-            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__Ngram}gram_OnlyN_{thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram}_{graph_embedding__pool_option}pool__+__{baseline_option}_{baseline__Ngram}gram__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
+         if "ngram" in baseline_option.lower():
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
 
          else: # simple-counting
             run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__Ngram}gram_OnlyN_{thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram}_{graph_embedding__pool_option}pool__+__{baseline_option}__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
        
        else: # other possible graph-embedding approaches      
 
-         if "ngram" in baseline_option:
+         if "ngram" in baseline_option.lower():
             run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__pool_option}pool__+__{baseline_option}_{baseline__Ngram}gram__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
 
          else: # simple-counting
@@ -582,6 +586,40 @@ if __name__ == '__main__':
          return manual_space
 
 
+    def Best_RF__Dataset_1__baseline3_4gram__threadlevel_4gram__concat():
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/RESULTS/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit_4gram_OnlyN_True_sumpool__+__baseline_3__flattened_graph_Ngram_events__node_type_counts__concat__2024-01-24_165458/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit_4gram_OnlyN_True_sumpool__+__baseline_3__flattened_graph_Ngram_events__node_type_counts__concat__2024-01-24_165458.csv
+         manual_space = []
+         manual_space.append(
+               {'bootstrap': True,
+               'criterion': 'gini',
+               'max_depth': 6,
+               'max_features': None,
+               'min_samples_leaf': 3,
+               'min_samples_split': 10,
+               'n_estimators': 200,
+               'random_state': 42,
+               'split_shuffle_seed': 100}             
+         )
+
+         return manual_space
+
+    def Best_RF__Dataset_2__baseline3_4gram__threadlevel_4gram__concat():
+
+         manual_space = []
+         manual_space.append(
+               {'bootstrap': True,
+               'criterion': 'gini',
+               'max_depth': None,
+               'max_features': None,
+               'min_samples_leaf': 3,
+               'min_samples_split': 2,
+               'n_estimators': 100,
+               'random_state': 42,
+               'split_shuffle_seed': 100}             
+         )
+
+         return manual_space
+
     ####################################################################################################################################################
 
 
@@ -598,6 +636,13 @@ if __name__ == '__main__':
 
     elif search_space_option == "RandomForest_default_hyperparam":
        search_space = RandomForest_default_hyperparam()   
+
+
+    elif search_space_option == "Best_RF__Dataset_1__baseline3_4gram__threadlevel_4gram__concat":
+       search_space = Best_RF__Dataset_1__baseline3_4gram__threadlevel_4gram__concat()   
+
+    elif search_space_option == "Best_RF__Dataset_2__baseline3_4gram__threadlevel_4gram__concat":
+       search_space = Best_RF__Dataset_2__baseline3_4gram__threadlevel_4gram__concat()  
 
 
     else:
@@ -1136,8 +1181,8 @@ if __name__ == '__main__':
                                  )
 
 
-            elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier'and\
-               'randomforest' in search_space_option.lower():
+            elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier'or\
+               'randomforest' in search_space_option.lower() or 'rf' in search_space_option.lower():
                model = model_cls(
                                  n_estimators= hyperparam_set['n_estimators'],
                                  criterion= hyperparam_set['criterion'], 
