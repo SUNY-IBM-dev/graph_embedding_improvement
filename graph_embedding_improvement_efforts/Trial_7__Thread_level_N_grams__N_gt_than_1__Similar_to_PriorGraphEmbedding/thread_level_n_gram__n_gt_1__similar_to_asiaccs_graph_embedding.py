@@ -286,10 +286,16 @@ def produce_SHAP_explanations(classification_model,
             # https://github.com/shap/shap/blob/2262893cf441478418abac5fd8cdd38e436a867b/shap/plots/_waterfall.py#L321C107-L321C117
 
             if Test_SG_name in misprediction_subgraph_names:
-               waterfallplot_out.savefig( os.path.join(Mispredictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+               try:
+                  waterfallplot_out.savefig( os.path.join(Mispredictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+               except:
+                  waterfallplot_out.figure.savefig( os.path.join(Mispredictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+                  
             else:
-               waterfallplot_out.savefig( os.path.join(Correct_Predictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
-
+               try:
+                  waterfallplot_out.savefig( os.path.join(Correct_Predictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
+               except: # in felis
+                   waterfallplot_out.figure.savefig( os.path.join(Correct_Predictions_WaterfallPlots_subdirpath, f"{N}-gram SHAP_local_interpretability_waterfall_plot_{Test_SG_name}.png") )
 
             # Added by JY @ 2023-12-21 : For local shap of sample (SUM of all feature's shap values for the sample)
             #                                                      ^-- corresponds to "f(x)" in Waterfall plot
@@ -1100,8 +1106,8 @@ def get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__FRNP_OutgoInco
 
             # **************************************************************************************************************************************************
             # [ node-type5bit + N>gram events ]
-            thread_level_nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__N_gram_events__dist = \                                                                              
-                                                                              torch.cat( [data_thread_node_all_unique_adjacent_nodes_5bit_dists,
+            thread_level_nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__N_gram_events__dist = torch.cat( 
+                                                                                         [data_thread_node_all_unique_adjacent_nodes_5bit_dists,
 
                                                                                           data_thread_node___dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node,
 
@@ -1128,6 +1134,256 @@ def get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__FRNP_OutgoInco
       return data_dict
 
 
+   # -----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# JY @ 2024-1-29: thread-level N>1 gram events + nodetype-5bits + Average Number of Different Threads per F/R/N/P node 
+def get_thread_level_N_gram_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__dict( 
+                                                            pretrained_Ngram_countvectorizer_list : list, # TODO        
+                                                            dataset : list, 
+                                                            pool : str = "sum",
+
+                                                              ):
+      
+
+      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
+
+      file_node_tensor = torch.tensor([1, 0, 0, 0, 0])
+      reg_node_tensor = torch.tensor([0, 1, 0, 0, 0])
+      net_node_tensor = torch.tensor([0, 0, 1, 0, 0])
+      proc_node_tensor = torch.tensor([0, 0, 0, 1, 0])
+
+
+      data_dict = dict()
+
+      cnt = 1
+      for data in dataset:
+            
+            print(f"{cnt} / {len(dataset)}: {data.name} -- generate graph-embedding", flush = True)
+
+            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
+            # if data.x.shape[1] != 5:
+  
+
+            # ------------------------------------------------------------------------------------------------------------------------------------------------
+            data_x_first5 = data.x[:,:5]
+            thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+
+            # which this node is a source-node (outgoing-edge w.r.t this node)
+  
+            data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.tensor([]) # Added by JY @ 2023-07-19
+            data_thread_level_all_Ngram_features = torch.tensor([]) # Added by JY @ 2023-01-20
+            for thread_node_idx in thread_node_indices:
+
+               edge_src_indices = data.edge_index[0]
+               edge_tar_indices = data.edge_index[1]
+
+               # which this node is a target-node (outgoing-edge w.r.t this node)
+               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
+               # which this node is a target-node (incoming-edge w.r.t this node)
+               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
+
+               # Following is to deal with edge-attr (event-dist & time-scalar) -------------------------------------------------------------------------------------
+               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
+               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
+
+
+
+               ''' JY @ 2024-1-20: Get thread-level event-sequence sorted by timestamps '''
+               # Refered to : https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/thread_level_n_gram__n_gt_1__similar_to_asiaccs_graph_embedding.py#L483C1-L491C95
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx = torch.cat([edge_attr_of_incoming_edges_from_thread_node_idx, 
+                                                                                   edge_attr_of_outgoing_edges_from_thread_node_idx],
+                                                                                   dim = 0)
+
+
+               timestamp_sorted_indices = torch.argsort(edge_attr_of_both_direction_edges_from_thread_node_idx[:, -1], descending=False)
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx__sorted = edge_attr_of_both_direction_edges_from_thread_node_idx[ timestamp_sorted_indices ]
+
+               taskname_indices = torch.nonzero(edge_attr_of_both_direction_edges_from_thread_node_idx__sorted[:,:-1], as_tuple=False)[:, -1]
+
+
+               thread_sorted_event_list = [taskname_colnames[i] for i in taskname_indices]
+
+               thread_sorted_event_str_sequence = " ".join(thread_sorted_event_list) # for compabitiblity with countvecotrizer
+
+               # transform and get count -- https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#sklearn.feature_extraction.text.CountVectorizer.transform
+               # Refer to: https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/local_ngram__standard_message_passing__graph_embedding.py#L760C41-L760C72
+
+               # Get all Ngrams (N could be multiple, depending on 'only_train_specified_Ngram' parameter value)
+               thread_all_Ngram_counts__appended_nparray = np.array([]) # torch.Tensor()
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  # If multiple countvectorizers, supposed to start from 1gram to Ngram
+                  #print(f"pretrained_Ngram_countvectorizer.ngram_range: {pretrained_Ngram_countvectorizer.ngram_range}", flush= True)
+                  thread_Ngram_counts__portion = pretrained_Ngram_countvectorizer.transform( [ thread_sorted_event_str_sequence ] ).toarray() # needs to be in a list
+                  thread_all_Ngram_counts__appended_nparray = np.append(thread_all_Ngram_counts__appended_nparray, thread_Ngram_counts__portion )           
+               #print("\n")
+
+               # JY @ 2024-1-20: so that can stack on 'data_thread_level_all_Ngram_features' for all thread's Ngram features within this subgrpah(data)
+               thread_all_Ngram_counts__appended_tensor = torch.Tensor(thread_all_Ngram_counts__appended_nparray).view(1,-1) # for Size([1,edge_feat_len])
+               data_thread_level_all_Ngram_features = torch.cat((data_thread_level_all_Ngram_features, thread_all_Ngram_counts__appended_tensor), dim=0)                  
+
+
+
+               # ==============================================================================================================================================
+               # Node-level
+
+               # But also need to consider the multi-graph aspect here. 
+               # So here, do not count twice for duplicate adjacent nodes due to multigraph.
+               # Just need to get the distribution.
+               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
+               unique_outgoing_edges_from_thread_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_thread_node_idx ], dim=1, return_inverse=True)
+
+               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
+               unique_incoming_edges_to_thread_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_thread_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_thread_node = unique_outgoing_edges_from_thread_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_thread_node = unique_incoming_edges_to_thread_node[0] # edge-src is index 0
+
+
+               #-- Option-1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
+               # # Already handled multi-graph case, but how about the bi-directional edge case?
+               # # For, T-->F and T<--F, information of F will be recorded twice."Dont Let it happen"
+               unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
+                                                                                                         source_nodes_of_incoming_edges_to_thread_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_thread = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
+               
+               data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
+                                                                                   integrated_5bit_of_all_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
+               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+            # ======================================================================================================================================================
+
+            # JY @ 2024-1-29 : Now deal with F/R/N/P
+
+            file_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, file_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+            reg_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, reg_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+            net_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, net_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+            proc_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, proc_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+
+
+            edge_src_indices = data.edge_index[0]
+            edge_tar_indices = data.edge_index[1]
+            data__num_diff_thread_nodes__file_node_interacted_with = []
+            for file_node_idx in file_node_indices:
+               outgoing_edges_from_file_node_idx = torch.nonzero( edge_src_indices == file_node_idx ).flatten()
+               incoming_edges_to_file_node_idx = torch.nonzero( edge_tar_indices == file_node_idx ).flatten()
+
+               unique_outgoing_edges_from_file_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_file_node_idx ], dim=1, return_inverse=True)
+               unique_incoming_edges_to_file_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_file_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_file_node = unique_outgoing_edges_from_file_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_file_node = unique_incoming_edges_to_file_node[0] # edge-src is index 0
+
+               unique_adjacent_nodes_of_both_direction_edges_of_file_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_file_node, 
+                                                                                                       source_nodes_of_incoming_edges_to_file_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_file = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_file_node], dim = 0 )
+               num_diff_thread_nodes__file_node_interacted_with = int(integrated_5bit_of_all_unique_adjacent_nodes_to_file[-1])
+               data__num_diff_thread_nodes__file_node_interacted_with.append(num_diff_thread_nodes__file_node_interacted_with)
+
+            data__num_diff_thread_nodes__reg_node_interacted_with = []
+            for reg_node_idx in reg_node_indices:
+               outgoing_edges_from_reg_node_idx = torch.nonzero( edge_src_indices == reg_node_idx ).flatten()
+               incoming_edges_to_reg_node_idx = torch.nonzero( edge_tar_indices == reg_node_idx ).flatten()
+
+               unique_outgoing_edges_from_reg_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_reg_node_idx ], dim=1, return_inverse=True)
+               unique_incoming_edges_to_reg_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_reg_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_reg_node = unique_outgoing_edges_from_reg_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_reg_node = unique_incoming_edges_to_reg_node[0] # edge-src is index 0
+
+               unique_adjacent_nodes_of_both_direction_edges_of_reg_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_reg_node, 
+                                                                                                       source_nodes_of_incoming_edges_to_reg_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_reg = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_reg_node], dim = 0 )
+               num_diff_thread_nodes__reg_node_interacted_with = int(integrated_5bit_of_all_unique_adjacent_nodes_to_reg[-1])
+               data__num_diff_thread_nodes__reg_node_interacted_with.append(num_diff_thread_nodes__reg_node_interacted_with)
+
+
+            data__num_diff_thread_nodes__net_node_interacted_with = []
+            for net_node_idx in net_node_indices:
+               outgoing_edges_from_net_node_idx = torch.nonzero( edge_src_indices == net_node_idx ).flatten()
+               incoming_edges_to_net_node_idx = torch.nonzero( edge_tar_indices == net_node_idx ).flatten()
+
+               unique_outgoing_edges_from_net_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_net_node_idx ], dim=1, return_inverse=True)
+               unique_incoming_edges_to_net_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_net_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_net_node = unique_outgoing_edges_from_net_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_net_node = unique_incoming_edges_to_net_node[0] # edge-src is index 0
+
+               unique_adjacent_nodes_of_both_direction_edges_of_net_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_net_node, 
+                                                                                                       source_nodes_of_incoming_edges_to_net_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_net = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_net_node], dim = 0 )
+               num_diff_thread_nodes__net_node_interacted_with = int(integrated_5bit_of_all_unique_adjacent_nodes_to_net[-1])
+               data__num_diff_thread_nodes__net_node_interacted_with.append(num_diff_thread_nodes__net_node_interacted_with)
+
+            data__num_diff_thread_nodes__proc_node_interacted_with = []
+            for proc_node_idx in proc_node_indices:
+               outgoing_edges_from_proc_node_idx = torch.nonzero( edge_src_indices == proc_node_idx ).flatten()
+               incoming_edges_to_proc_node_idx = torch.nonzero( edge_tar_indices == proc_node_idx ).flatten()
+
+               unique_outgoing_edges_from_proc_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_proc_node_idx ], dim=1, return_inverse=True)
+               unique_incoming_edges_to_proc_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_proc_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_proc_node = unique_outgoing_edges_from_proc_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_proc_node = unique_incoming_edges_to_proc_node[0] # edge-src is index 0
+
+               unique_adjacent_nodes_of_both_direction_edges_of_proc_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_proc_node, 
+                                                                                                       source_nodes_of_incoming_edges_to_proc_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_proc = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_proc_node], dim = 0 )
+               num_diff_thread_nodes__proc_node_interacted_with = int(integrated_5bit_of_all_unique_adjacent_nodes_to_proc[-1])
+               data__num_diff_thread_nodes__proc_node_interacted_with.append(num_diff_thread_nodes__proc_node_interacted_with)
+
+
+
+            if data__num_diff_thread_nodes__file_node_interacted_with == []:
+               AvgNum_DiffThreads_for_File_Nodes = 0
+            else:
+               AvgNum_DiffThreads_for_File_Nodes = float(np.mean(data__num_diff_thread_nodes__file_node_interacted_with))
+            
+            if data__num_diff_thread_nodes__reg_node_interacted_with == []:
+               AvgNum_DiffThreads_for_Registry_Nodes = 0
+            else:
+               AvgNum_DiffThreads_for_Registry_Nodes = float(np.mean(data__num_diff_thread_nodes__reg_node_interacted_with))
+            
+            if data__num_diff_thread_nodes__net_node_interacted_with == []:
+               AvgNum_DiffThreads_for_Network_Nodes = 0
+            else:
+               AvgNum_DiffThreads_for_Network_Nodes = float(np.mean(data__num_diff_thread_nodes__net_node_interacted_with))
+            
+            if data__num_diff_thread_nodes__proc_node_interacted_with == []:
+               AvgNum_DiffThreads_for_Process_Nodes = 0
+            else:
+               AvgNum_DiffThreads_for_Process_Nodes = float(np.mean(data__num_diff_thread_nodes__proc_node_interacted_with))
+
+
+            data_AvgNum_DiffThreads_perFRNP = [AvgNum_DiffThreads_for_File_Nodes, AvgNum_DiffThreads_for_Registry_Nodes, 
+                                               AvgNum_DiffThreads_for_Network_Nodes, AvgNum_DiffThreads_for_Process_Nodes]
+            # 다 sumpool하고 
+            # feature value 똑갘나 비교해보는방법도있음 
+            # ---> torch.sum( data_thread_node_all_unique_adjacent_nodes_5bit_dists, dim = 0)[0] 와 sum(data__num_diff_thread_nodes__file_node_interacted_with) 비교햇을때 
+            #                  같은경우있는거 보니 맞는듯.
+
+
+            # ======================================================================================================================================================
+            # [ node-type5bit + AvgNum_DiffThreads_perFRNP + N>1gram events ]
+            thread_level_N_gram_events_adjacent_5bit_dist = torch.cat( [data_thread_node_all_unique_adjacent_nodes_5bit_dists, 
+                                                                        data_thread_level_all_Ngram_features, 
+                                                                         ], dim = 1)
+            
+            
+            
+            ''' JY @ 2024-1-29: Following pooling applys to 'node-type5bit' and 'N>1gram events' '''
+            if pool == "sum": pool__func = torch.sum
+            elif pool == "mean": pool__func = torch.mean
+
+            data__pooled__nodetype5bit__NgramEvents = pool__func(thread_level_N_gram_events_adjacent_5bit_dist, dim = 0)            
+            
+            graph_embedding = data__pooled__nodetype5bit__NgramEvents[:5].tolist() + data_AvgNum_DiffThreads_perFRNP + data__pooled__nodetype5bit__NgramEvents[5:].tolist()
+            
+            data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*?)\.pickle', data.name).group(1) ] = graph_embedding
+
+            # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
+            cnt+=1
+      return data_dict
 
 
 ##########################################################################################################################################################
@@ -1170,9 +1426,10 @@ if __name__ == '__main__':
 
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1',
-                                  'Dataset-Case-2' # try
+                                  'Dataset-Case-2',
+                                  'Dataset-Case-3',
                                   ], 
-                        default = ['Dataset-Case-1'])
+                        default = ['Dataset-Case-2'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1196,6 +1453,9 @@ if __name__ == '__main__':
                                   'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True', 
                                   'Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True',
                                   # ------------------------------------------------------------------------------------
+                                  # thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount
+                                  'Best_RF__Dataset_1__2gram__FRNPeventCount__FRNP_OutgoIncom_eventCount',
+                                  'Best_RF__Dataset_1__4gram__FRNPeventCount__FRNP_OutgoIncom_eventCount',
 
                                   ], 
                                   default = ["RandomForest_searchspace_1"])
@@ -1209,8 +1469,11 @@ if __name__ == '__main__':
                                  
                                   'thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount', # implemented at 2024-1-27
                                   'thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount',  # implemented at 2024-1-27
+
+                                  'thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP', # implemented at 2024-1-29
+
                                   ], 
-                                  default = ["thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount"])
+                                  default = ['thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP'])
     
     parser.add_argument('-pool_opt', '--pool_option', 
                         choices= ['sum',
@@ -1231,7 +1494,7 @@ if __name__ == '__main__':
 
     # --------- For Thread-level N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [4])  # Added by JY @ 2024-1-20
+                        default = [2])  # Added by JY @ 2024-1-20
 
 
     parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
@@ -1242,8 +1505,8 @@ if __name__ == '__main__':
     # --------- JY @ 2024-1-23: For path resolve -- os.expanduser() also dependent on curr-dir, so better to do this way for now.
     parser.add_argument("--running_from_machine", 
                                  
-                         choices= ["panther", "ocelot"], 
-                         default = ["ocelot"] )
+                         choices= ["panther", "ocelot", "felis"], 
+                         default = ["felis"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
                         default = [1])  # Added by JY @ 2024-1-20
@@ -1270,7 +1533,7 @@ if __name__ == '__main__':
  
     if running_from_machine == "ocelot":
       abs_path_to_tabby = "/data/d1/jgwak1/tabby"
-    else: # ocelot
+    else: # panther or felis
       abs_path_to_tabby = "/home/jgwak1/tabby" 
  
     model_cls_name = re.search(r"'(.*?)'", str(model_cls)).group(1)
@@ -1296,7 +1559,9 @@ if __name__ == '__main__':
       #  else:
       #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
-       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{Ngram}gram__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+      #  run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{Ngram}gram__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{Ngram}gram__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+
        this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/{run_identifier}"
        final_test_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
@@ -1319,7 +1584,9 @@ if __name__ == '__main__':
       "Dataset-Case-2": \
         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/train"},
-
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/train/Processed_Benign_ONLY_TaskName_edgeattr"}
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1332,6 +1599,9 @@ if __name__ == '__main__':
       "Dataset-Case-2": \
       {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
        "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/train"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/train/Processed_Malware_ONLY_TaskName_edgeattr"}
 
 
     }
@@ -1346,6 +1616,9 @@ if __name__ == '__main__':
       "Dataset-Case-2": \
          {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
           "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/test"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/test/Processed_Benign_ONLY_TaskName_edgeattr"}
 
     }
     projection_datapath_Malware_Test_dict = {
@@ -1359,6 +1632,9 @@ if __name__ == '__main__':
       "Dataset-Case-2": \
          {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
           "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/test"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/test/Processed_Malware_ONLY_TaskName_edgeattr"}
 
     }
 
@@ -1699,8 +1975,38 @@ if __name__ == '__main__':
          )
          return manual_space
 
+    def Best_RF__Dataset_1__2gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount() -> dict :
+      # /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_141047/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_141047.csv
+      # -- tuning done
+         manual_space = []
+         manual_space.append(
+               {'bootstrap': True,
+               'criterion': 'gini',
+               'max_depth': None,
+               'max_features': None,
+               'min_samples_leaf': 1,
+               'min_samples_split': 2,
+               'n_estimators': 200,
+               'random_state': 42,
+               'split_shuffle_seed': 100}
+         )
+         return manual_space
 
-
+    def Best_RF__Dataset_1__4gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount() -> dict :
+      # /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_140946/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_140946.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': None,
+            'min_samples_leaf': 1,
+            'min_samples_split': 5,
+            'n_estimators': 200,
+            'random_state': 0,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space
     ####################################################################################################################################################
 
 
@@ -1739,9 +2045,13 @@ if __name__ == '__main__':
     elif search_space_option == 'Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True':
        search_space = Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True()   
 
+    # -----------------------------------------------------------
 
-
-
+    elif search_space_option == 'Best_RF__Dataset_1__2gram__FRNPeventCount__FRNP_OutgoIncom_eventCount':
+       search_space = Best_RF__Dataset_1__2gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount()   
+       
+    elif search_space_option == 'Best_RF__Dataset_1__4gram__FRNPeventCount__FRNP_OutgoIncom_eventCount':
+       search_space = Best_RF__Dataset_1__4gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount()   
 
     # -----------------------------------------------------------
 
@@ -1866,6 +2176,27 @@ if __name__ == '__main__':
          feature_names = nodetype_names + FRNP_event_count_features + FRNP_outgoing_and_incoming_events_count_features +\
                          Ngram_edge_feature_names # yes this order is correct
 
+
+    elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP":
+
+         pretrained_Ngram_countvectorizer_list = pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( Ngram = Ngram,
+                                                                                                                               dataset= train_dataset,
+                                                                                                                               only_train_specified_Ngram = only_train_specified_Ngram 
+                                                                                                                              )
+         train_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__dict( 
+                                                                                                                    pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                                    dataset= train_dataset,
+                                                                                                                    pool = pool_option
+                                                                                                                   )
+         nodetype_names = ["file", "registry", "network", "process", "thread"] 
+         FRNP_AvgNum_DiffThreads = ["file_avg_diff_threads", "registry_avg_diff_threads", "network_avg_diff_threads", "process_avg_diff_threads" ]
+ 
+         Ngram_edge_feature_names = []
+         for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+             Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+         feature_names = nodetype_names + FRNP_AvgNum_DiffThreads +\
+                         Ngram_edge_feature_names # yes this order is correct
+
     else:
          ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")                  
 
@@ -1934,6 +2265,24 @@ if __name__ == '__main__':
                # JY @ 2024-1-27
                feature_names = nodetype_names + FRNP_event_count_features + FRNP_outgoing_and_incoming_events_count_features +\
                                Ngram_edge_feature_names # yes this order is correct
+
+
+         elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP":
+               final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__dict( 
+                                                                                                               pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                                               dataset= final_test_dataset,
+                                                                                                               pool = pool_option
+                                                                                                             )
+               nodetype_names = ["file", "registry", "network", "process", "thread"] 
+               FRNP_AvgNum_DiffThreads = ["file_avg_diff_threads", "registry_avg_diff_threads", "network_avg_diff_threads", "process_avg_diff_threads" ]
+      
+               Ngram_edge_feature_names = []
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+               feature_names = nodetype_names + FRNP_AvgNum_DiffThreads +\
+                              Ngram_edge_feature_names # yes this order is correct
+
+
 
          else:
                ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")
