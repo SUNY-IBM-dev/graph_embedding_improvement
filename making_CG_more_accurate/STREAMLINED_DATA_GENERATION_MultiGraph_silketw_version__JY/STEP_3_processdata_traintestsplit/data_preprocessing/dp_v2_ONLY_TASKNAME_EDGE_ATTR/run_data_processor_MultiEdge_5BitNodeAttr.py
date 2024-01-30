@@ -2,6 +2,8 @@ import os
 
 import sys
 sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/STREAMLINED_DATA_GENERATION_MultiGraph_silketw_version__JY/STEP_3_processdata_traintestsplit/data_preprocessing/dp_v2_ONLY_TASKNAME_EDGE_ATTR")
+sys.path.append("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/STREAMLINED_DATA_GENERATION_MultiGraph_silketw_version__JY/STEP_3_processdata_traintestsplit/data_preprocessing/dp_v2_ONLY_TASKNAME_EDGE_ATTR")
+
 # from data_processor_v2_MultiEdge import DataProcessor
 from data_processor_v2_MultiEdge_5BitNodeAttr import DataProcessor
 

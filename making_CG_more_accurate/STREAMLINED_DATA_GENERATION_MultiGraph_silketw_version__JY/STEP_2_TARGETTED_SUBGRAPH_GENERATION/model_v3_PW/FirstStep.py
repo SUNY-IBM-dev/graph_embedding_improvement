@@ -1081,6 +1081,8 @@ def get_net_info(log_entry, host,
                                'Task Name': logentry_TaskName, 'Opcode': logentry_Opcode,'OpcodeName':logentry_OpcodeName,
                                'TimeStamp': logentry_TimeStamp,
                                
+                               'daddr': logentry_destaddr, # Added by JY @ 2024-1-30       
+
                             #    'size': logentry_size, 'SubProcessTag': logentry_SubProcessTag,
                                
                                "NET-NODE": net_uid,
@@ -1143,7 +1145,11 @@ def get_file_info(log_entry, host,
             #                
 
             #file_hash = str(logentry_FileObject)+ str(logentry_FileName.upper()) + str(logentry_Parent_ProcessID) + str(logentry_Parent_ThreadID) # > FileUID (Filepath)
-            file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(FileName):{logentry_FileName.upper()}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+            #file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(FileName):{logentry_FileName.upper()}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+            
+            # JY @ 2024-1-30 -- get rid of pid and tid from hash
+            file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(FileName):{logentry_FileName.upper()}"
+
             file_uid = get_uid(file_hash,host)
             file_uid_list.append(file_uid)
             file_node_dict[file_uid]= {'FileName': logentry_FileName, 'FileObject': logentry_FileObject}
@@ -1175,7 +1181,11 @@ def get_file_info(log_entry, host,
                 #           "str(logentry_FileObject) + str(logentry_Parent_ProcessID) + str(logentry_Parent_ThreadID)""
 
                 #file_hash = str(logentry_FileObject) + str(logentry_Parent_ProcessID) + str(logentry_Parent_ThreadID)
-                file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+                #file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+
+                # JY @ 2024-1-30 -- get rid of pid and tid from hash    
+                file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}"
+
                 file_uid=get_uid(file_hash,host)
                 file_uid_list.append(file_uid)
                 file_node_dict[file_uid]= {'FileName': logentry_FileName, 'FileObject': logentry_FileObject}
@@ -1203,7 +1213,11 @@ def get_file_info(log_entry, host,
             #########################################################################################################################
 
             else:
-                file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+                #file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+
+                # JY @ 2024-1-30 -- get rid of pid and tid from hash    
+                file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}"
+
                 file_uid=get_uid(file_hash,host)
                 file_uid_list.append(file_uid)
                 file_node_dict[file_uid]= {'FileName': logentry_FileName, 'FileObject': logentry_FileObject}
@@ -1265,7 +1279,10 @@ def get_file_info(log_entry, host,
                                    'ThreadId': logentry_Parent_ThreadID, 'ThreadID': logentry_Child_ThreadID,
                                    'Task Name': logentry_TaskName, 'Opcode': logentry_Opcode,'OpcodeName':logentry_OpcodeName,
                                    'TimeStamp': logentry_TimeStamp,
-                                   
+                                    
+                                   'FileName': logentry_FileName, # Added by JY @ 2024-1-30
+                                   'FileObject': logentry_FileObject,     # Added by JY @ 2024-1-30                           
+
                                 #    'Irp': logentry_Irp, 'SubProcessTag': logentry_SubProcessTag,
                                    
                                    'FILE-NODE': file_uid,
@@ -1325,7 +1342,12 @@ def get_reg_info(log_entry, host,
 
 
         #reg_hash = str(logentry_KeyObject) + str(logentry_RelativeName.upper()) + str(logentry_Parent_ProcessID) + str(logentry_Parent_ThreadID)
-        reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(RelativeName):{logentry_RelativeName.upper()}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+        #reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(RelativeName):{logentry_RelativeName.upper()}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+        
+        # JY @ 2024-1-30 -- get rid of pid and tid from hash
+        reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(RelativeName):{logentry_RelativeName.upper()}"
+
+
         reg_uid = get_uid(reg_hash,host)
         reg_uid_list.append(reg_uid)
         
@@ -1346,7 +1368,11 @@ def get_reg_info(log_entry, host,
         else:       # If this registry which is being closed was either (1) created by this process and thread before log-collection start
                     #                                                   (2) created by another process and thread before or after log-collection start -- not sure if this case is realistic, but if so handled here
             #reg_hash = str(logentry_KeyObject) + str(logentry_Parent_ProcessID) + str(logentry_Parent_ThreadID)
-            reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+
+            # reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+
+            # JY @ 2024-1-30 -- get rid of pid and tid from hash
+            reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}"
             reg_uid = get_uid(reg_hash,host)
             reg_uid_list.append(reg_uid)
             reg_node_dict[reg_uid] = {'KeyObject': logentry_KeyObject, 'RelativeName': logentry_RelativeName}
@@ -1367,7 +1393,10 @@ def get_reg_info(log_entry, host,
         #########################################################################################################################
         else:
             #reg_hash = str(logentry_KeyObject) + str(logentry_Parent_ProcessID) + str(logentry_Parent_ThreadID)
-            reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+            #reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+
+            # JY @ 2024-1-30 -- get rid of pid and tid from hash
+            reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}"
             reg_uid = get_uid(reg_hash,host)
             reg_uid_list.append(reg_uid)
             reg_node_dict[reg_uid] = {'KeyObject': logentry_KeyObject, 'RelativeName': logentry_RelativeName}
@@ -1433,6 +1462,9 @@ def get_reg_info(log_entry, host,
                               'Task Name': logentry_TaskName, 'Opcode': logentry_Opcode, 'OpcodeName':logentry_OpcodeName,
                               'TimeStamp': logentry_TimeStamp,
                               
+                              'KeyObject': logentry_KeyObject, # Added by JY @ 2024-1-30
+                              'RelativeName': logentry_RelativeName, # Added by JY @ 2024-1-30
+
                             #   'Status': logentry_Status, 'SubProcessTag': logentry_SubProcessTag, 'Disposition': logentry_Disposition,
                               
                               'REG-NODE': reg_uid,
