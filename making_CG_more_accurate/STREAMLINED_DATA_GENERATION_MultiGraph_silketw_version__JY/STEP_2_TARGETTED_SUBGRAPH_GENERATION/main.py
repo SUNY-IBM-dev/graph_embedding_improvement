@@ -20,7 +20,7 @@ from model_v3_PW import Projection3_final as sub3
 # from model_v3_JY_SimpleGraph import Projection3_final as sub3
 
 
-def run_Targetted_Subgraph_Generation( ESIndex_ProcessID_dict, subgraphs_to_save_dirpath):
+def run_Targetted_Subgraph_Generation( ESIndex_ProcessID_dict, subgraphs_to_save_dirpath, elastic_search_machine):
 
     starttime = datetime.now()
 
@@ -46,7 +46,7 @@ def run_Targetted_Subgraph_Generation( ESIndex_ProcessID_dict, subgraphs_to_save
             print("Igraph generation Phase", flush= True)
 
             # # Added by JY @ 2023-03-02: Added 3rd argument "EventTypes_to_Exclude_set"
-            fstep.first_step(idx, target_path)
+            fstep.first_step(idx, target_path, elastic_search_machine)
 
 
             f = open(os.path.join(target_path,"file_edge.json"))

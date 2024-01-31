@@ -861,7 +861,6 @@ case2_malware_logs = {
 }
 
 
-
 case1_benign_logs = {
 "set-adserverusage" : "6548",
 "install-visual-studio-code" : "4696",
@@ -1700,6 +1699,175 @@ case2_benign_logs = {
 # JY @ 2024-1-30
 for_debugging = {"set-adserverusage" : "6548",}
 
+
+non_trace_command_benign__Panther ={
+    "benign_ledragox_powershell_logs_install-nerdfont" : "5028",
+    "benign_ledragox_powershell_logs_optimize-security": "5848",
+    "benign_ledragox_powershell_logs_optimize-servicesrunning": "404",
+    "benign_jhochwald_powershell_logs_get-windowsbuildformigrationsupport__snippet":"4340",
+    "benign_jhochwald_powershell_logs_grant-logonasservice":"4932",
+    "benign_jhochwald_powershell_logs_hosts_helper":"1852",
+    "benign_jhochwald_powershell_logs_install-sysinternalssuite":"2832",
+    "benign_jhochwald_powershell_logs_invoke-cve202221907handling":"308",
+    "benign_stevencohn_windowspowershell_logs_get-env":"2532",
+    "benign_stevencohn_windowspowershell_logs_install-docker":"960",
+    "benign_stevencohn_windowspowershell_logs_new-host": "5976",
+    "benign_redttr_scripts_logs_removeapps":"5976",
+    "benign_redttr_scripts_logs_removequicktime":"3140",
+    "benign_jrussellfreelance_powershell-scripts_logs_get-cmdlets-list":"4444",
+    "benign_jrussellfreelance_powershell-scripts_logs_powershellhelp.designer":"5952",
+    "benign_sysadmin-survival-kit-scripts_logs_remove-onedrive":"4556",
+    "benign_sysadmin-survival-kit-scripts_logs_wsl":"960",
+    "benign_farag2_utilities_logs_add_custom_folder_to_file_explorer":"3196",
+    "benign_farag2_utilities_logs_gzdoom":"1160",
+    "benign_farag2_utilities_logs_yt-dlp":"5676",
+    "benign_powershell-master_logs_cd-crashdumps":"3740",
+    "benign_powershell-master_logs_cd-temp":"3688",
+    "benign_powershell-master_logs_cd-users":"5852",
+    "benign_powershell-master_logs_list-earthquakes":"2832",
+    "benign_powershell-master_logs_list-window-titles":"4916",
+    "benign_powershell-master_logs_new-qrcode":"5784",
+    "benign_powershell-master_logs_uninstall-bloatware":"4120",
+    "benign_powershell-master_logs_windefender": "3452",
+    "benign_farag2_utilities_logs_create_reminder_in_task_scheduler_to_print_photo":"7300",
+    "benign_farag2_utilities_logs_teamviewer":"6580",
+    "benign_powershell-master_logs_cd-downloads":"2408",
+    "benign_powershell-master_logs_cd-recycle-bin":"7044",
+    "benign_powershell-master_logs_check-pending-reboot":"8096",
+    "benign_powershell-master_logs_introduce-powershell":"2000",
+    "benign_powershell-master_logs_list-crypto-rates":"4200",
+    "benign_powershell-master_logs_list-profiles":"6388",
+    "benign_powershell-master_logs_list-repos":"8100",
+    "benign_powershell-master_logs_list-unused-files":"6120",
+    "benign_powershell-master_logs_open-auto-start-folder":"4200",
+    "benign_powershell-master_logs_open-documents-folder":"7560",
+    "benign_powershell-master_logs_open-git-extensions":"7284",
+    "benign_powershell-master_logs_play-bee-sound":"932",
+    "benign_powershell-master_logs_play-frog-sound":"8180",
+    "benign_powershell-master_logs_remove-print-jobs":"8152",
+    "benign_powershell-master_logs_speak-test":"8096",
+    "benign_powershell-master_logs_weather":"6908",
+    "benign_jhochwald_powershell_logs_get-directorysize":"1488",
+    "benign_jhochwald_powershell_logs_get-localgroupmembership":"4840",
+    "benign_jhochwald_powershell_logs_get-outdatedpowershellmodules":"6868",
+    "benign_stevencohn_windowspowershell_logs_clear-temp":"5344",
+    "benign_stevencohn_windowspowershell_logs_get-commandline":"2828",
+    "benign_stevencohn_windowspowershell_logs_get-commits":"5168",
+    "benign_stevencohn_windowspowershell_logs_get-dirsize":"5312",
+    "benign_stevencohn_windowspowershell_logs_initialize-machine":"2812",
+    "benign_stevencohn_windowspowershell_logs_install-chocolatey":"5320",
+    "benign_jrussellfreelance_powershell-scripts_logs_powershell-cmdlet-explorer.designer":"5636",
+    "benign_sysadmin-survival-kit-scripts_logs_mygit":"5316",
+    "benign_sysadmin-survival-kit-scripts_logs_disable-scheduled-tasks":"5652",
+    "benign_sysadmin-survival-kit-scripts_logs_enable-god-mode":"3168",
+    "benign_jhochwald_powershell_logs_get-dsregstatusinfo":"9196",
+    "benign_jhochwald_powershell_logs_set-officeinsider":"1520",
+    "benign_redttr_scripts_logs_installpowershell":"5064",
+    "benign_redttr_scripts_logs_installteams":"6452",
+    "benign_redttr_scripts_logs_removewpsoffice":"6452",
+    "benign_jrussellfreelance_powershell-scripts_logs_file-search":"5652",
+    "benign_stevencohn_windowspowershell_logs_get-account":"5884",
+    "benign_stevencohn_windowspowershell_logs_install-buildtools":"5644",
+    "benign_powershell-master_logs_cd-etc":"2308",
+    "benign_powershell-master_logs_check-cpu":"7260",
+    "benign_powershell-master_logs_check-independence-day":"8772",
+    "benign_powershell-master_logs_check-outlook":"8836",
+    "benign_powershell-master_logs_check-wind":"2580",
+    "benign_powershell-master_logs_disconnect-vpn":"5524",
+    "benign_powershell-master_logs_install-git-for-windows":"1884",
+    "benign_powershell-master_logs_install-power-toys":"1732",
+    "benign_powershell-master_logs_list-console-colors":"1720",
+    "benign_powershell-master_logs_open-outlook":"4656",
+    "benign_powershell-master_logs_play-elk-sound":"6400",
+    "benign_powershell-master_logs_roll-a-dice":"7016",
+    "benign_powershell-master_logs_speak-italian":"9092",
+    "benign_powershell-master_logs_tell-joke":"3804",
+    "benign_powershell-master_logs_uninstall-all-apps":"6184",
+    "benign_ledragox_powershell_logs_backup-system":"4896",
+    "benign_ledragox_powershell_logs_git-gnupgsshkeyssetup":"3888",
+    "benign_ledragox_powershell_logs_install-defaultappslist":"4196",
+
+}
+
+non_trace_command_malware__Panther = {
+   "malware_poshc2_powershell_logs_invoke-portscan":"1584",
+    "malware_mafia_logs_invoke-portscan":"2816",
+    "malware_empire_logs_bloodhound":"1156",
+    "malware_empire_logs_exploit-jboss":"2816",
+    "malware_empire_logs_get-screenshot":"3756",
+    "malware_empire_logs_get-sqlquery":"5672",
+    "malware_nishang_logs_add-scrnsavebackdoor":"5308",
+    "malware_nishang_logs_base64tostring":"6664",
+    "malware_nishang_logs_convertto-rot13":"5300",
+    "malware_nishang_logs_invoke-bruteforce":"2816",
+    "malware_nishang_logs_remove-update":"5320",
+    "malware_invoke_obfuscation_logs_out-encodedbinarycommand":"5300",
+    "malware_poshc2_powershell_logs_brute-locadmin":"7464",
+    "malware_poshc2_powershell_logs_get-idletime":"4400",
+    "malware_poshc2_powershell_logs_get-injectedthread":"8080",
+    "malware_poshc2_powershell_logs_invoke-eventvwrbypass":"1988",
+    "malware_smallposh_cleareventlogs":"5316",
+    "malware_smallposh_minidump":"5368",
+    "malware_psbits_fwkeeper":"2368",
+    "malware_psbits_get-suspiciousserviceacls":"4324",
+    "malware_psbits_getsysmonnoisyevents":"3004",
+    "malware_offsec_invoke-sauroneye":"5320",
+    "malware_metasploit_cd621db680041f810025726e6c015dc7109238e5cf666d14a5f13c1634f13365":"5356",
+    "malware_quakbot_8493b0e70b6179a76ee3f0e1df5cfaa2a5c4184a75873d8d44be97f8805c1858":"5372",
+    "malware_cobalt_strike_887091c7f045b9f69b933b34876b428e39ed58dce7a6a60f2516a60e012ff676":"3756",
+    "malware_cobalt_strike_2505081308adf0cc2de22df8164213d735ac462d088c3c1f8e913fd629a2ff9c":"5368",
+    "malware_netwalker_1899ff66b76a3f6302fea0afbc26c8452949345d2ea6d987b683c6a0037f22d0":"",
+    "malware_netwalker_6887fa9f10ad20a3a78cd33335a065ac9266cd2709ffa56d9f60877cbf3170a6":"",
+    "malware_asyncrat_1e0558b39f249087fee5b4d5a94b41fdcabb9611720f4028302703dfe9015862":"1156",
+    "malware_asyncrat_460d093a55b930e733c60575f82183cd0edd52ec6b927cdb4a93dc5da7f0ac9c":"5168",
+    "malware_asyncrat_921b4f6811d98c61b29a90639c2cf9dde8194bbf0c4ffac7eab55a2fc598bdcd":"5320",
+    "malware_asyncrat_8501de3d3e0cb356f11439fc0425a60e8aefd8c24ed7015fffff4334d63e962b":"5672",
+    "malware_asyncrat_beb78a481d2bbff8b63981e4270748bdf636c8b33655fa8c3da3393274666464":"6684",
+    "malware_asyncrat_e295984425358eced8a6afbb88da79fa4a09c845f2d391e39e45c53c636ee8c3": "6500",
+    "malware_asyncrat_ec8dd481d2cb0a202cfb519495ba5839a6fdb7b712128d7b7c5de48c61a9452a":"2816",
+    "malware_asyncrat_f323435fe2f716f7a074349f93bb6c8c265a7c9bc4f9443925897fb195ef0e02":"2828",
+    "malware_rest_925191be26b5087f04a6616fae9fbb71b8e09f80591cf4608d49076a5c0015ca":"7152",
+    "malware_psbits_get-productpolicy":"1640",
+    "malware_psbits_update-certhosts":"392",
+    "malware_powershellery_get-pesecurity":"3224",
+    "malware_poshc2_powershell_logs_bypass-uac":"1852",
+    "malware_poshc2_powershell_logs_get-computerinfo":"5784",
+    "malware_poshc2_powershell_logs_get-keystrokes":"3184",
+    "malware_poshc2_powershell_logs_invoke-powerdump":"2832",
+    "malware_poshc2_powershell_logs_invoke-psexec":"4288",
+    "malware_poshc2_powershell_logs_portscanner":"556",
+    "malware_poshc2_powershell_logs_powerup":"3492",
+    "malware_poshc2_powershell_logs_powerupsql":"3184",
+    "malware_poshc2_powershell_logs_powerupsql_full":"2772",
+    "malware_guloader_c0a129c69476534a654a0575a02da2d9596de225185d5c37a2a28e23ecb3d35a":"2976",
+    "malware_metasploit_35f634a00e48d1431c6845e2b72fdc79b373e7d905c6a79b0ed4755b4e8b023b":"5640",
+    "malware_metasploit_b1f32e797d0ff51fd926834b89167ba45c3ca8a75f2cfe8cda7dbb1c9fdc6775":"3224",
+    "malware_asyncrat_3cb8519b3d33b567e68289dd057629c12388ca19ee2cd0bfd2dcbefe8728402d":"4876",
+    "malware_asyncrat_5d48192917608013a83fe66ee29d3e307305d0ef44d0deb93bc7a8e9f78a96c3":"1212",
+    "malware_asyncrat_89aba0ed190195731401622ba60a75d1daaef2d894c4bdcc98d9e96f16b20d0d":"3040",
+    "malware_asyncrat_262dcabfeea27988f7638430379c17d78144f20f1b0ea6695e9a209b16ae2bbd":"6044",
+    "malware_asyncrat_941c004ba4ec222c4ca88d5a9b4597877ffa6b3658e0c7f40fcad6eb59630525":"3876",
+    "malware_asyncrat_1514468529e81c0c425047e49752570edf80cdc68d09846f31e9e4fa572814ed":"3028",
+    "malware_asyncrat_d05e72b5d5ee62a18b8c24b92309a2bdabd8149499845a0418fa226da367a62f":"2976",
+    "malware_netwalker_4158ad6eca8c3087ed221953f7a69d3d40a772c5af415f32e110a46da8a9f8ac":"",
+    "malware_metasploit_da69111d0ba32fa46dfcf6dbb30d672d39bf5794951f5c4d69fb378eda4bd1ff":"7944",
+    "malware_rest_b91e521a864bd5aabc0bf30b8f983adac9a873f16a7f20a8faa3e93f13fb435f":"1432",
+    "malware_asyncrat_03f7cc3cfda880c17d3339c63bc87ee4af3d75fff81ff104741dea04e1f9752a":"8252",
+    "malware_asyncrat_6e39cc4bf7d911b9b6b47d0ca860df4b405386a8232943cd9e4a7f03d2027c0c":"5428",
+    "malware_asyncrat_186cd386ed08dd8f21ca5961d5f39519bf79224fdd57573c3c6f266e781fd73e":"5644",
+    "malware_asyncrat_295f4242ed4bebbbc2d8f1e602a9bb4c66a987d7c6e6522590327da91fc40279":"4456",
+    "malware_asyncrat_1806695ff2b00c1dcbdba40be92836efa3b36228124e0e18e471aec6ed9de7ad":"444",
+    "malware_asyncrat_aed50a5da5a71dbee227b9de4c9ee68ec20e9814928b16fb231784c3d45ef4a2":"5248",
+    "malware_asyncrat_b1b9795bd6a8f47224b156a25c9011d7c8b4f8fb2c3a9042fa97db6eabef8ac7":"7372",
+    "malware_asyncrat_b657b4edd125fdc8bc4aac2f8f2b0617b1c9ba3bf1e6e5834971c7ba0bf77d4d":"5248",
+    "malware_invoke_obfuscation_logs_out-compressedcommand":"4188",
+    "malware_empire_logs_find-fruit":"3908",
+    "malware_empire_logs_get-rickastley":"1180",
+
+
+}
+
+
 ###########################################################################################################################################################################
 ###########################################################################################################################################################################
 ###########################################################################################################################################################################
@@ -1717,14 +1885,19 @@ for_debugging = {"set-adserverusage" : "6548",}
 
 # SET
 subgraphs_savedirpath = \
-"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs"
+"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/Indices"
+#"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/Indices"
+
+
 #"/home/pwakodi1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case2/Indices"
 # "/data/d1/jgwak1/tabby/OFFLINE_TRAINTEST_DATA/all_malware_psh_samples_asof_20230520_MULTI_GRAPH"
 
-es_indices_and_ProcessIDs = for_debugging
+es_indices_and_ProcessIDs = non_trace_command_malware__Panther # non_trace_command_benign__Panther
 
+elastic_search_machine = "panther"
+# non_trace_command_benign -- seems to be stored in panther, so change ocelot to panther in firststep.py
 # dir_start_pattern doesn't have to be exact. -- JY @ 2024-1-2 : just leave it as is, even when benign, handled
-dir_start_pattern = "benign" 
+dir_start_pattern = "malware" 
 
 # SET
 main_offline_train_data_dirpath=\
@@ -1739,7 +1912,7 @@ main_offline_test_data_main_dirpath=\
 # SET non_target and/or target
 # non_target = False
 target = True # typically malware
-label = "Benign" # change based on the indices 
+label = "Malware" # change based on the indices 
 if label not in ["Benign", "Malware"]:
    raise ValueError("label must be either 'Benign' or 'Malware' ; case-matters b/c of compatibiltiy with existing code")
 
@@ -1758,9 +1931,9 @@ Test_ratio = 1 - Train_ratio
 
 # SET steps
 target__step_1 = True # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
-target__step_2 = False
-target__step_3 = False
-
+target__step_2 = True   # organize into Label Dir
+target__step_3 = True   # generate process pickle files
+target__step_4 = False
 
 
 
@@ -1808,7 +1981,8 @@ if __name__ == "__main__":
          processes=[]
          for es_indices_and_ProcessIDs_segment in es_indices_and_ProcessIDs_segments:
             proc = Process(target = run_Targetted_Subgraph_Generation, kwargs = {"ESIndex_ProcessID_dict": es_indices_and_ProcessIDs_segment,
-                                                                                 "subgraphs_to_save_dirpath": subgraphs_savedirpath})
+                                                                                 "subgraphs_to_save_dirpath": subgraphs_savedirpath,
+                                                                                 "elastic_search_machine": elastic_search_machine})
             proc.start()
             processes.append(proc)
          for proc in processes:
@@ -1821,7 +1995,7 @@ if __name__ == "__main__":
          print(f"\Targetted Subgraph Generation - {label} Step-1 elapsed time (#parallel-processes: {N_parallel}): {str(step1_done - step1_start)}", flush=True)
 
 
-      # (Step-2) Data-preprocess subgraphs into pickle files.
+      # (Step-2) Organize subgraphs into LABEL dir.
       if target__step_2:
          step2_start = datetime.datetime.now()
          # 3-1: organize and rename subgraphs for compatibility with the data-processor code
@@ -1833,7 +2007,15 @@ if __name__ == "__main__":
          print(f"\nOrganized/Renamed and copied subgraphs to: {subgraphs_savedirpath}/{label}", flush=True)
          print(f"\nOrganized/Renamed and copied subgraphs to: {subgraphs_savedirpath}/{label}", flush=True)
 
-         # # 3-2: run the data-processor which will generate + save processed-pickle-files to 
+         step2_done = datetime.datetime.now()
+         # print(f"\nMalware Step-2 elapsed time: {str(step2_done - step2_start)}", flush=True)
+
+
+      # (Step-3) Data-preprocess subgraphs into pickle files.
+
+      if target__step_3:
+         step3_start = datetime.datetime.now()
+         # # 3.  run the data-processor which will generate + save processed-pickle-files to 
          # #      "subgraphs_savedirpath/Processed_Benign" directory.       
          # run_data_processor_MultiEdge_only_taskname_edgeattr_ver(data_type = label, load_and_save_path = subgraphs_savedirpath)   
          
@@ -1847,8 +2029,8 @@ if __name__ == "__main__":
 
          Processed_picklefiles_dirpath = f"{subgraphs_savedirpath}/Processed_{label}_ONLY_TaskName_edgeattr"
          print(f"\nProcessed-data (pickle files) are saved to : {Processed_picklefiles_dirpath}", flush=True)
-         step2_done = datetime.datetime.now()
-         # print(f"\nMalware Step-2 elapsed time: {str(step2_done - step2_start)}", flush=True)
+         step3_done = datetime.datetime.now()
+         # print(f"\nMalware Step-2 elapsed time: {str(step3_done - step3_start)}", flush=True)
 
 
       # (Step-3) Train & Test split the newly created Processed-data,
@@ -1858,8 +2040,8 @@ if __name__ == "__main__":
       #          the 80% vs 20% ratio will be preserved, as we are also distributing new train and test data 
       #          based on that ratio. )
       #          + For future refernce, add a "txt file that records these increments of data."
-      if target__step_3:
-         step3_start = datetime.datetime.now()
+      if target__step_4:
+         step4_start = datetime.datetime.now()
 
          Processed_picklefiles_dirpath = f"{subgraphs_savedirpath}/Processed_{label}_ONLY_TaskName_edgeattr"
          source_dirpath = Processed_picklefiles_dirpath
@@ -1915,6 +2097,6 @@ if __name__ == "__main__":
             print(f"{test_pickle_cnt}. copied '{test_pkl}' from '{source_dirpath}' to '{test_dest_dirpath}'", flush= True, file= test_pickles_addition_record_fp)
             test_pickle_cnt += 1
 
-         step3_done = datetime.datetime.now()
+         step4_done = datetime.datetime.now()
 
-         print(f"\nStep-3 elapsed time: {str(step3_done - step3_start)}", flush=True)
+         print(f"\nStep-4 elapsed time: {str(step4_done - step4_start)}", flush=True)
