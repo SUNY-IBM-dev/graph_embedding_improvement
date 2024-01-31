@@ -1343,16 +1343,32 @@ def get_reg_info(log_entry, host,
 
         #reg_hash = str(logentry_KeyObject) + str(logentry_RelativeName.upper()) + str(logentry_Parent_ProcessID) + str(logentry_Parent_ThreadID)
         #reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(RelativeName):{logentry_RelativeName.upper()}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
+
         
-        # JY @ 2024-1-30 -- get rid of pid and tid from hash
+        # JY @ 2024-1-30 -- got rid of pid and tid from hash
         reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(RelativeName):{logentry_RelativeName.upper()}"
-
-
         reg_uid = get_uid(reg_hash,host)
         reg_uid_list.append(reg_uid)
         
         reg_node_dict[reg_uid] = {'KeyObject': logentry_KeyObject, 'RelativeName': logentry_RelativeName} # > Regisrty UID (KeyName + KeyObject)
 
+        ''' 
+        JY @ 2024-1-30: 
+        
+        This mapping, utilizing '(logentry_KeyObject, logentry_Parent_ProcessID, logentry_Parent_ThreadID)' as a key, 
+        is based on the observation that non-0x0 KeyObjects (e.g., 0xffffffadfa323) are not invoked with 'CreateKey' or 'OpenKey' unless it is the first time being created or opened, 
+        or there was a preceding 'CloseKey'. 
+        
+        In other words, for KeyObject '0xffffffadfa323', the pattern is like 
+        'CreateKey QueryKey CloseKey' then 'OpenKey ... CloseKey' then 'CreateKey ... CloseKey', 
+        validating this mapping approach.
+
+        However, for 0x0 KeyObjects, it was observed that 'OpenKey's are called without a preceding 'CloseKey', BUT THIS IS FINE because, 
+        for 0x0 KeyObjects, only 'OpenKey's are called, and no other event types are invoked. 
+        - Remember that the purpose of this mapping is to deal with event-types that do not provide log-attributes like 'RelativeName'.
+          0x0 KeyObjects don't match our observed pattern, but also does not come with such event-types (b/c only it comes with 'OpenKey' events wihich provides 'RelativeName'), 
+          Therefore mapping is not used anyways. 
+        '''
         mapping[(logentry_KeyObject, logentry_Parent_ProcessID, logentry_Parent_ThreadID)] = reg_uid  # To keep track of mapping between (KeyObject,ProcessId,ThreadId) tuple and corresponding reg_uid
 
     #elif logentry_TaskName == 'EventID(13)'--->opttion1 
@@ -1360,6 +1376,7 @@ def get_reg_info(log_entry, host,
     #elif logentry_Opcode == 44:--->opttion3 # For Registry events, Opcode 44 should correspond to "CLOSE" in File events.
 
         if (logentry_KeyObject, logentry_Parent_ProcessID, logentry_Parent_ThreadID) in mapping:  # If this registry which is being closed was created by this process and thread after log-collection start.
+            
             reg_uid = mapping[(logentry_KeyObject, logentry_Parent_ProcessID, logentry_Parent_ThreadID)] # retrieve the stored reg-uid
             reg_uid_list.append(reg_uid)
                                               # Here, no need to do "reg_node_dict[reg_uid]= {'KeyObject':logentry_KeyObject, 'RelativeName':logentry_RelativeName}" as it was already done during creation
@@ -1367,6 +1384,7 @@ def get_reg_info(log_entry, host,
         
         else:       # If this registry which is being closed was either (1) created by this process and thread before log-collection start
                     #                                                   (2) created by another process and thread before or after log-collection start -- not sure if this case is realistic, but if so handled here
+            
             #reg_hash = str(logentry_KeyObject) + str(logentry_Parent_ProcessID) + str(logentry_Parent_ThreadID)
 
             # reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
@@ -1377,7 +1395,7 @@ def get_reg_info(log_entry, host,
             reg_uid_list.append(reg_uid)
             reg_node_dict[reg_uid] = {'KeyObject': logentry_KeyObject, 'RelativeName': logentry_RelativeName}
     
-    else: # ALL OTHER Opcodes  
+    else: # ALL OTHER Opcodes (e.g. QueryValueKey, SetInformationKey, etc.) 
 
           # QUESTION: What is the purpose of explicitly differentiating between registries that were created after log-collection-start and those which are not, by hash-inputs?
           #           "str(logentry_KeyObject) + str(logentry_RelativeName.upper()) + str(logentry_Parent_ProcessID) + str(logentry_Parent_ThreadID)"
@@ -1388,6 +1406,7 @@ def get_reg_info(log_entry, host,
         # Added by JY @ 2023-05-20 ############################################################################################
         # to handle normal-case
         if (logentry_KeyObject, logentry_Parent_ProcessID, logentry_Parent_ThreadID) in mapping:
+           
             reg_uid = mapping[(logentry_KeyObject, logentry_Parent_ProcessID, logentry_Parent_ThreadID)] # retrieve the stored reg-uid
             reg_uid_list.append(reg_uid)
         #########################################################################################################################
@@ -1961,6 +1980,36 @@ def first_step(idx, root_path):
                           )
 
         if provider == REGISTRY_provider:
+
+            # JY @ 2024-1-30: Debug fro, jere
+
+            # "KeyObject": "0xffffe38e61507b60",
+            # "RelativeName": "\\REGISTRY\\USER\\S-1-5-21-2334472832-2587113924-773976260-1001"
+            # pid == 6548
+            # tid == 2308 , 2984, 8124 
+            # what happens to these?
+
+            logentry_Parent_ProcessID = str(log_entry.get('_source_ProcessID'))
+            logentry_Child_ProcessID = str(log_entry.get('_source_XmlEventData_ProcessID')) #-------------already in string
+            logentry_Parent_ThreadID = str(log_entry.get('_source_ThreadID'))
+            logentry_Child_ThreadID = str(log_entry.get('_source_XmlEventData_ThreadID'))#-------------already in string format: e.g, 4,00 // str() to convert null value to 'none'
+            logentry_KeyObject = log_entry.get('_source_XmlEventData_KeyObject')
+            logentry_RelativeName = logentry_RelativeName = log_entry.get('_source_XmlEventData_RelativeName')
+
+
+            # [x for x in all_log_entries if x['_source_ProcessID'] == 6548 and x['_source_ThreadID'] == 8124 and x.get('_source_XmlEventData_RelativeName') == "\\REGISTRY\\USER\\S-1-5-21-2334472832-2587113924-773976260-1001"]
+
+
+
+            # if int(logentry_Parent_ProcessID) == 6548 and int(logentry_Parent_ThreadID) in {2308, 2984, 8124}:
+
+            if logentry_KeyObject != None and "0xffffe38e61507b60" == logentry_KeyObject:
+
+                if logentry_RelativeName != None and "\\REGISTRY\\USER\\S-1-5-21-2334472832-2587113924-773976260-1001" in logentry_RelativeName:
+
+                    print(f"logentry_Parent_ProcessID: {logentry_Parent_ProcessID} | logentry_Parent_ThreadID: {logentry_Parent_ThreadID} | logentry_Child_ProcessID: {logentry_Child_ProcessID} | logentry_Child_ThreadID: {logentry_Child_ThreadID}", flush = True)
+
+
             get_reg_info(log_entry, host_name, 
                          reg_uid_list, reg_thread_uid_list, reg_edge_uid_list,  
                          reg_node_dict, reg_thread_dict, reg_edge_dict,

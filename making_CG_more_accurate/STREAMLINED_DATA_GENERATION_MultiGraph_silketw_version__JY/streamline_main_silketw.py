@@ -1724,7 +1724,7 @@ subgraphs_savedirpath = \
 es_indices_and_ProcessIDs = for_debugging
 
 # dir_start_pattern doesn't have to be exact. -- JY @ 2024-1-2 : just leave it as is, even when benign, handled
-dir_start_pattern = "malware" 
+dir_start_pattern = "benign" 
 
 # SET
 main_offline_train_data_dirpath=\
