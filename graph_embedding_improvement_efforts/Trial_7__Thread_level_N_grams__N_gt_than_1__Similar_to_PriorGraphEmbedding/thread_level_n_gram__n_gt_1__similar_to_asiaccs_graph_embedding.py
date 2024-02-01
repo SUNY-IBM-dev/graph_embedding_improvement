@@ -1428,8 +1428,10 @@ if __name__ == '__main__':
                         choices= ['Dataset-Case-1',
                                   'Dataset-Case-2',
                                   'Dataset-Case-3',
+
+                                  'Dataset-Case-3__FR_UID_rule_updated',
                                   ], 
-                        default = ['Dataset-Case-2'])
+                        default = ['Dataset-Case-3__FR_UID_rule_updated'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1489,7 +1491,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     # --------- For Thread-level N-gram
@@ -1506,7 +1508,7 @@ if __name__ == '__main__':
     parser.add_argument("--running_from_machine", 
                                  
                          choices= ["panther", "ocelot", "felis"], 
-                         default = ["felis"] )
+                         default = ["ocelot"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
                         default = [1])  # Added by JY @ 2024-1-20
@@ -1586,7 +1588,11 @@ if __name__ == '__main__':
          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/train"},
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-3": \
-        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/train/Processed_Benign_ONLY_TaskName_edgeattr"}
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/train/Processed_Benign_ONLY_TaskName_edgeattr"},
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/Indices/Processed_Benign_ONLY_TaskName_edgeattr"}
+
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1601,7 +1607,11 @@ if __name__ == '__main__':
        "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/train"},
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-3": \
-        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/train/Processed_Malware_ONLY_TaskName_edgeattr"}
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/train/Processed_Malware_ONLY_TaskName_edgeattr"},
+
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/Indices/Processed_Malware_ONLY_TaskName_edgeattr"}
 
 
     }
@@ -1618,7 +1628,10 @@ if __name__ == '__main__':
           "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/test"},
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-3": \
-        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/test/Processed_Benign_ONLY_TaskName_edgeattr"}
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/test/Processed_Benign_ONLY_TaskName_edgeattr"},
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": None}
 
     }
     projection_datapath_Malware_Test_dict = {
@@ -1634,7 +1647,10 @@ if __name__ == '__main__':
           "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/test"},
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-3": \
-        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/test/Processed_Malware_ONLY_TaskName_edgeattr"}
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/test/Processed_Malware_ONLY_TaskName_edgeattr"},
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": None}
 
     }
 

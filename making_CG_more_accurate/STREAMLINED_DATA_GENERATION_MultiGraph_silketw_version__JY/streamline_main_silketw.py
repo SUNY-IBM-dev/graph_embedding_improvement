@@ -1885,17 +1885,17 @@ non_trace_command_malware__Panther = {
 
 # SET
 subgraphs_savedirpath = \
-"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs"
-# "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/Indices"
-#"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/Indices"
+"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/Indices"
+#"/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/Indices"
+
 
 
 #"/home/pwakodi1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case2/Indices"
 # "/data/d1/jgwak1/tabby/OFFLINE_TRAINTEST_DATA/all_malware_psh_samples_asof_20230520_MULTI_GRAPH"
 
-es_indices_and_ProcessIDs = for_debugging #non_trace_command_malware__Panther # non_trace_command_benign__Panther
+es_indices_and_ProcessIDs = non_trace_command_benign__Panther #non_trace_command_malware__Panther # non_trace_command_benign__Panther
 
-elastic_search_machine = "ocelot"
+elastic_search_machine = "panther"
 # non_trace_command_benign -- seems to be stored in panther, so change ocelot to panther in firststep.py
 # dir_start_pattern doesn't have to be exact. -- JY @ 2024-1-2 : just leave it as is, even when benign, handled
 dir_start_pattern = "benign" 
