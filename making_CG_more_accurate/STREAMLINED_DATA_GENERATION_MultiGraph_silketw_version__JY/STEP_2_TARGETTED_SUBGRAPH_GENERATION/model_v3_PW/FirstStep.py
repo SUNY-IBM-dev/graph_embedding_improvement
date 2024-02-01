@@ -1387,10 +1387,10 @@ def get_reg_info(log_entry, host,
         # JY @ 2024-1-30 -- got rid of pid and tid from hash
         # reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(RelativeName):{logentry_RelativeName.upper()}"
 
-        # JY @ 2024-1-31 -- further got rid of keyobject from hash
+        # JY @ 2024-1-31 -- got rid of pid, tid, and keyobject from hash
         reg_hash = f"<<REG-NODE>>(RelativeName):{logentry_RelativeName.upper()}"
-
         reg_uid = get_uid(reg_hash,host)
+
         reg_uid_list.append(reg_uid)
         
         # reg_node_dict[reg_uid] = {'KeyObject': logentry_KeyObject, 'RelativeName': logentry_RelativeName} # > Regisrty UID (KeyName + KeyObject)
@@ -1488,6 +1488,7 @@ def get_reg_info(log_entry, host,
                                                                        #                 and according to Priti, these reg-nodes are unlikely to be included in the Subgraph (while in CG)
                                                                        #                 as these registry-entities might have been 'created' or 'opened' before log-collection.
                                                                        #                 So just use KeyObject for reg-UID generation in these cases 
+            reg_uid = get_uid(reg_hash,host)
             reg_uid_list.append(reg_uid)
 
 
