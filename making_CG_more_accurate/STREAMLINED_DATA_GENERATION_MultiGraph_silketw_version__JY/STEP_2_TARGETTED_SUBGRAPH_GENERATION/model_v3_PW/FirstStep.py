@@ -1154,11 +1154,15 @@ def get_file_info(log_entry, host,
             #file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(FileName):{logentry_FileName.upper()}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
             
             # JY @ 2024-1-30 -- get rid of pid and tid from hash
-            file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(FileName):{logentry_FileName.upper()}"
+            # file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(FileName):{logentry_FileName.upper()}"
+
+            # JY @ 2024-1-31 -- further got rid of fileobject from hash
+            file_hash = f"<<FILE-NODE>>(FileName):{logentry_FileName.upper()}"
 
             file_uid = get_uid(file_hash,host)
             file_uid_list.append(file_uid)
-            file_node_dict[file_uid]= {'FileName': logentry_FileName, 'FileObject': logentry_FileObject}
+            # JY @ 2024-1-31 -- got rid of FileObject node-attribute. 
+            file_node_dict[file_uid]= {'FileName': logentry_FileName}
 
 
             mapping[(logentry_FileObject, logentry_Parent_ProcessID, logentry_Parent_ThreadID)] = file_uid    # To keep track of mapping between (FileObject,ProcessId,ThreadId) tuple and corresponding file-uid
@@ -1190,11 +1194,25 @@ def get_file_info(log_entry, host,
                 #file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
 
                 # JY @ 2024-1-30 -- get rid of pid and tid from hash    
-                file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}"
+                file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}"  # JY @ 2024-1-31: Based on discussion with Priti , 
+                                                                                #                 just use FileObject for file-UID generation in these cases 
+                                                                                #                 where we can't find (fileobject, pid, tid) triplet in mapping for close event.
+                                                                                #                 Information-flow wise, this is not ideal,   
+                                                                                #                 and did consider another option of generating the reg-node's uid based on some random value 
+                                                                                #                 to avoid 'possibly different' file-entities 
+                                                                                #                 (with different filenames, which we cannot access here)
+                                                                                #                 being represented as the same node in CG, 
+                                                                                #                 just because they are handled with the same fileobject.
+                                                                                #                 However, there may be still cases, where those file-entities are actually the same,
+                                                                                #                 and according to Priti, these file-nodes are unlikely to be included in the Subgraph (while in CG)
+                                                                                #                 as these file-entities might have been 'created' or 'createnewfiled' before log-collection.
+                                                                                #                 So just use FileObject for file-UID generation in these cases 
 
                 file_uid=get_uid(file_hash,host)
                 file_uid_list.append(file_uid)
-                file_node_dict[file_uid]= {'FileName': logentry_FileName, 'FileObject': logentry_FileObject}
+
+                # JY @ 2024-1-31 -- got rid of fileobject node-attribute for consistency (can check it through connecting edge)        
+                file_node_dict[file_uid]= {'FileName': logentry_FileName}
         
         else:   # ALL OTHER TaskNames  
 
@@ -1222,11 +1240,26 @@ def get_file_info(log_entry, host,
                 #file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
 
                 # JY @ 2024-1-30 -- get rid of pid and tid from hash    
-                file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}"
+                file_hash = f"<<FILE-NODE>>(FileObject):{logentry_FileObject}" # JY @ 2024-1-31: Based on discussion with Priti , 
+                                                                                #                 just use FileObject for file-UID generation in these cases 
+                                                                                #                 where we can't find (fileobject, pid, tid) triplet in mapping for other non-create events.
+                                                                                #                 Information-flow wise, this is not ideal,   
+                                                                                #                 and did consider another option of generating the reg-node's uid based on some random value 
+                                                                                #                 to avoid 'possibly different' file-entities 
+                                                                                #                 (with different filenames, which we cannot access here)
+                                                                                #                 being represented as the same node in CG, 
+                                                                                #                 just because they are handled with the same fileobject.
+                                                                                #                 However, there may be still cases, where those file-entities are actually the same,
+                                                                                #                 and according to Priti, these file-nodes are unlikely to be included in the Subgraph (while in CG)
+                                                                                #                 as these file-entities might have been 'created' or 'createnewfiled' before log-collection.
+                                                                                #                 So just use FileObject for file-UID generation in these cases 
+
 
                 file_uid=get_uid(file_hash,host)
                 file_uid_list.append(file_uid)
-                file_node_dict[file_uid]= {'FileName': logentry_FileName, 'FileObject': logentry_FileObject}
+
+                # JY @ 2024-1-31 -- got rid of fileobject node-attribute for consistency (can check it through connecting edge)        
+                file_node_dict[file_uid]= {'FileName': logentry_FileName}
 
 
         
@@ -1286,8 +1319,8 @@ def get_file_info(log_entry, host,
                                    'Task Name': logentry_TaskName, 'Opcode': logentry_Opcode,'OpcodeName':logentry_OpcodeName,
                                    'TimeStamp': logentry_TimeStamp,
                                     
-                                   'FileName': logentry_FileName, # Added by JY @ 2024-1-30
-                                   'FileObject': logentry_FileObject,     # Added by JY @ 2024-1-30                           
+                                   'FileObject': logentry_FileObject,     # Added by JY @ 2024-1-30 & 2024-1-31 -- 'FileObject' is now associated with edge                          
+                                   'FileName': logentry_FileName, # Added by JY @ 2024-1-30 -- doesn't need to be here, but for debugging purposes
 
                                 #    'Irp': logentry_Irp, 'SubProcessTag': logentry_SubProcessTag,
                                    
@@ -1419,7 +1452,7 @@ def get_reg_info(log_entry, host,
             reg_uid = get_uid(reg_hash,host)
             reg_uid_list.append(reg_uid)
             
-            # JY @ 2024-1-31 -- got rid of keyobject node-attribute for consistency         
+            # JY @ 2024-1-31 -- got rid of keyobject node-attribute for consistency (can check it through connecting edge)            
             reg_node_dict[reg_uid] = {'RelativeName': logentry_RelativeName}
     
     else: # ALL OTHER Opcodes (e.g. QueryValueKey, SetInformationKey, etc.) 
@@ -1444,7 +1477,7 @@ def get_reg_info(log_entry, host,
             # JY @ 2024-1-30 -- get rid of pid and tid from hash
             reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}" # JY @ 2024-1-31: Based on discussion with Priti , 
                                                                        #                 just use KeyObject for reg-UID generation in these cases 
-                                                                       #                 where we can't find (keyobject, pid, tid) triplet in mapping for closekey event.
+                                                                       #                 where we can't find (keyobject, pid, tid) triplet in mapping for non-create/non-open events.
                                                                        #                 Information-flow wise, this is not ideal,   
                                                                        #                 and did consider another option of generating the reg-node's uid based on some random value 
                                                                        #                 to avoid 'possibly different' registry-entities 
@@ -1458,7 +1491,7 @@ def get_reg_info(log_entry, host,
             reg_uid_list.append(reg_uid)
 
 
-            # JY @ 2024-1-31 -- got rid of keyobject node-attribute for consistency               
+            # JY @ 2024-1-31 -- got rid of keyobject node-attribute for consistency (can check it through connecting edge)                  
             reg_node_dict[reg_uid] = {'RelativeName': logentry_RelativeName }
         
         
