@@ -1352,11 +1352,18 @@ def get_reg_info(log_entry, host,
 
         
         # JY @ 2024-1-30 -- got rid of pid and tid from hash
-        reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(RelativeName):{logentry_RelativeName.upper()}"
+        # reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(RelativeName):{logentry_RelativeName.upper()}"
+
+        # JY @ 2024-1-31 -- further got rid of keyobject from hash
+        reg_hash = f"<<REG-NODE>>(RelativeName):{logentry_RelativeName.upper()}"
+
         reg_uid = get_uid(reg_hash,host)
         reg_uid_list.append(reg_uid)
         
-        reg_node_dict[reg_uid] = {'KeyObject': logentry_KeyObject, 'RelativeName': logentry_RelativeName} # > Regisrty UID (KeyName + KeyObject)
+        # reg_node_dict[reg_uid] = {'KeyObject': logentry_KeyObject, 'RelativeName': logentry_RelativeName} # > Regisrty UID (KeyName + KeyObject)
+
+         # JY @ 2024-1-31 -- got rid of keyobject node-attribute. 
+        reg_node_dict[reg_uid] = {'RelativeName': logentry_RelativeName}
 
         ''' 
         JY @ 2024-1-30: 
@@ -1396,10 +1403,24 @@ def get_reg_info(log_entry, host,
             # reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
 
             # JY @ 2024-1-30 -- get rid of pid and tid from hash
-            reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}"
+            reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}" # JY @ 2024-1-31: Based on discussion with Priti , 
+                                                                       #                 just use KeyObject for reg-UID generation in these cases 
+                                                                       #                 where we can't find (keyobject, pid, tid) triplet in mapping for closekey event.
+                                                                       #                 Information-flow wise, this is not ideal,   
+                                                                       #                 and did consider another option of generating the reg-node's uid based on some random value 
+                                                                       #                 to avoid 'possibly different' registry-entities 
+                                                                       #                 (with different relativenames, which we cannot access here)
+                                                                       #                 being represented as the same node in CG, 
+                                                                       #                 just because they are handled with the same keyobject.
+                                                                       #                 However, there may be still cases, where those registry-entities are actually the same,
+                                                                       #                 and according to Priti, these reg-nodes are unlikely to be included in the Subgraph (while in CG)
+                                                                       #                 as these registry-entities might have been 'created' or 'opened' before log-collection.
+                                                                       #                 So just use KeyObject for reg-UID generation in these cases 
             reg_uid = get_uid(reg_hash,host)
             reg_uid_list.append(reg_uid)
-            reg_node_dict[reg_uid] = {'KeyObject': logentry_KeyObject, 'RelativeName': logentry_RelativeName}
+            
+            # JY @ 2024-1-31 -- got rid of keyobject node-attribute for consistency         
+            reg_node_dict[reg_uid] = {'RelativeName': logentry_RelativeName}
     
     else: # ALL OTHER Opcodes (e.g. QueryValueKey, SetInformationKey, etc.) 
 
@@ -1421,10 +1442,24 @@ def get_reg_info(log_entry, host,
             #reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}_(PID):{logentry_Parent_ProcessID}_(TID):{logentry_Parent_ThreadID}"
 
             # JY @ 2024-1-30 -- get rid of pid and tid from hash
-            reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}"
-            reg_uid = get_uid(reg_hash,host)
+            reg_hash = f"<<REG-NODE>>(KeyObject):{logentry_KeyObject}" # JY @ 2024-1-31: Based on discussion with Priti , 
+                                                                       #                 just use KeyObject for reg-UID generation in these cases 
+                                                                       #                 where we can't find (keyobject, pid, tid) triplet in mapping for closekey event.
+                                                                       #                 Information-flow wise, this is not ideal,   
+                                                                       #                 and did consider another option of generating the reg-node's uid based on some random value 
+                                                                       #                 to avoid 'possibly different' registry-entities 
+                                                                       #                 (with different relativenames, which we cannot access here)
+                                                                       #                 being represented as the same node in CG, 
+                                                                       #                 just because they are handled with the same keyobject.
+                                                                       #                 However, there may be still cases, where those registry-entities are actually the same,
+                                                                       #                 and according to Priti, these reg-nodes are unlikely to be included in the Subgraph (while in CG)
+                                                                       #                 as these registry-entities might have been 'created' or 'opened' before log-collection.
+                                                                       #                 So just use KeyObject for reg-UID generation in these cases 
             reg_uid_list.append(reg_uid)
-            reg_node_dict[reg_uid] = {'KeyObject': logentry_KeyObject, 'RelativeName': logentry_RelativeName}
+
+
+            # JY @ 2024-1-31 -- got rid of keyobject node-attribute for consistency               
+            reg_node_dict[reg_uid] = {'RelativeName': logentry_RelativeName }
         
         
 
@@ -1484,11 +1519,12 @@ def get_reg_info(log_entry, host,
     reg_edge_uid_list.append(edge_uid)
     reg_edge_dict[edge_uid]= {'ProcessId': logentry_Parent_ProcessID, 'ProcessID': logentry_Child_ProcessID,
                               'ThreadId': logentry_Parent_ThreadID, 'ThreadID': logentry_Child_ThreadID,
-                              'Task Name': logentry_TaskName, 'Opcode': logentry_Opcode, 'OpcodeName':logentry_OpcodeName,
+                              'Task Name': logentry_TaskName, 'Opcode': logentry_Opcode, 'OpcodeName': logentry_OpcodeName,
                               'TimeStamp': logentry_TimeStamp,
                               
-                              'KeyObject': logentry_KeyObject, # Added by JY @ 2024-1-30
-                              'RelativeName': logentry_RelativeName, # Added by JY @ 2024-1-30
+                              'KeyObject': logentry_KeyObject, # Added by JY @ 2024-1-30 & 2024-1-31 -- 'KeyObject' is now associated with edge
+
+                              'RelativeName': logentry_RelativeName, # Added by JY @ 2024-1-30 -- doesn't need to be here, but for debugging purposes
 
                             #   'Status': logentry_Status, 'SubProcessTag': logentry_SubProcessTag, 'Disposition': logentry_Disposition,
                               
