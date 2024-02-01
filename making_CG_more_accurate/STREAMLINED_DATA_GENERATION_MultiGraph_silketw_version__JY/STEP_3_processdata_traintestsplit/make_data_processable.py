@@ -34,9 +34,9 @@ def organize_and_rename_subgraphs_into_LABEL_dir(main_dirpath, dir_start_pattern
       dirnames = [ d for d in os.listdir(main_dirpath) if d.startswith(dir_start_pattern)]
 
    Path_which_datapreprocessor_looks_for = os.path.join(main_dirpath, label)
-   if os.path.exists( Path_which_datapreprocessor_looks_for ):
-      shutil.rmtree( Path_which_datapreprocessor_looks_for )
-   os.makedirs( Path_which_datapreprocessor_looks_for )
+   if not os.path.exists( Path_which_datapreprocessor_looks_for ):
+      # shutil.rmtree( Path_which_datapreprocessor_looks_for )
+      os.makedirs( Path_which_datapreprocessor_looks_for )
 
    for malware_dirname in dirnames:
 

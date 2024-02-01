@@ -38,9 +38,9 @@ def run_Targetted_Subgraph_Generation( ESIndex_ProcessID_dict, subgraphs_to_save
         try:
 
                 
-            if os.path.exists(target_path):
-                    shutil.rmtree(target_path)
-            os.makedirs(target_path)
+            if not os.path.exists(target_path):
+                    # shutil.rmtree(target_path)
+                os.makedirs(target_path)
             # #malware_path = os.path.expanduser('~/tabby/SUNY_IBM_Project/data/'+idx)
 
             print("Igraph generation Phase", flush= True)

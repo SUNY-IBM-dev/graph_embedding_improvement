@@ -1893,7 +1893,16 @@ subgraphs_savedirpath = \
 #"/home/pwakodi1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case2/Indices"
 # "/data/d1/jgwak1/tabby/OFFLINE_TRAINTEST_DATA/all_malware_psh_samples_asof_20230520_MULTI_GRAPH"
 
-es_indices_and_ProcessIDs = non_trace_command_benign__Panther #non_trace_command_malware__Panther # non_trace_command_benign__Panther
+# these indieces seem to be peleted from pantehr
+non_trace_command_benign__Panther__leftovers = \
+{"benign_powershell-master_logs_list-unused-files":"6120",
+"benign_powershell-master_logs_disconnect-vpn":"5524",
+"benign_powershell-master_logs_check-outlook":"8836",
+"benign_powershell-master_logs_cd-etc":"2308",
+"benign_powershell-master_logs_check-independence-day":"8772",
+"benign_powershell-master_logs_install-git-for-windows":"1884"}
+
+es_indices_and_ProcessIDs = non_trace_command_benign__Panther__leftovers #non_trace_command_malware__Panther # non_trace_command_benign__Panther
 
 elastic_search_machine = "panther"
 # non_trace_command_benign -- seems to be stored in panther, so change ocelot to panther in firststep.py

@@ -1459,8 +1459,12 @@ if __name__ == '__main__':
                                   'Best_RF__Dataset_1__2gram__FRNPeventCount__FRNP_OutgoIncom_eventCount',
                                   'Best_RF__Dataset_1__4gram__FRNPeventCount__FRNP_OutgoIncom_eventCount',
 
+                                  # -------------------------------------------------------------------------------------
+                                  # thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP
+                                  'Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP',
+
                                   ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                  default = ["Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP"])
 
 #PW: Why 10 Kfold? just common values
  # flatten vs no graph ?? is that only ML tuning differece??
@@ -1491,7 +1495,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
 
     # --------- For Thread-level N-gram
@@ -1511,7 +1515,7 @@ if __name__ == '__main__':
                          default = ["ocelot"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [4])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 
@@ -1591,7 +1595,7 @@ if __name__ == '__main__':
         {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/train/Processed_Benign_ONLY_TaskName_edgeattr"},
 
       "Dataset-Case-3__FR_UID_rule_updated": \
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/Indices/Processed_Benign_ONLY_TaskName_edgeattr"}
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/train"}
 
     }
     projection_datapath_Malware_Train_dict = {
@@ -1611,7 +1615,7 @@ if __name__ == '__main__':
 
 
       "Dataset-Case-3__FR_UID_rule_updated": \
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/Indices/Processed_Malware_ONLY_TaskName_edgeattr"}
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/train"}
 
 
     }
@@ -1631,7 +1635,7 @@ if __name__ == '__main__':
         {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/test/Processed_Benign_ONLY_TaskName_edgeattr"},
 
       "Dataset-Case-3__FR_UID_rule_updated": \
-        {"5": None}
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/test"}
 
     }
     projection_datapath_Malware_Test_dict = {
@@ -1650,7 +1654,7 @@ if __name__ == '__main__':
         {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/test/Processed_Malware_ONLY_TaskName_edgeattr"},
 
       "Dataset-Case-3__FR_UID_rule_updated": \
-        {"5": None}
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/test"}
 
     }
 
@@ -2023,6 +2027,24 @@ if __name__ == '__main__':
             'split_shuffle_seed': 100}
          )
          return manual_space
+
+    def Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP() -> dict :
+         # /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-3__FR_UID_rule_updated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-31_232601/RandomForest__Dataset-Case-3__FR_UID_rule_updated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-31_232601.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': 'log2',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 500,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space
+
+
     ####################################################################################################################################################
 
 
@@ -2068,6 +2090,9 @@ if __name__ == '__main__':
        
     elif search_space_option == 'Best_RF__Dataset_1__4gram__FRNPeventCount__FRNP_OutgoIncom_eventCount':
        search_space = Best_RF__Dataset_1__4gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount()   
+
+    elif search_space_option == 'Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP':
+       search_space = Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP()   
 
     # -----------------------------------------------------------
 

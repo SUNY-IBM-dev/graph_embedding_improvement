@@ -9,7 +9,7 @@ if __name__ == "__main__":
       raise ValueError("'up_to_row' should only either be integer or None")
 
     dataset_csvpath =\
-      "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-28_155546/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-28_155546.csv"
+      "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-3__FR_UID_rule_updated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-31_232601/RandomForest__Dataset-Case-3__FR_UID_rule_updated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-31_232601.csv"
     # -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     tuning_df = pd.read_csv(dataset_csvpath)

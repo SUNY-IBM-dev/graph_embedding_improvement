@@ -47,41 +47,53 @@ if __name__ == "__main__":
 
    # distribute benign_train
    for benign_train_fname in original_split_benign_train__fnames:
-
-      src = os.path.join(all_benign_pickles_to_distribute__dpath, benign_train_fname)
-      dest = os.path.join(destination_benign_train__dpath, benign_train_fname)
-      shutil.copy(source = src, 
-                  destination = dest)
-      print(f"{benign_train_fname} copied successfully from\n{src}\nto\n{dest}.", flush = True)
-
+      try:
+         src = os.path.join(all_benign_pickles_to_distribute__dpath, benign_train_fname)
+         dest = os.path.join(destination_benign_train__dpath, benign_train_fname)
+         shutil.copy(src = src, 
+                     dst = dest)
+         # print(f"{benign_train_fname} copied successfully from\n{src}\nto\n{dest}.", flush = True)
+      except:
+         print(f"execption with {benign_train_fname}")
 
    # distribute benign_test
    for benign_test_fname in original_split_benign_test__fnames:
+      try:
 
-      src = os.path.join(all_benign_pickles_to_distribute__dpath, benign_test_fname)
-      dest = os.path.join(destination_benign_test__dpath, benign_test_fname)
-      shutil.copy(source = src, 
-                  destination = dest)
-      print(f"{benign_test_fname} copied successfully from\n{src}\nto\n{dest}.", flush = True)      
-
+         src = os.path.join(all_benign_pickles_to_distribute__dpath, benign_test_fname)
+         dest = os.path.join(destination_benign_test__dpath, benign_test_fname)
+         shutil.copy(src = src, 
+                     dst = dest)
+         # print(f"{benign_test_fname} copied successfully from\n{src}\nto\n{dest}.", flush = True)      
+      except:
+         print(f"execption with {benign_train_fname}")
 
    # distribute malware_train
    for malware_train_fname in original_split_malware_train__fnames:
-
-      src = os.path.join(all_malware_pickles_to_distribute__dpath, malware_train_fname)
-      dest = os.path.join(destination_malware_train__dpath, malware_train_fname)
-      shutil.copy(source = src, 
-                  destination = dest)
-      print(f"{malware_train_fname} copied successfully from\n{src}\nto\n{dest}.", flush = True)      
-
+      try:
+         src = os.path.join(all_malware_pickles_to_distribute__dpath, malware_train_fname)
+         dest = os.path.join(destination_malware_train__dpath, malware_train_fname)
+         shutil.copy(src = src, 
+                     dst = dest)
+         # print(f"{malware_train_fname} copied successfully from\n{src}\nto\n{dest}.", flush = True)      
+      except:
+         print(f"execption with {malware_train_fname}")
 
    # distribute malware_test
    for malware_test_fname in original_split_malware_test__fnames:
-      src = os.path.join(all_malware_pickles_to_distribute__dpath, malware_test_fname)
-      dest = os.path.join(destination_malware_test__dpath, malware_test_fname)
-      shutil.copy(source = src, 
-                  destination = dest)
-      print(f"{malware_test_fname} copied successfully from\n{src}\nto\n{dest}.", flush = True)      
-
+      try:
+         src = os.path.join(all_malware_pickles_to_distribute__dpath, malware_test_fname)
+         dest = os.path.join(destination_malware_test__dpath, malware_test_fname)
+         shutil.copy(src = src, 
+                     dst = dest)
+         # print(f"{malware_test_fname} copied successfully from\n{src}\nto\n{dest}.", flush = True)      
+      except: 
+         print(f"execption with {malware_test_fname}")
 
    print("done", flush=True)
+
+
+   # assert set(os.listdir(destination_benign_train__dpath)) == set(original_split_benign_train__fnames)
+   # assert set(os.listdir(destination_malware_train__dpath)) == set(original_split_malware_train__fnames)
+   # assert set(os.listdir(destination_benign_test__dpath)) == set(original_split_benign_test__fnames)
+   # assert set(os.listdir(destination_malware_test__dpath)) == set(original_split_malware_test__fnames)   
