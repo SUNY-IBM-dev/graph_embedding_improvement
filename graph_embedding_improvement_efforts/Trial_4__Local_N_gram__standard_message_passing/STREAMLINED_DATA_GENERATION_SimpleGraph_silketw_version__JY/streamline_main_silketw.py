@@ -2967,19 +2967,24 @@ non_trace_command_malware_case2 = {
 
 # SET
 subgraphs_savedirpath = \
-"/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/Indices"
-# /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/Indices
-# /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/Indices
-# /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/Indices
+"/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/Indices"
+# "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/Indices"
+# "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/Indices"
+# "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/Indices"
+
+
+
+
+
+
 
 elastic_search_machine = "panther"
 
 #  non_trace_command_benign_case1 , non_trace_command_benign_case2
 #  non_trace_command_malware_case1 , non_trace_command_malware_case2 
-es_indices_and_ProcessIDs = non_trace_command_benign_case1 
+es_indices_and_ProcessIDs = non_trace_command_malware_case2 
 
-# dir_start_pattern doesn't have to be exact. -- JY @ 2024-1-2 : just leave it as is, even when benign, handled
-dir_start_pattern = "benign" 
+dir_start_pattern = "malware"  # change based on the indice
 
 # SET
 main_offline_train_data_dirpath=\
@@ -2994,7 +2999,7 @@ main_offline_test_data_main_dirpath=\
 # SET non_target and/or target
 # non_target = False
 target = True # typically malware
-label = "Benign" # change based on the indices 
+label = "Malware" # change based on the indices 
 if label not in ["Benign", "Malware"]:
    raise ValueError("label must be either 'Benign' or 'Malware' ; case-matters b/c of compatibiltiy with existing code")
 
@@ -3012,8 +3017,8 @@ Test_ratio = 1 - Train_ratio
 
 
 # SET steps
-target__step_1 = True # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
-target__step_2 = True   # organize into Label Dir
+target__step_1 = False # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
+target__step_2 = False   # organize into Label Dir
 target__step_3 = True   # generate process pickle files
 target__step_4 = False
 
@@ -3109,7 +3114,7 @@ if __name__ == "__main__":
          #                            But since largi is helping us with fine-grained filename / registry name key-pattern encoding,
          #                            following function is not compatible with that. So need to write a run-data_processor_* version compatible with largi's update im future
          
-         run_data_processor_MultiEdge_5BitNodeAttr_only_taskname_edgeattr_ver(data_type = label, 
+         run_data_processor_SimpleGraph_5BitNodeAttr_TasknameNgramCompEdgeAttr(data_type = label, 
                                                                                load_and_save_path = subgraphs_savedirpath)  
 
          Processed_picklefiles_dirpath = f"{subgraphs_savedirpath}/Processed_{label}_ONLY_TaskName_edgeattr"
