@@ -134,7 +134,7 @@ if __name__ == '__main__':
                                   'Dataset_2__NoTrace_UIDruleUpdated',
 
                                   ], 
-                        default = ['Dataset-Case-2'])
+                        default = ['Dataset_2__NoTrace_UIDruleUpdated'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -217,7 +217,7 @@ if __name__ == '__main__':
                          default = ["felis"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [7])  # Added by JY @ 2024-1-20
    # ==================================================================================================================================
 
     # cmd args
@@ -262,10 +262,10 @@ if __name__ == '__main__':
        if "thread_level__N>1_grams_events__nodetype_5bit" in graph_embedding_option:
          
          if "ngram" in baseline_option.lower():
-            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__Ngram}gram_OnlyN_{thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram}_{graph_embedding__pool_option}pool__+__{baseline_option}_{baseline__Ngram}gram__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
+            run_identifier = f"{model_choice}_{dataset_choice}_{search_space_option}_{K}FoldCV_{search_on_train__or__final_test}_{graph_embedding_option}_{graph_embedding__Ngram}gram_{graph_embedding__pool_option}pool_+_{baseline_option}_{baseline__Ngram}gram_{combine_option}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
 
          else: # simple-counting
-            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}_{graph_embedding__Ngram}gram_OnlyN_{thread_level__Ngrams_events__nodetype_5bit____only_train_specified_Ngram}_{graph_embedding__pool_option}pool__+__{baseline_option}__{combine_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
+            run_identifier = f"{model_choice}_{dataset_choice}_{search_space_option}_{K}FoldCV_{search_on_train__or__final_test}_{graph_embedding_option}_{graph_embedding__Ngram}gram_{graph_embedding__pool_option}pool_+_{baseline_option}__{combine_option}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"             
        
        else: # other possible graph-embedding approaches      
 
