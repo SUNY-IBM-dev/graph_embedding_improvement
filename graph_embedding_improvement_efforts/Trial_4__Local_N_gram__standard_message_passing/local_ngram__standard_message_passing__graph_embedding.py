@@ -15,6 +15,7 @@ from code.trainer import TrainModel
 '''
 
 sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/source")
+sys.path.append("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/source")
 
 from source.dataprocessor_graphs import LoadGraphs
 from source.model import GIN
@@ -833,8 +834,16 @@ if __name__ == '__main__':
                         default = ["RandomForest"] )
 
     parser.add_argument('-data', '--dataset', 
-                        choices= ['Dataset-Case-1', 'Dataset-Case-2'], 
-                        default = ["Dataset-Case-1"])
+                        choices= ['Dataset-Case-1',
+                                  'Dataset-Case-2',
+                                  'Dataset-Case-3',
+                                  'Dataset-Case-3__FR_UID_rule_updated',
+                                 
+                                   # 
+                                  'Dataset_1__NoTrace_UIDruleUpdated',
+                                  'Dataset_2__NoTrace_UIDruleUpdated',
+                                  ], 
+                        default = ['Dataset_2__NoTrace_UIDruleUpdated'])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -886,6 +895,15 @@ if __name__ == '__main__':
     parser.add_argument('--N', nargs = 1, type = int, 
                         default = [4])  # Added by JY @ 12-23
 
+
+    # --------- JY @ 2024-1-23: For path resolve -- os.expanduser() also dependent on curr-dir, so better to do this way for now.
+    parser.add_argument("--running_from_machine", 
+                                 
+                         choices= ["panther", "ocelot", "felis"], 
+                         default = ["ocelot"] )
+    
+    parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
+                        default = [4])  # Added by JY @ 2024-1-20
    
    # ==================================================================================================================================
 
@@ -904,7 +922,17 @@ if __name__ == '__main__':
     search_space_option = parser.parse_args().search_space_option[0]
     search_on_train__or__final_test = parser.parse_args().search_on_train__or__final_test[0] 
 
+
+    running_from_machine = parser.parse_args().running_from_machine[0] 
+    RF__n_jobs = parser.parse_args().RF__n_jobs[0] 
+
     # -----------------------------------------------------------------------------------------------------------------------------------
+
+    if running_from_machine == "ocelot":
+      abs_path_to_tabby = "/data/d1/jgwak1/tabby"
+    else: # panther or felis
+      abs_path_to_tabby = "/home/jgwak1/tabby"  
+
     model_cls_name = re.search(r"'(.*?)'", str(model_cls)).group(1)
 
 
@@ -936,45 +964,118 @@ if __name__ == '__main__':
 
     ###############################################################################################################################################
     # Set data paths
-    ###############################################################################################################################################
-    # Set data paths
     projection_datapath_Benign_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       #PW: Dataset-Case-1 
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train",
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr", # dim-node == 5
+         "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case1/train"}, # dim-node == 35 (adhoc)
+
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train"
+        {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
+         "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/train"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/train/Processed_Benign_ONLY_TaskName_edgeattr"},
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/train"},
+
+      # JY @ 2024-2-3
+      'Dataset_1__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/train/Processed_Benign_ONLY_TaskName_edgeattr"}, # dim-node == 5
+      'Dataset_2__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/train/Processed_Benign_ONLY_TaskName_edgeattr"},
+
     }
     projection_datapath_Malware_Train_dict = {
       # Dataset-1 (B#288, M#248) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train",
+      {"5":f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+       "35":f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case1/train"},
+
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#662, M#628)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train"
+      {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
+       "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/train"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/train/Processed_Malware_ONLY_TaskName_edgeattr"},
+
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/train"},
+
+
+      # JY @ 2024-2-3
+      'Dataset_1__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/train/Processed_Malware_ONLY_TaskName_edgeattr"}, # dim-node == 5
+      'Dataset_2__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/train/Processed_Malware_ONLY_TaskName_edgeattr"},
+
+
+
     }
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test",
+      {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+       "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case1/test"},
+
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test"
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
+          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/test"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/test/Processed_Benign_ONLY_TaskName_edgeattr"},
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/test"},
+
+
+
+      # JY @ 2024-2-3
+      'Dataset_1__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/test/Processed_Benign_ONLY_TaskName_edgeattr"}, # dim-node == 5
+      'Dataset_2__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/test/Processed_Benign_ONLY_TaskName_edgeattr"},
+
     }
+
+
+
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
-         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test",
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case1/test"},
+
       # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       # Dataset-2 (B#167, M#158)
       "Dataset-Case-2": \
-         "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test"
+         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
+          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/test"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/test/Processed_Malware_ONLY_TaskName_edgeattr"},
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/test"},
+
+
+
+      # JY @ 2024-2-3
+      'Dataset_1__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/test/Processed_Malware_ONLY_TaskName_edgeattr"}, # dim-node == 5
+      'Dataset_2__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/test/Processed_Malware_ONLY_TaskName_edgeattr"},
     }
+
     ###############################################################################################################################################
 
     _num_classes = 2  # number of class labels and always binary classification.
@@ -1454,8 +1555,8 @@ if __name__ == '__main__':
                                     )
 
 
-               elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier'and\
-                  'randomforest' in model_cls_name.lower():
+               elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier' or \
+                  'randomforest' in search_space_option.lower() or 'rf' in search_space_option.lower():
                   model = model_cls(
                                     n_estimators= hyperparam_set['n_estimators'],
                                     criterion= hyperparam_set['criterion'], 
@@ -1464,8 +1565,16 @@ if __name__ == '__main__':
                                     min_samples_leaf= hyperparam_set['min_samples_leaf'], 
                                     max_features= hyperparam_set['max_features'],
                                     bootstrap= hyperparam_set['bootstrap'],
-                                    random_state= hyperparam_set['random_state']
+                                    random_state= hyperparam_set['random_state'],
+
+                                    n_jobs = RF__n_jobs
                                     )
+                                    # Added by JY @ 2024-1-23:
+                                    #     "n_jobs" == This parameter is used to specify how many concurrent processes or threads should be used for routines that are parallelized with joblib.
+                                    #     The number of jobs to run in parallel. fit, predict, decision_path and apply are all parallelized over the trees.
+                                    #     -1 means using all processors
+                                    #     https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier.fit
+                                    #     https://scikit-learn.org/stable/glossary.html#term-n_jobs
 
 
                elif model_cls_name == 'sklearn.linear_model._logistic.LogisticRegression'and\
@@ -1490,37 +1599,86 @@ if __name__ == '__main__':
                data_names = X['data_name']
 
                for data_name in data_names:
-
+                     # benign --------------
+                     if "powershell-master" in data_name:
+                        X_grouplist.append("benign_fleschutz")
+                     elif "jhochwald" in data_name:
+                        X_grouplist.append("benign_jhochwald")
+                     elif "devblackops" in data_name:
+                        X_grouplist.append("benign_devblackops")
+                     elif "farag2" in data_name:
+                        X_grouplist.append("benign_farag2")
+                     elif "jimbrig" in data_name:
+                        X_grouplist.append("benign_jimbrig")
+                     elif "jrussellfreelance" in data_name:
+                        X_grouplist.append("benign_jrussellfreelance")
+                     elif "nickrod518" in data_name:
+                        X_grouplist.append("benign_nickrod518")
+                     elif "redttr" in data_name:
+                        X_grouplist.append("benign_redttr")
+                     elif "sysadmin-survival-kit" in data_name:
+                        X_grouplist.append("benign_sysadmin-survival-kit")
+                     elif "stevencohn" in data_name:
+                        X_grouplist.append("benign_stevencohn")
+                     elif "ledragox" in data_name:
+                        X_grouplist.append("benign_ledrago")
+                     elif "floriantim" in data_name: # Added by JY @ 2024-2-3 : pattern in dataset-2
+                        X_grouplist.append("benign_floriantim")
+                     elif "nickbeau" in data_name: # Added by JY @ 2024-2-3 : pattern in dataset-2
+                        X_grouplist.append("benign_nickbeau")
                      # malware ------------------------------------------
-                     if "empire" in data_name: X_grouplist.append("malware_empire")
-                     elif "invoke_obfuscation" in data_name: X_grouplist.append("malware_invoke_obfuscation")
-                     elif "nishang" in data_name: X_grouplist.append("malware_nishang")
-                     elif "poshc2" in data_name: X_grouplist.append("malware_poshc2")
-                     elif "mafia" in data_name: X_grouplist.append("malware_mafia")
-                     elif "offsec" in data_name: X_grouplist.append("malware_offsec")
-                     elif "powershellery" in data_name: X_grouplist.append("malware_powershellery")
-                     elif "psbits" in data_name: X_grouplist.append("malware_psbits")
-                     elif "pt_toolkit" in data_name: X_grouplist.append("malware_pt_toolkit")
-                     elif "randomps" in data_name: X_grouplist.append("malware_randomps")
-                     elif "smallposh" in data_name: X_grouplist.append("malware_smallposh")
-                     #PW: need to change depends on all types e.g., malware_rest
-                     elif "asyncrat" in data_name: X_grouplist.append("malware_asyncrat")
-                     elif "bumblebee" in data_name: X_grouplist.append("malware_bumblebee")
-                     elif "cobalt_strike" in data_name: X_grouplist.append("malware_cobalt_strike")
-                     elif "coinminer" in data_name: X_grouplist.append("malware_coinminer")
-                     elif "gozi" in data_name: X_grouplist.append("malware_gozi")
-                     elif "guloader" in data_name: X_grouplist.append("malware_guloader")
-                     elif "netsupport" in data_name: X_grouplist.append("malware_netsupport")
-                     elif "netwalker" in data_name: X_grouplist.append("malware_netwalker")
-                     elif "nw0rm" in data_name: X_grouplist.append("malware_nw0rm")
-                     elif "quakbot" in data_name: X_grouplist.append("malware_quakbot")
-                     elif "quasarrat" in data_name: X_grouplist.append("malware_quasarrat")
-                     elif "rest" in data_name: X_grouplist.append("malware_rest")
-                     elif "metasploit" in data_name: X_grouplist.append("malware_metasploit")                       
-                     
-                     # benign -------------- # PW:for silketw we dont have benign source level identifier                  
+                     elif "empire" in data_name:
+                        X_grouplist.append("malware_empire")
+                     elif "invoke_obfuscation" in data_name:
+                        X_grouplist.append("malware_invoke_obfuscation")
+                     elif "nishang" in data_name:
+                        X_grouplist.append("malware_nishang")
+                     elif "poshc2" in data_name:
+                        X_grouplist.append("malware_poshc2")
+                     elif "mafia" in data_name:
+                        X_grouplist.append("malware_mafia")
+                     elif "offsec" in data_name:
+                        X_grouplist.append("malware_offsec")
+                     elif "powershellery" in data_name:
+                        X_grouplist.append("malware_powershellery")
+                     elif "psbits" in data_name:
+                        X_grouplist.append("malware_psbits")
+                     elif "pt_toolkit" in data_name:
+                        X_grouplist.append("malware_pt_toolkit")
+                     elif "randomps" in data_name:
+                        X_grouplist.append("malware_randomps")
+                     elif "smallposh" in data_name:
+                        X_grouplist.append("malware_smallposh")
+                     elif "asyncrat" in data_name: #PW: need to change depends on all types e.g., malware_rest
+                        X_grouplist.append("malware_asyncrat")
+                     elif "bumblebee" in data_name:
+                        X_grouplist.append("malware_bumblebee")
+                     elif "cobalt_strike" in data_name:
+                        X_grouplist.append("malware_cobalt_strike")
+                     elif "coinminer" in data_name:
+                        X_grouplist.append("malware_coinminer")
+                     elif "gozi" in data_name:
+                        X_grouplist.append("malware_gozi")
+                     elif "guloader" in data_name:
+                        X_grouplist.append("malware_guloader")
+                     elif "netsupport" in data_name:
+                        X_grouplist.append("malware_netsupport")
+                     elif "netwalker" in data_name:
+                        X_grouplist.append("malware_netwalker")
+                     elif "nw0rm" in data_name:
+                        X_grouplist.append("malware_nw0rm")
+                     elif "quakbot" in data_name:
+                        X_grouplist.append("malware_quakbot")
+                     elif "quasarrat" in data_name:
+                        X_grouplist.append("malware_quasarrat")
+                     elif "rest" in data_name:
+                        X_grouplist.append("malware_rest")
+                     elif "metasploit" in data_name:
+                        X_grouplist.append("malware_metasploit")                       
+                     # if "recollected" in data_name:
+                        # X_grouplist.append("malware_recollected")
                      else:
-                        X_grouplist.append("benign")
+                        raise ValueError(f"unidentifeid pattern in {data_name}")
 
                # correctness of X_grouplist can be checked by following
                # list(zip(X, [data_name for data_name in X.index], y, X_grouplist))
@@ -1665,19 +1823,26 @@ if __name__ == '__main__':
                                     )
 
 
-               elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier' or\
-                    'randomforest' in model_cls_name.lower():
-                    
-                     model = model_cls(
-                                    n_estimators= hyperparam_set['n_estimators'],
-                                    criterion= hyperparam_set['criterion'], 
-                                    max_depth= hyperparam_set['max_depth'],
-                                    min_samples_split= hyperparam_set['min_samples_split'], 
-                                    min_samples_leaf= hyperparam_set['min_samples_leaf'], 
-                                    max_features= hyperparam_set['max_features'],
-                                    bootstrap= hyperparam_set['bootstrap'],
-                                    random_state= hyperparam_set['random_state']
-                                    )
+               elif model_cls_name == 'sklearn.ensemble._forest.RandomForestClassifier' or \
+                    'randomforest' in search_space_option.lower() or 'rf' in search_space_option.lower():
+                  model = model_cls(
+                                 n_estimators= hyperparam_set['n_estimators'],
+                                 criterion= hyperparam_set['criterion'], 
+                                 max_depth= hyperparam_set['max_depth'],
+                                 min_samples_split= hyperparam_set['min_samples_split'], 
+                                 min_samples_leaf= hyperparam_set['min_samples_leaf'], 
+                                 max_features= hyperparam_set['max_features'],
+                                 bootstrap= hyperparam_set['bootstrap'],
+                                 random_state= hyperparam_set['random_state'],
+
+                                 n_jobs = RF__n_jobs
+                                 )
+                                 # Added by JY @ 2024-1-23:
+                                 #     "n_jobs" == This parameter is used to specify how many concurrent processes or threads should be used for routines that are parallelized with joblib.
+                                 #     The number of jobs to run in parallel. fit, predict, decision_path and apply are all parallelized over the trees.
+                                 #     -1 means using all processors
+                                 #     https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier.fit
+                                 #     https://scikit-learn.org/stable/glossary.html#term-n_jobs
 
 
                elif model_cls_name == 'sklearn.linear_model._logistic.LogisticRegression' or\

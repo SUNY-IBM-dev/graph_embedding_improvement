@@ -16,11 +16,16 @@ from code.trainer import TrainModel
 
 sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/source")
 
+sys.path.append("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach/source")
+
+
 from source.dataprocessor_graphs import LoadGraphs
 from source.model import GIN
 from source.trainer_meng_ver import TrainModel
 
 sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach")
+sys.path.append("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Combining__Baseline_Approach__with__Treatment_Approach")
+
 from _baseline_graph_embedding_functions import *
 from _treatment_graph_embedding_functions import *
 from _explanation_functions import *
@@ -122,6 +127,12 @@ if __name__ == '__main__':
     parser.add_argument('-data', '--dataset', 
                         choices= ['Dataset-Case-1',
                                   'Dataset-Case-2' # try
+
+
+                                   # 
+                                  'Dataset_1__NoTrace_UIDruleUpdated',
+                                  'Dataset_2__NoTrace_UIDruleUpdated',
+
                                   ], 
                         default = ['Dataset-Case-2'])
 
@@ -141,7 +152,7 @@ if __name__ == '__main__':
                                   'Best_RF__Dataset_1__baseline3_4gram__threadlevel_4gram__concat',
                                   'Best_RF__Dataset_2__baseline3_4gram__threadlevel_4gram__concat',
                                   ], 
-                                  default = ["Best_RF__Dataset_2__baseline3_4gram__threadlevel_4gram__concat"])
+                                  default = ["RandomForest_searchspace_1"])
 
 
 
@@ -185,7 +196,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     parser.add_argument('--combine_option', 
@@ -202,8 +213,8 @@ if __name__ == '__main__':
     # --------- JY @ 2024-1-23: For path resolve -- os.expanduser() also dependent on curr-dir, so better to do this way for now.
     parser.add_argument("--running_from_machine", 
                                  
-                         choices= ["panther", "ocelot"], 
-                         default = ["panther"] )
+                         choices= ["panther", "ocelot", "felis"], 
+                         default = ["felis"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
                         default = [1])  # Added by JY @ 2024-1-20
@@ -240,7 +251,7 @@ if __name__ == '__main__':
 
     if running_from_machine == "ocelot":
       abs_path_to_tabby = "/data/d1/jgwak1/tabby"
-    else: # ocelot
+    else: # panther, felis
       abs_path_to_tabby = "/home/jgwak1/tabby" 
 
     model_cls_name = re.search(r"'(.*?)'", str(model_cls)).group(1)
@@ -298,7 +309,6 @@ if __name__ == '__main__':
     trace_filename = f'traces_stratkfold_double_strat_{model_cls_name}__generated@'+str(datetime.now())+".txt" 
 
 
-
     ###############################################################################################################################################
     # Set data paths
     projection_datapath_Benign_Train_dict = {
@@ -313,6 +323,18 @@ if __name__ == '__main__':
       "Dataset-Case-2": \
         {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr",
          "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/train"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/train/Processed_Benign_ONLY_TaskName_edgeattr"},
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/train"},
+
+      # JY @ 2024-2-3
+      'Dataset_1__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/train/Processed_Benign_ONLY_TaskName_edgeattr"}, # dim-node == 5
+      'Dataset_2__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/train/Processed_Benign_ONLY_TaskName_edgeattr"},
 
     }
     projection_datapath_Malware_Train_dict = {
@@ -326,6 +348,21 @@ if __name__ == '__main__':
       "Dataset-Case-2": \
       {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr",
        "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/train"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/train/Processed_Malware_ONLY_TaskName_edgeattr"},
+
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/train"},
+
+
+      # JY @ 2024-2-3
+      'Dataset_1__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/train/Processed_Malware_ONLY_TaskName_edgeattr"}, # dim-node == 5
+      'Dataset_2__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/train/Processed_Malware_ONLY_TaskName_edgeattr"},
+
 
 
     }
@@ -340,8 +377,25 @@ if __name__ == '__main__':
       "Dataset-Case-2": \
          {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr",
           "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Benign_case2/test"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_commad_benign_dataset/test/Processed_Benign_ONLY_TaskName_edgeattr"},
+
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Benign/test"},
+
+
+
+      # JY @ 2024-2-3
+      'Dataset_1__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/test/Processed_Benign_ONLY_TaskName_edgeattr"}, # dim-node == 5
+      'Dataset_2__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/test/Processed_Benign_ONLY_TaskName_edgeattr"},
 
     }
+
+
+
     projection_datapath_Malware_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
@@ -353,7 +407,20 @@ if __name__ == '__main__':
       "Dataset-Case-2": \
          {"5": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr",
           "35": f"{abs_path_to_tabby}/SILKETW_DATASET_NEW/Malware_case2/test"},
+      # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      "Dataset-Case-3": \
+        {"5": f"{abs_path_to_tabby}/Graph_embedding_aka_signal_amplification_files/Non_trace_command_malware_dataset/test/Processed_Malware_ONLY_TaskName_edgeattr"},
 
+      "Dataset-Case-3__FR_UID_rule_updated": \
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/test"},
+
+
+
+      # JY @ 2024-2-3
+      'Dataset_1__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/test/Processed_Malware_ONLY_TaskName_edgeattr"}, # dim-node == 5
+      'Dataset_2__NoTrace_UIDruleUpdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/test/Processed_Malware_ONLY_TaskName_edgeattr"},
     }
 
     _num_classes = 2  # number of class labels and always binary classification.
@@ -956,31 +1023,35 @@ if __name__ == '__main__':
             data_names = X['data_name']
 
             for data_name in data_names:
-                  # benign -------------- # PW:for silketw we dont have benign source level identifier
-                  # if "fleschutz" in data_name:
-                     # X_grouplist.append("benign_fleschutz")
-                  # if "jhochwald" in data_name:
-                     # X_grouplist.append("benign_jhochwald")
-                  # if "devblackops" in data_name:
-                     # X_grouplist.append("benign_devblackops")
-                  # if "farag2" in data_name:
-                     # X_grouplist.append("benign_farag2")
-                  # if "jimbrig" in data_name:
-                     # X_grouplist.append("benign_jimbrig")
-                  # if "jrussellfreelance" in data_name:
-                     # X_grouplist.append("benign_jrussellfreelance")
-                  # if "nickrod518" in data_name:
-                     # X_grouplist.append("benign_nickrod518")
-                  # if "redttr" in data_name:
-                     # X_grouplist.append("benign_redttr")
-                  # if "sysadmin-survival-kit" in data_name:
-                     # X_grouplist.append("benign_sysadmin-survival-kit")
-                  # if "stevencohn" in data_name:
-                     # X_grouplist.append("benign_stevencohn")
-                  # if "ledrago" in data_name:
-                     # X_grouplist.append("benign_ledrago")
+                  # benign --------------
+                  if "powershell-master" in data_name:
+                     X_grouplist.append("benign_fleschutz")
+                  elif "jhochwald" in data_name:
+                     X_grouplist.append("benign_jhochwald")
+                  elif "devblackops" in data_name:
+                     X_grouplist.append("benign_devblackops")
+                  elif "farag2" in data_name:
+                     X_grouplist.append("benign_farag2")
+                  elif "jimbrig" in data_name:
+                     X_grouplist.append("benign_jimbrig")
+                  elif "jrussellfreelance" in data_name:
+                     X_grouplist.append("benign_jrussellfreelance")
+                  elif "nickrod518" in data_name:
+                     X_grouplist.append("benign_nickrod518")
+                  elif "redttr" in data_name:
+                     X_grouplist.append("benign_redttr")
+                  elif "sysadmin-survival-kit" in data_name:
+                     X_grouplist.append("benign_sysadmin-survival-kit")
+                  elif "stevencohn" in data_name:
+                     X_grouplist.append("benign_stevencohn")
+                  elif "ledragox" in data_name:
+                     X_grouplist.append("benign_ledrago")
+                  elif "floriantim" in data_name: # Added by JY @ 2024-2-3 : pattern in dataset-2
+                     X_grouplist.append("benign_floriantim")
+                  elif "nickbeau" in data_name: # Added by JY @ 2024-2-3 : pattern in dataset-2
+                     X_grouplist.append("benign_nickbeau")
                   # malware ------------------------------------------
-                  if "empire" in data_name:
+                  elif "empire" in data_name:
                      X_grouplist.append("malware_empire")
                   elif "invoke_obfuscation" in data_name:
                      X_grouplist.append("malware_invoke_obfuscation")
@@ -1031,7 +1102,7 @@ if __name__ == '__main__':
                   # if "recollected" in data_name:
                      # X_grouplist.append("malware_recollected")
                   else:
-                      X_grouplist.append("benign")
+                     raise ValueError(f"unidentifeid pattern in {data_name}")
 
             # correctness of X_grouplist can be checked by following
             # list(zip(X, [data_name for data_name in X.index], y, X_grouplist))

@@ -1881,37 +1881,86 @@ if __name__ == '__main__':
                data_names = X['data_name']
 
                for data_name in data_names:
-
+                     # benign --------------
+                     if "powershell-master" in data_name:
+                        X_grouplist.append("benign_fleschutz")
+                     elif "jhochwald" in data_name:
+                        X_grouplist.append("benign_jhochwald")
+                     elif "devblackops" in data_name:
+                        X_grouplist.append("benign_devblackops")
+                     elif "farag2" in data_name:
+                        X_grouplist.append("benign_farag2")
+                     elif "jimbrig" in data_name:
+                        X_grouplist.append("benign_jimbrig")
+                     elif "jrussellfreelance" in data_name:
+                        X_grouplist.append("benign_jrussellfreelance")
+                     elif "nickrod518" in data_name:
+                        X_grouplist.append("benign_nickrod518")
+                     elif "redttr" in data_name:
+                        X_grouplist.append("benign_redttr")
+                     elif "sysadmin-survival-kit" in data_name:
+                        X_grouplist.append("benign_sysadmin-survival-kit")
+                     elif "stevencohn" in data_name:
+                        X_grouplist.append("benign_stevencohn")
+                     elif "ledragox" in data_name:
+                        X_grouplist.append("benign_ledrago")
+                     elif "floriantim" in data_name: # Added by JY @ 2024-2-3 : pattern in dataset-2
+                        X_grouplist.append("benign_floriantim")
+                     elif "nickbeau" in data_name: # Added by JY @ 2024-2-3 : pattern in dataset-2
+                        X_grouplist.append("benign_nickbeau")
                      # malware ------------------------------------------
-                     if "empire" in data_name: X_grouplist.append("malware_empire")
-                     elif "invoke_obfuscation" in data_name: X_grouplist.append("malware_invoke_obfuscation")
-                     elif "nishang" in data_name: X_grouplist.append("malware_nishang")
-                     elif "poshc2" in data_name: X_grouplist.append("malware_poshc2")
-                     elif "mafia" in data_name: X_grouplist.append("malware_mafia")
-                     elif "offsec" in data_name: X_grouplist.append("malware_offsec")
-                     elif "powershellery" in data_name: X_grouplist.append("malware_powershellery")
-                     elif "psbits" in data_name: X_grouplist.append("malware_psbits")
-                     elif "pt_toolkit" in data_name: X_grouplist.append("malware_pt_toolkit")
-                     elif "randomps" in data_name: X_grouplist.append("malware_randomps")
-                     elif "smallposh" in data_name: X_grouplist.append("malware_smallposh")
-                     #PW: need to change depends on all types e.g., malware_rest
-                     elif "asyncrat" in data_name: X_grouplist.append("malware_asyncrat")
-                     elif "bumblebee" in data_name: X_grouplist.append("malware_bumblebee")
-                     elif "cobalt_strike" in data_name: X_grouplist.append("malware_cobalt_strike")
-                     elif "coinminer" in data_name: X_grouplist.append("malware_coinminer")
-                     elif "gozi" in data_name: X_grouplist.append("malware_gozi")
-                     elif "guloader" in data_name: X_grouplist.append("malware_guloader")
-                     elif "netsupport" in data_name: X_grouplist.append("malware_netsupport")
-                     elif "netwalker" in data_name: X_grouplist.append("malware_netwalker")
-                     elif "nw0rm" in data_name: X_grouplist.append("malware_nw0rm")
-                     elif "quakbot" in data_name: X_grouplist.append("malware_quakbot")
-                     elif "quasarrat" in data_name: X_grouplist.append("malware_quasarrat")
-                     elif "rest" in data_name: X_grouplist.append("malware_rest")
-                     elif "metasploit" in data_name: X_grouplist.append("malware_metasploit")                       
-                     
-                     # benign -------------- # PW:for silketw we dont have benign source level identifier                  
+                     elif "empire" in data_name:
+                        X_grouplist.append("malware_empire")
+                     elif "invoke_obfuscation" in data_name:
+                        X_grouplist.append("malware_invoke_obfuscation")
+                     elif "nishang" in data_name:
+                        X_grouplist.append("malware_nishang")
+                     elif "poshc2" in data_name:
+                        X_grouplist.append("malware_poshc2")
+                     elif "mafia" in data_name:
+                        X_grouplist.append("malware_mafia")
+                     elif "offsec" in data_name:
+                        X_grouplist.append("malware_offsec")
+                     elif "powershellery" in data_name:
+                        X_grouplist.append("malware_powershellery")
+                     elif "psbits" in data_name:
+                        X_grouplist.append("malware_psbits")
+                     elif "pt_toolkit" in data_name:
+                        X_grouplist.append("malware_pt_toolkit")
+                     elif "randomps" in data_name:
+                        X_grouplist.append("malware_randomps")
+                     elif "smallposh" in data_name:
+                        X_grouplist.append("malware_smallposh")
+                     elif "asyncrat" in data_name: #PW: need to change depends on all types e.g., malware_rest
+                        X_grouplist.append("malware_asyncrat")
+                     elif "bumblebee" in data_name:
+                        X_grouplist.append("malware_bumblebee")
+                     elif "cobalt_strike" in data_name:
+                        X_grouplist.append("malware_cobalt_strike")
+                     elif "coinminer" in data_name:
+                        X_grouplist.append("malware_coinminer")
+                     elif "gozi" in data_name:
+                        X_grouplist.append("malware_gozi")
+                     elif "guloader" in data_name:
+                        X_grouplist.append("malware_guloader")
+                     elif "netsupport" in data_name:
+                        X_grouplist.append("malware_netsupport")
+                     elif "netwalker" in data_name:
+                        X_grouplist.append("malware_netwalker")
+                     elif "nw0rm" in data_name:
+                        X_grouplist.append("malware_nw0rm")
+                     elif "quakbot" in data_name:
+                        X_grouplist.append("malware_quakbot")
+                     elif "quasarrat" in data_name:
+                        X_grouplist.append("malware_quasarrat")
+                     elif "rest" in data_name:
+                        X_grouplist.append("malware_rest")
+                     elif "metasploit" in data_name:
+                        X_grouplist.append("malware_metasploit")                       
+                     # if "recollected" in data_name:
+                        # X_grouplist.append("malware_recollected")
                      else:
-                        X_grouplist.append("benign")
+                        raise ValueError(f"unidentifeid pattern in {data_name}")
 
                # correctness of X_grouplist can be checked by following
                # list(zip(X, [data_name for data_name in X.index], y, X_grouplist))

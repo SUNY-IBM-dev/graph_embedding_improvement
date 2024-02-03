@@ -441,8 +441,9 @@ def pretrain__countvectorizer_on_training_set__before_graph_embedding_generation
          
       '''
 
-      if Ngram <= 1:
-         ValueError("Ngram should be greater than 1 for this graph-embedding approach.\n-> AsiaCCS submission already handled thread-level 1gram event distirubtion")
+      # JY @ 2024-2-3: Just enable 1-gram
+      # if Ngram <= 1:
+      #    ValueError("Ngram should be greater than 1 for this graph-embedding approach.\n-> AsiaCCS submission already handled thread-level 1gram event distirubtion")
 
       pretrained_countvectorizers_list =[]
 
@@ -1481,6 +1482,8 @@ if __name__ == '__main__':
 
                                   'thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP', # implemented at 2024-1-29
 
+                                  'thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP', # TODO: implement
+
                                   ], 
                                   default = ['thread_level__N>1_grams_events__nodetype5bit'])
     
@@ -1503,7 +1506,7 @@ if __name__ == '__main__':
 
     # --------- For Thread-level N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [2])  # Added by JY @ 2024-1-20
+                        default = [4])  # Added by JY @ 2024-1-20
 
 
     parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
@@ -1515,10 +1518,10 @@ if __name__ == '__main__':
     parser.add_argument("--running_from_machine", 
                                  
                          choices= ["panther", "ocelot", "felis"], 
-                         default = ["ocelot"] )
+                         default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [4])  # Added by JY @ 2024-1-20
+                        default = [15])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 
