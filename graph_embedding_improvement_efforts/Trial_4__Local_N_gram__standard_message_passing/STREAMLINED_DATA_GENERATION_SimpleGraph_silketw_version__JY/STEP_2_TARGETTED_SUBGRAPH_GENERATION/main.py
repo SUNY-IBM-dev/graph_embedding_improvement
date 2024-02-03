@@ -7,6 +7,8 @@ import shutil
 import time
 
 sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/STREAMLINED_DATA_GENERATION_SimpleGraph_silketw_version__JY/STEP_2_TARGETTED_SUBGRAPH_GENERATION")
+sys.path.append("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/STREAMLINED_DATA_GENERATION_SimpleGraph_silketw_version__JY/STEP_2_TARGETTED_SUBGRAPH_GENERATION")
+
 # from model_v3_PW import FirstStep as fstep
 # from model_v3_PW import SecondStep as sstep
 # from model_v3_PW import EdgeDirection_Sorted_multigraph as ed

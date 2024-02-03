@@ -1047,15 +1047,15 @@ def appid2vec(value):
     else:
         return [0,0,0,0,0,0,1]
 
-ValueNamepath = '/data/d1/pwakodi1/VN.txt'
-VolumeNamepath = '/data/d1/pwakodi1/VoN.txt'
-with open(ValueNamepath, 'r') as VN:
-    line = VN.read().strip()
-    VNlist = line.split("\n")
+# ValueNamepath = '/data/d1/pwakodi1/VN.txt'
+# VolumeNamepath = '/data/d1/pwakodi1/VoN.txt'
+# with open(ValueNamepath, 'r') as VN:
+#     line = VN.read().strip()
+#     VNlist = line.split("\n")
 
-with open(VolumeNamepath,'r') as VoN:
-    line = VoN.read().strip()
-    VoNlist = line.split("\n")
+# with open(VolumeNamepath,'r') as VoN:
+#     line = VoN.read().strip()
+#     VoNlist = line.split("\n")
 
 
 def second_step(root_path):
