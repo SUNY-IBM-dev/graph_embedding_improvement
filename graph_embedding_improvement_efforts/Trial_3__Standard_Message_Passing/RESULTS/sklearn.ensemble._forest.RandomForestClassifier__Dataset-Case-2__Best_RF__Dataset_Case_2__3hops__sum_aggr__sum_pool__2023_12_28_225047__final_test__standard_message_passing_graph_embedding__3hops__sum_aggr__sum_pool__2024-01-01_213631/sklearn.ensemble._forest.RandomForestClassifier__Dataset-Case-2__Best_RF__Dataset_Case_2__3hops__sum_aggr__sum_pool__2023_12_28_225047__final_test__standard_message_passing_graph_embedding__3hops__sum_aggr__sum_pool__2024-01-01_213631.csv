@@ -1,2 +1,0 @@
-  ,bootstrap ,criterion ,max_depth ,max_features ,min_samples_leaf ,min_samples_split ,n_estimators ,random_state ,split_shuffle_seed ,Final_Test_Accuracy ,Final_Test_F1      ,Final_Test_Precision ,Final_Test_Recall  ,FN ,FP ,TN  ,TP
-0 ,True      ,gini      ,       15 ,             ,               1 ,                2 ,         100 ,           0 ,               100 , 0.8364197530864198 ,0.8215488215488216 ,  0.8714285714285714 ,0.7770700636942676 ,35 ,18 ,149 ,122
