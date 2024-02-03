@@ -53,9 +53,16 @@ def ts_to_int(iso_timestamp):
 
     return windows_filetime
 
-def from_elastic(idx):
+def from_elastic(idx, elastic_search_machine):
 
-    es = Elasticsearch(['http://ocelot.cs.binghamton.edu:9200'],timeout = 300)
+
+    elastic_search_machine = elastic_search_machine.lower()
+    if elastic_search_machine not in {'panther', 'ocelot'}:
+        raise ValueError(f"{elastic_search_machine} should be either 'panther' or 'ocelot'")
+
+    # es = Elasticsearch(['http://ocelot.cs.binghamton.edu:9200'],timeout = 300)
+    es = Elasticsearch([f'http://{elastic_search_machine}.cs.binghamton.edu:9200'],timeout = 300)
+
     es.indices.put_settings(index=idx,
                             body={'index':{
                             'max_result_window':999999999}})
@@ -1939,7 +1946,7 @@ def get_dicts(dicts_root,file_edge_dict,file_node_dict,file_thread_dict, proc_ed
     reg_thread.close()
 
     
-def first_step(idx, root_path):
+def first_step(idx, root_path, elastic_search_machine):
     
     # Added by JY @ 2023-03-02: Added 3rd argument "EventTypes_to_Exclude_set"    
     #  Elements in 'EventTypes_to_Exclude_set' will be in format of 
@@ -2000,7 +2007,7 @@ def first_step(idx, root_path):
     PROCESS_provider = '22fb2cd6-0e7b-422b-a0c7-2fad1fd0e716'
     REGISTRY_provider = '70eb4f03-c1de-4f73-a051-33d13d5413bd'
 
-    all_log_entries = from_elastic(idx)
+    all_log_entries = from_elastic(idx, elastic_search_machine)
     host_name = get_host() # part of the hash-function
 
     # Get providers data

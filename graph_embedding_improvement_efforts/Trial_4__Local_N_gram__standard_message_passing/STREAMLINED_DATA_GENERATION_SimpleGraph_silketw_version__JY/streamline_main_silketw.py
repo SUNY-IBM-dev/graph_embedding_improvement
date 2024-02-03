@@ -2972,6 +2972,7 @@ subgraphs_savedirpath = \
 # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/Indices
 # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/Indices
 
+elastic_search_machine = "panther"
 
 #  non_trace_command_benign_case1 , non_trace_command_benign_case2
 #  non_trace_command_malware_case1 , non_trace_command_malware_case2 
@@ -3012,8 +3013,10 @@ Test_ratio = 1 - Train_ratio
 
 # SET steps
 target__step_1 = True # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
-target__step_2 = True
-target__step_3 = False
+target__step_2 = True   # organize into Label Dir
+target__step_3 = True   # generate process pickle files
+target__step_4 = False
+
 
 
 
@@ -3062,7 +3065,8 @@ if __name__ == "__main__":
          processes=[]
          for es_indices_and_ProcessIDs_segment in es_indices_and_ProcessIDs_segments:
             proc = Process(target = run_Targetted_Subgraph_Generation, kwargs = {"ESIndex_ProcessID_dict": es_indices_and_ProcessIDs_segment,
-                                                                                 "subgraphs_to_save_dirpath": subgraphs_savedirpath})
+                                                                                 "subgraphs_to_save_dirpath": subgraphs_savedirpath,
+                                                                                 "elastic_search_machine": elastic_search_machine})
             proc.start()
             processes.append(proc)
          for proc in processes:
@@ -3075,11 +3079,12 @@ if __name__ == "__main__":
          print(f"\Targetted Subgraph Generation - {label} Step-1 elapsed time (#parallel-processes: {N_parallel}): {str(step1_done - step1_start)}", flush=True)
 
 
-      # (Step-2) Data-preprocess subgraphs into pickle files.
+      # (Step-2) Organize subgraphs into LABEL dir.
       if target__step_2:
          step2_start = datetime.datetime.now()
          # 3-1: organize and rename subgraphs for compatibility with the data-processor code
          #      > Referring to /data/d1/jgwak1/tabby/GENERAL_LOG_COLLECTION_SUBGRAPHS_20230203/make_data_processable_for_general_log_collection.py
+
 
          organize_and_rename_subgraphs_into_LABEL_dir( main_dirpath = subgraphs_savedirpath, 
                                                          dir_start_pattern= dir_start_pattern, 
@@ -3087,7 +3092,15 @@ if __name__ == "__main__":
          print(f"\nOrganized/Renamed and copied subgraphs to: {subgraphs_savedirpath}/{label}", flush=True)
          print(f"\nOrganized/Renamed and copied subgraphs to: {subgraphs_savedirpath}/{label}", flush=True)
 
-         # # 3-2: run the data-processor which will generate + save processed-pickle-files to 
+         step2_done = datetime.datetime.now()
+         # print(f"\nMalware Step-2 elapsed time: {str(step2_done - step2_start)}", flush=True)
+
+
+      # (Step-3) Data-preprocess subgraphs into pickle files.
+
+      if target__step_3:
+         step3_start = datetime.datetime.now()
+         # # 3.  run the data-processor which will generate + save processed-pickle-files to 
          # #      "subgraphs_savedirpath/Processed_Benign" directory.       
          # run_data_processor_MultiEdge_only_taskname_edgeattr_ver(data_type = label, load_and_save_path = subgraphs_savedirpath)   
          
@@ -3096,13 +3109,13 @@ if __name__ == "__main__":
          #                            But since largi is helping us with fine-grained filename / registry name key-pattern encoding,
          #                            following function is not compatible with that. So need to write a run-data_processor_* version compatible with largi's update im future
          
-         run_data_processor_SimpleGraph_5BitNodeAttr_TasknameNgramCompEdgeAttr(data_type = label, 
+         run_data_processor_MultiEdge_5BitNodeAttr_only_taskname_edgeattr_ver(data_type = label, 
                                                                                load_and_save_path = subgraphs_savedirpath)  
 
          Processed_picklefiles_dirpath = f"{subgraphs_savedirpath}/Processed_{label}_ONLY_TaskName_edgeattr"
          print(f"\nProcessed-data (pickle files) are saved to : {Processed_picklefiles_dirpath}", flush=True)
-         step2_done = datetime.datetime.now()
-         # print(f"\nMalware Step-2 elapsed time: {str(step2_done - step2_start)}", flush=True)
+         step3_done = datetime.datetime.now()
+         # print(f"\nMalware Step-2 elapsed time: {str(step3_done - step3_start)}", flush=True)
 
 
       # (Step-3) Train & Test split the newly created Processed-data,
@@ -3112,8 +3125,8 @@ if __name__ == "__main__":
       #          the 80% vs 20% ratio will be preserved, as we are also distributing new train and test data 
       #          based on that ratio. )
       #          + For future refernce, add a "txt file that records these increments of data."
-      if target__step_3:
-         step3_start = datetime.datetime.now()
+      if target__step_4:
+         step4_start = datetime.datetime.now()
 
          Processed_picklefiles_dirpath = f"{subgraphs_savedirpath}/Processed_{label}_ONLY_TaskName_edgeattr"
          source_dirpath = Processed_picklefiles_dirpath
@@ -3169,6 +3182,6 @@ if __name__ == "__main__":
             print(f"{test_pickle_cnt}. copied '{test_pkl}' from '{source_dirpath}' to '{test_dest_dirpath}'", flush= True, file= test_pickles_addition_record_fp)
             test_pickle_cnt += 1
 
-         step3_done = datetime.datetime.now()
+         step4_done = datetime.datetime.now()
 
-         print(f"\nStep-3 elapsed time: {str(step3_done - step3_start)}", flush=True)
+         print(f"\nStep-4 elapsed time: {str(step4_done - step4_start)}", flush=True)
