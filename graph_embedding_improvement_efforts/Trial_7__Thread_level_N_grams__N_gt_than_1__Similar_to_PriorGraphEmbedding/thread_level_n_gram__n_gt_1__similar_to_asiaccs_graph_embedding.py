@@ -1438,7 +1438,7 @@ if __name__ == '__main__':
                                   'Full_Dataset_1_NoTraceUIDupdated',
                                   'Full_Dataset_2_NoTraceUIDupdated',
                                   ], 
-                        default = ['Dataset_1__NoTrace_UIDruleUpdated'])
+                        default = ['Full_Dataset_2_NoTraceUIDupdated'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1509,7 +1509,7 @@ if __name__ == '__main__':
 
     # --------- For Thread-level N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [4])  # Added by JY @ 2024-1-20
+                        default = [1])  # Added by JY @ 2024-1-20
 
 
     parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
@@ -1524,7 +1524,7 @@ if __name__ == '__main__':
                          default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [15])  # Added by JY @ 2024-1-20
+                        default = [3])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 

@@ -38,12 +38,20 @@ def run_Targetted_Subgraph_Generation( ESIndex_ProcessID_dict, subgraphs_to_save
         try:
 
             
-            if os.path.exists(target_path):
-                 shutil.rmtree(target_path)
-            os.makedirs(target_path)
+            if not os.path.exists(target_path):
+                #shutil.rmtree(target_path)
+                os.makedirs(target_path)
             # #malware_path = os.path.expanduser('~/tabby/SUNY_IBM_Project/data/'+idx)
+            
+            # Added by JY @ 2024-2-4
+            print("First check if already subgraph is generated", flush= True)
+            if "graph.GraphML" in os.listdir(target_path):
+                print(f"Subgraph already exists for '{idx}' in\n{target_path}", flush= True)
+                continue
+
 
             print("Igraph generation Phase", flush= True)
+            
 
             # # Added by JY @ 2023-03-02: Added 3rd argument "EventTypes_to_Exclude_set"
             fstep.first_step(idx, target_path, elastic_search_machine)
