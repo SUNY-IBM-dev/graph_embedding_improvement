@@ -830,7 +830,7 @@ if __name__ == '__main__':
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
                      "LogisticRegression": LogisticRegression, "SVM": svm } 
-    parser.add_argument('-mod_cls', '--trad_model_cls', nargs = 1, type = str, 
+    parser.add_argument('-mod_cls', '--model_choice', nargs = 1, type = str, 
                         default = ["RandomForest"] )
 
     parser.add_argument('-data', '--dataset', 
@@ -850,10 +850,7 @@ if __name__ == '__main__':
                         
                         choices= [
                                   'local_ngram__standard_message_passing__graph_embedding', # Added by JY @ 2023-12-27
-                                  # vs. (for now)
-                                  'no_graph_structure__event_1gram_nodetype_5bit', 
-                                  'no_graph_structure__event_1gram',
-                                  'no_graph_structure__event_1gram_nodetype_5bit_and_Ahoc_Identifier',
+
                                   ], 
 
                                   default = ["local_ngram__standard_message_passing__graph_embedding"])
@@ -900,7 +897,7 @@ if __name__ == '__main__':
     parser.add_argument("--running_from_machine", 
                                  
                          choices= ["panther", "ocelot", "felis"], 
-                         default = ["ocelot"] )
+                         default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
                         default = [4])  # Added by JY @ 2024-1-20
@@ -909,7 +906,8 @@ if __name__ == '__main__':
 
     # cmd args
     K = parser.parse_args().K[0]
-    model_cls = model_cls_map[ parser.parse_args().trad_model_cls[0] ]
+    model_choice = parser.parse_args().model_choice[0]
+    model_cls = model_cls_map[ model_choice ]
     dataset_choice = parser.parse_args().dataset[0]
 
     n_hops = parser.parse_args().n_hops[0]
@@ -939,9 +937,9 @@ if __name__ == '__main__':
     if search_on_train__or__final_test in {"search_on_train", "search_on_all"}:
 
        if graph_embedding_option == "local_ngram__standard_message_passing__graph_embedding":
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__local_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+         run_identifier = f"{model_choice}_{dataset_choice}_{search_space_option}_{K}FoldCV_{search_on_train__or__final_test}_{graph_embedding_option}_Local{N_gram}gram_{n_hops}hop_{neighborhood_aggregation}aggr_{pool_option}pool_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
+         run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
        this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/RESULTS/{run_identifier}"
        experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
        if not os.path.exists(this_results_dirpath):
@@ -950,9 +948,9 @@ if __name__ == '__main__':
 
     if search_on_train__or__final_test == "final_test":
        if graph_embedding_option == "local_ngram__standard_message_passing__graph_embedding":
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__local_{N_gram}gram__{n_hops}hops__{neighborhood_aggregation}_aggr__{pool_option}_pool__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+         run_identifier = f"{model_choice}_{dataset_choice}_{search_space_option}_{search_on_train__or__final_test}_{graph_embedding_option}_Local{N_gram}gram_{n_hops}hop_{neighborhood_aggregation}aggr_{pool_option}pool_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
        else:
-         run_identifier = f"{model_cls_name}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
+         run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
 
        this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/RESULTS/{run_identifier}"
@@ -985,9 +983,9 @@ if __name__ == '__main__':
 
       # JY @ 2024-2-3
       'Dataset_1__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/train/Processed_Benign_ONLY_TaskName_edgeattr"}, # dim-node == 5
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/train"}, # dim-node == 5
       'Dataset_2__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/train/Processed_Benign_ONLY_TaskName_edgeattr"},
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/train"},
 
     }
     projection_datapath_Malware_Train_dict = {
@@ -1012,9 +1010,9 @@ if __name__ == '__main__':
 
       # JY @ 2024-2-3
       'Dataset_1__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/train/Processed_Malware_ONLY_TaskName_edgeattr"}, # dim-node == 5
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/train"}, # dim-node == 5
       'Dataset_2__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/train/Processed_Malware_ONLY_TaskName_edgeattr"},
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/train"},
 
 
 
@@ -1041,9 +1039,9 @@ if __name__ == '__main__':
 
       # JY @ 2024-2-3
       'Dataset_1__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/test/Processed_Benign_ONLY_TaskName_edgeattr"}, # dim-node == 5
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/test"}, # dim-node == 5
       'Dataset_2__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/test/Processed_Benign_ONLY_TaskName_edgeattr"},
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/test"},
 
     }
 
@@ -1071,9 +1069,9 @@ if __name__ == '__main__':
 
       # JY @ 2024-2-3
       'Dataset_1__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/test/Processed_Malware_ONLY_TaskName_edgeattr"}, # dim-node == 5
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/test"}, # dim-node == 5
       'Dataset_2__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/test/Processed_Malware_ONLY_TaskName_edgeattr"},
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/test"},
     }
 
     ###############################################################################################################################################
@@ -1085,10 +1083,10 @@ if __name__ == '__main__':
     _dim_edge = 62 #72    # (or edge_dim) ; num edge features
 
 
-    _benign_train_data_path = projection_datapath_Benign_Train_dict[dataset_choice]
-    _malware_train_data_path = projection_datapath_Malware_Train_dict[dataset_choice]
-    _benign_final_test_data_path = projection_datapath_Benign_Test_dict[dataset_choice]
-    _malware_final_test_data_path = projection_datapath_Malware_Test_dict[dataset_choice]
+    _benign_train_data_path = projection_datapath_Benign_Train_dict[dataset_choice][str(_dim_node)]
+    _malware_train_data_path = projection_datapath_Malware_Train_dict[dataset_choice][str(_dim_node)]
+    _benign_final_test_data_path = projection_datapath_Benign_Test_dict[dataset_choice][str(_dim_node)]
+    _malware_final_test_data_path = projection_datapath_Malware_Test_dict[dataset_choice][str(_dim_node)]
 
 
     print(f"dataset_choice: {dataset_choice}", flush=True)

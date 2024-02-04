@@ -20,45 +20,45 @@ if __name__ == "__main__":
    # ========================================================================================================
    # PREDEFINED SPLITS (ONLY FOR SPLITS INFORMATION **) 
    #  Predefined Split Dataset-1   
-   PredefinedSplit__Dataset_case1__benign_train__pickles_dirpath = "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
-   PredefinedSplit__Dataset_case1__benign_final_test__pickles_dirpath = "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
+   PredefinedSplit__Dataset_case1__benign_train__pickles_dirpath = "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/train/Processed_Benign_ONLY_TaskName_edgeattr"
+   PredefinedSplit__Dataset_case1__benign_final_test__pickles_dirpath = "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/test/Processed_Benign_ONLY_TaskName_edgeattr"
    
-   PredefinedSplit__Dataset_case1__malware_train__pickles_dirpath = "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
-   PredefinedSplit__Dataset_case1__malware_final_test__pickles_dirpath = "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"   
+   PredefinedSplit__Dataset_case1__malware_train__pickles_dirpath = "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/train/Processed_Malware_ONLY_TaskName_edgeattr"
+   PredefinedSplit__Dataset_case1__malware_final_test__pickles_dirpath = "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/test/Processed_Malware_ONLY_TaskName_edgeattr"   
    
    #  Predefined Split Dataset-2
-   PredefinedSplit__Dataset_case1_case2__benign_train__pickles_dirpath = "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train/Processed_Benign_ONLY_TaskName_edgeattr"
-   PredefinedSplit__Dataset_case1_case2__benign_final_test__pickles_dirpath = "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test/Processed_Benign_ONLY_TaskName_edgeattr"
+   PredefinedSplit__Dataset_case1_case2__benign_train__pickles_dirpath = "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/train/Processed_Benign_ONLY_TaskName_edgeattr"
+   PredefinedSplit__Dataset_case1_case2__benign_final_test__pickles_dirpath = "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/test/Processed_Benign_ONLY_TaskName_edgeattr"
    
-   PredefinedSplit__Dataset_case1_case2__malware_train__pickles_dirpath = "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train/Processed_Malware_ONLY_TaskName_edgeattr"
-   PredefinedSplit__Dataset_case1_case2__malware_final_test__pickles_dirpath = "/data/d1/jgwak1/tabby/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test/Processed_Malware_ONLY_TaskName_edgeattr"      
+   PredefinedSplit__Dataset_case1_case2__malware_train__pickles_dirpath = "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/train/Processed_Malware_ONLY_TaskName_edgeattr"
+   PredefinedSplit__Dataset_case1_case2__malware_final_test__pickles_dirpath = "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/test/Processed_Malware_ONLY_TaskName_edgeattr"      
    # ========================================================================================================
    # SOURCE DIRECTORIES (of pickle files to copy from)
 
    # Dataset-1
-   Source__Dataset_case1__benign_ALL__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/Indices/Processed_Benign_ONLY_TaskName_edgeattr"
-   Source__Dataset_case2__benign_ALL__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case2/Indices/Processed_Benign_ONLY_TaskName_edgeattr"
+   Source__Dataset_case1__benign_ALL__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/Indices/Processed_Benign_ONLY_TaskName_edgeattr"
+   Source__Dataset_case2__benign_ALL__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/Indices/Processed_Benign_ONLY_TaskName_edgeattr"
 
    # Dataset-2   
-   Source__Dataset_case1__malware_ALL__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/Indices/Processed_Malware_ONLY_TaskName_edgeattr"
-   Source__Dataset_case2__malware_ALL__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case2/Indices/Processed_Malware_ONLY_TaskName_edgeattr"
+   Source__Dataset_case1__malware_ALL__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/Indices/Processed_Malware_ONLY_TaskName_edgeattr"
+   Source__Dataset_case2__malware_ALL__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/Indices/Processed_Malware_ONLY_TaskName_edgeattr"
 
    # ========================================================================================================
    # TARGET DIRECTORIES (of pickle files to copy to)
    
    # Dataset-1   
-   Target__Dataset_case1__benign_train__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_train"
-   Target__Dataset_case1__benign_final_test__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1/offline_test"
+   Target__Dataset_case1__benign_train__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/train"
+   Target__Dataset_case1__benign_final_test__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/test"
    
-   Target__Dataset_case1__malware_train__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_train"
-   Target__Dataset_case1__malware_final_test__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1/offline_test"   
+   Target__Dataset_case1__malware_train__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/train"
+   Target__Dataset_case1__malware_final_test__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/test"
    
    # Dataset-2
-   Target__Dataset_case1_case2__benign_train__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_train" 
-   Target__Dataset_case1_case2__benign_final_test__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_benign_train_test_data_case1_case2/offline_test" 
+   Target__Dataset_case1_case2__benign_train__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/train" 
+   Target__Dataset_case1_case2__benign_final_test__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/test" 
    
-   Target__Dataset_case1_case2__malware_train__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_train" 
-   Target__Dataset_case1_case2__malware_final_test__pickles_dirpath = "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/SILKETW_DATASET_NEW/Silketw_malware_train_test_data_case1_case2/offline_test" 
+   Target__Dataset_case1_case2__malware_train__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/train" 
+   Target__Dataset_case1_case2__malware_final_test__pickles_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/test" 
 
    # *******************************************************************************************************
    # *******************************************************************************************************
