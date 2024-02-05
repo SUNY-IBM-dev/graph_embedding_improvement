@@ -15,6 +15,9 @@ from code.trainer import TrainModel
 '''
 
 sys.path.append("/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/source")
+sys.path.append("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/source")
+
+
 
 from source.dataprocessor_graphs import LoadGraphs
 from source.model import GIN
@@ -1432,13 +1435,13 @@ if __name__ == '__main__':
                                   'Dataset-Case-3__FR_UID_rule_updated',
                                  
                                    # 
-                                  'Dataset_1__NoTrace_UIDruleUpdated',
-                                  'Dataset_2__NoTrace_UIDruleUpdated',
+                                  'Dataset_1__NoTrace_UIDruleUpdated', # Partial Dataset-1
+                                  'Dataset_2__NoTrace_UIDruleUpdated', # Partial Dataset-2
 
                                   'Full_Dataset_1_NoTraceUIDupdated',
                                   'Full_Dataset_2_NoTraceUIDupdated',
                                   ], 
-                        default = ['Full_Dataset_2_NoTraceUIDupdated'])
+                        default = ['Dataset_1__NoTrace_UIDruleUpdated'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1452,26 +1455,46 @@ if __name__ == '__main__':
                                   'XGBoost_searchspace_1',
                                   'RandomForest_searchspace_1',
 
-                                  # ------------------------------------------------------------------------------------
-                                  # thread_level__N>1_grams_events__nodetype5bit
-                                  'Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True', # tuning-complete
-                                  'Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True', # tuning-complete
-                                  'Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True',
+                                 #  # ------------------------------------------------------------------------------------
+                                 #  # thread_level__N>1_grams_events__nodetype5bit
+                                 #  'Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True', # tuning-complete
+                                 #  'Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True', # tuning-complete
+                                 #  'Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True',
 
-                                  'Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True', 
-                                  'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True', 
-                                  'Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True',
-                                  # ------------------------------------------------------------------------------------
-                                  # thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount
-                                  'Best_RF__Dataset_1__2gram__FRNPeventCount__FRNP_OutgoIncom_eventCount',
-                                  'Best_RF__Dataset_1__4gram__FRNPeventCount__FRNP_OutgoIncom_eventCount',
+                                 #  'Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True', 
+                                 #  'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True', 
+                                 #  'Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True',
+                                 #  # ------------------------------------------------------------------------------------
+                                 #  # thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount
+                                 #  'Best_RF__Dataset_1__2gram__FRNPeventCount__FRNP_OutgoIncom_eventCount',
+                                 #  'Best_RF__Dataset_1__4gram__FRNPeventCount__FRNP_OutgoIncom_eventCount',
+
+                                 #  # -------------------------------------------------------------------------------------
+                                 #  # thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP
+                                 #  'Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP',
 
                                   # -------------------------------------------------------------------------------------
-                                  # thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP
-                                  'Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP',
+                                  # thread_level__N>1_grams_events__nodetype5bit
+                                  'Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__1gram__sum_pool', # tuning done # final-tested
+                                  'Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__2gram__sum_pool', # tuning done # final-tested
+                                  'Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__4gram__sum_pool', # tuning done     
+
+                                  'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__1gram__sum_pool', # tuning done # final-tested
+                                  'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2gram__sum_pool', # tuning done # final-tested
+                                  'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__4gram__sum_pool',                                  
+
+                                  # -------------------------------------------------------------------------------------
+                                  # thread_level__N>1_grams_events__nodetype5bit
+                                  'Best_RF__Full_Dataset_1_NoTraceUIDupdated__1gram__sum_pool', 
+                                  'Best_RF__Full_Dataset_1_NoTraceUIDupdated__2gram__sum_pool', 
+                                  'Best_RF__Full_Dataset_1_NoTraceUIDupdated__4gram__sum_pool',      
+
+                                  'Best_RF__Full_Dataset_2_NoTraceUIDupdated__1gram__sum_pool', 
+                                  'Best_RF__Full_Dataset_2_NoTraceUIDupdated__2gram__sum_pool', 
+                                  'Best_RF__Full_Dataset_2_NoTraceUIDupdated__4gram__sum_pool',    
 
                                   ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                  default = ["Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__4gram__sum_pool"])
 
 #PW: Why 10 Kfold? just common values
  # flatten vs no graph ?? is that only ML tuning differece??
@@ -1504,12 +1527,12 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
 
     # --------- For Thread-level N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [4])  # Added by JY @ 2024-1-20
 
 
     parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
@@ -1521,10 +1544,10 @@ if __name__ == '__main__':
     parser.add_argument("--running_from_machine", 
                                  
                          choices= ["panther", "ocelot", "felis"], 
-                         default = ["panther"] )
+                         default = ["felis"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [3])  # Added by JY @ 2024-1-20
+                        default = [1])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 
@@ -1963,161 +1986,251 @@ if __name__ == '__main__':
          return manual_space
 
 
-    def Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True() -> dict :
-      # RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202742
-      # -- tuning done
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': False,
-            'criterion': 'gini',
-            'max_depth': 20,
-            'max_features': 'log2',
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 100,
-            'random_state': 42,
-            'split_shuffle_seed': 100}
-         )
+   #  def Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+   #    # RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202742
+   #    # -- tuning done
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': False,
+   #          'criterion': 'gini',
+   #          'max_depth': 20,
+   #          'max_features': 'log2',
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 100,
+   #          'random_state': 42,
+   #          'split_shuffle_seed': 100}
+   #       )
 
-         return manual_space
+   #       return manual_space
 
 
-    def Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True() -> dict :
-      # RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202813
-      # -- tuning done
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': True,
-            'criterion': 'gini',
-            'max_depth': None,
-            'max_features': None,
-            'min_samples_leaf': 1,
-            'min_samples_split': 5,
-            'n_estimators': 200,
-            'random_state': 42,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space
+   #  def Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+   #    # RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202813
+   #    # -- tuning done
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': True,
+   #          'criterion': 'gini',
+   #          'max_depth': None,
+   #          'max_features': None,
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 5,
+   #          'n_estimators': 200,
+   #          'random_state': 42,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space
       
-    def Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True() -> dict :
-      # -- tuning NOT done
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': True,
-            'criterion': 'gini',
-            'max_depth': 6,
-            'max_features': None,
-            'min_samples_leaf': 1,
-            'min_samples_split': 15,
-            'n_estimators': 100,
-            'random_state': 99,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space
+   #  def Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+   #    # -- tuning NOT done
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': True,
+   #          'criterion': 'gini',
+   #          'max_depth': 6,
+   #          'max_features': None,
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 15,
+   #          'n_estimators': 100,
+   #          'random_state': 99,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space
 
 
 
-    def Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True() -> dict :
-      # RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202900
-      # -- tuning done
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': False,
-            'criterion': 'gini',
-            'max_depth': 20,
-            'max_features': 'sqrt',
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 300,
-            'random_state': 99,
-            'split_shuffle_seed': 100}
-         )
+   #  def Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+   #    # RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202900
+   #    # -- tuning done
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': False,
+   #          'criterion': 'gini',
+   #          'max_depth': 20,
+   #          'max_features': 'sqrt',
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 300,
+   #          'random_state': 99,
+   #          'split_shuffle_seed': 100}
+   #       )
 
-         return manual_space
+   #       return manual_space
       
-    def Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True() -> dict :
-      # RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202918
-      # -- tuning NOT done
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': True,
-            'criterion': 'gini',
-            'max_depth': None,
-            'max_features': None,
-            'min_samples_leaf': 5,
-            'min_samples_split': 2,
-            'n_estimators': 100,
-            'random_state': 42,
-            'split_shuffle_seed': 100}
+   #  def Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+   #    # RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype_5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-20_202918
+   #    # -- tuning NOT done
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': True,
+   #          'criterion': 'gini',
+   #          'max_depth': None,
+   #          'max_features': None,
+   #          'min_samples_leaf': 5,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 100,
+   #          'random_state': 42,
+   #          'split_shuffle_seed': 100}
 
-         )
+   #       )
 
-         return manual_space
+   #       return manual_space
             
-    def Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True() -> dict :
-      # -- tuning NOT done
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': False,
-            'criterion': 'gini',
-            'max_depth': None,
-            'max_features': 'sqrt',
-            'min_samples_leaf': 1,
-            'min_samples_split': 15,
-            'n_estimators': 100,
-            'random_state': 0,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space
+   #  def Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True() -> dict :
+   #    # -- tuning NOT done
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': False,
+   #          'criterion': 'gini',
+   #          'max_depth': None,
+   #          'max_features': 'sqrt',
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 15,
+   #          'n_estimators': 100,
+   #          'random_state': 0,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space
 
-    def Best_RF__Dataset_1__2gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount() -> dict :
-      # /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_141047/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_141047.csv
-      # -- tuning done
+   #  def Best_RF__Dataset_1__2gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount() -> dict :
+   #    # /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_141047/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_141047.csv
+   #    # -- tuning done
+   #       manual_space = []
+   #       manual_space.append(
+   #             {'bootstrap': True,
+   #             'criterion': 'gini',
+   #             'max_depth': None,
+   #             'max_features': None,
+   #             'min_samples_leaf': 1,
+   #             'min_samples_split': 2,
+   #             'n_estimators': 200,
+   #             'random_state': 42,
+   #             'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space
+
+   #  def Best_RF__Dataset_1__4gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount() -> dict :
+   #    # /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_140946/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_140946.csv
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': True,
+   #          'criterion': 'gini',
+   #          'max_depth': None,
+   #          'max_features': None,
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 5,
+   #          'n_estimators': 200,
+   #          'random_state': 0,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space
+
+   #  def Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP() -> dict :
+   #       # /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-3__FR_UID_rule_updated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-31_232601/RandomForest__Dataset-Case-3__FR_UID_rule_updated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-31_232601.csv
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': False,
+   #          'criterion': 'gini',
+   #          'max_depth': None,
+   #          'max_features': 'log2',
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 500,
+   #          'random_state': 42,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space
+
+
+
+
+    def Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__1gram__sum_pool() -> dict :
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102515/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102515.csv
          manual_space = []
          manual_space.append(
-               {'bootstrap': True,
+               {'bootstrap': False,
                'criterion': 'gini',
-               'max_depth': None,
-               'max_features': None,
+               'max_depth': 20,
+               'max_features': 'sqrt',
                'min_samples_leaf': 1,
                'min_samples_split': 2,
-               'n_estimators': 200,
+               'n_estimators': 500,
                'random_state': 42,
-               'split_shuffle_seed': 100}
+               'split_shuffle_seed': 100}             
          )
          return manual_space
 
-    def Best_RF__Dataset_1__4gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount() -> dict :
-      # /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_140946/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__4gram__sum_pool__only_train_specified_Ngram_True__2024-01-27_140946.csv
+
+    def Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__2gram__sum_pool() -> dict :
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102737/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102737.csv
          manual_space = []
          manual_space.append(
-            {'bootstrap': True,
+            {'bootstrap': False,
             'criterion': 'gini',
-            'max_depth': None,
-            'max_features': None,
+            'max_depth': 15,
+            'max_features': 'sqrt',
             'min_samples_leaf': 1,
             'min_samples_split': 5,
-            'n_estimators': 200,
-            'random_state': 0,
+            'n_estimators': 100,
+            'random_state': 99,
             'split_shuffle_seed': 100}
          )
          return manual_space
 
-    def Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP() -> dict :
-         # /data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset-Case-3__FR_UID_rule_updated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-31_232601/RandomForest__Dataset-Case-3__FR_UID_rule_updated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__2gram__sum_pool__only_train_specified_Ngram_True__2024-01-31_232601.csv
+    def Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__4gram__sum_pool() -> dict :
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102937/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102937.csv
          manual_space = []
          manual_space.append(
             {'bootstrap': False,
             'criterion': 'gini',
             'max_depth': None,
-            'max_features': 'log2',
+            'max_features': 'sqrt',
             'min_samples_leaf': 1,
             'min_samples_split': 2,
             'n_estimators': 500,
             'random_state': 42,
             'split_shuffle_seed': 100}
          )
+         return manual_space        
+
+
+
+    def Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__1gram__sum_pool() -> dict :
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102605/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102605.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': 20,
+            'max_features': 'log2',
+            'min_samples_leaf': 1,
+            'min_samples_split': 15,
+            'n_estimators': 100,
+            'random_state': 0,
+            'split_shuffle_seed': 100}             
+         )
          return manual_space
+    
+
+    def Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2gram__sum_pool() -> dict :
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102809/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_102809.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': 20,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 10,
+            'n_estimators': 500,
+            'random_state': 0,
+            'split_shuffle_seed': 100}             
+         )
+         return manual_space
+
+
+
 
 
     ####################################################################################################################################################
@@ -2139,37 +2252,56 @@ if __name__ == '__main__':
 
     # -----------------------------------------------------------
 
-    elif search_space_option == 'Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True':
-       search_space = Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True()   
+   #  elif search_space_option == 'Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True':
+   #     search_space = Best_RF__Dataset_1__2gram__sum_pool__only_train_specified_Ngram_True()   
 
-    elif search_space_option == 'Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True':
-       search_space = Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True()   
+   #  elif search_space_option == 'Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True':
+   #     search_space = Best_RF__Dataset_1__4gram__sum_pool__only_train_specified_Ngram_True()   
 
-    elif search_space_option == 'Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True':
-       search_space = Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True()   
+   #  elif search_space_option == 'Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True':
+   #     search_space = Best_RF__Dataset_1__6gram__sum_pool__only_train_specified_Ngram_True()   
 
 
-    elif search_space_option == 'Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True':
-       search_space = Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True()   
+   #  elif search_space_option == 'Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True':
+   #     search_space = Best_RF__Dataset_2__2gram__sum_pool__only_train_specified_Ngram_True()   
 
-    elif search_space_option == 'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True':
-       search_space = Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True()   
+   #  elif search_space_option == 'Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True':
+   #     search_space = Best_RF__Dataset_2__4gram__sum_pool__only_train_specified_Ngram_True()   
 
-    elif search_space_option == 'Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True':
-       search_space = Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True()   
+   #  elif search_space_option == 'Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True':
+   #     search_space = Best_RF__Dataset_2__6gram__sum_pool__only_train_specified_Ngram_True()   
 
-    # -----------------------------------------------------------
+   #  # -----------------------------------------------------------
 
-    elif search_space_option == 'Best_RF__Dataset_1__2gram__FRNPeventCount__FRNP_OutgoIncom_eventCount':
-       search_space = Best_RF__Dataset_1__2gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount()   
+   #  elif search_space_option == 'Best_RF__Dataset_1__2gram__FRNPeventCount__FRNP_OutgoIncom_eventCount':
+   #     search_space = Best_RF__Dataset_1__2gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount()   
        
-    elif search_space_option == 'Best_RF__Dataset_1__4gram__FRNPeventCount__FRNP_OutgoIncom_eventCount':
-       search_space = Best_RF__Dataset_1__4gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount()   
+   #  elif search_space_option == 'Best_RF__Dataset_1__4gram__FRNPeventCount__FRNP_OutgoIncom_eventCount':
+   #     search_space = Best_RF__Dataset_1__4gram__also_with__FRNPeventCount__FRNP_OutgoIncom_eventCount()   
 
-    elif search_space_option == 'Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP':
-       search_space = Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP()   
-    # -----------------------------------------------------------
+   #  elif search_space_option == 'Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP':
+   #     search_space = Best_RF__Dataset_3_FR_UID_rule_updated__2gram_with__AvgNum_DiffThreads_perFRNP()   
+   #  # -----------------------------------------------------------
     # No-Trace & FID-rule updated 
+
+
+    elif search_space_option == 'Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__1gram__sum_pool': # tuning done
+            search_space = Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__1gram__sum_pool()   
+           
+    elif search_space_option == 'Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__2gram__sum_pool': # tuning done
+            search_space = Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__2gram__sum_pool()
+
+    elif search_space_option == "Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__4gram__sum_pool": # tuning done
+            search_space = Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__4gram__sum_pool()
+
+
+    elif search_space_option == 'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__1gram__sum_pool': # tuning done
+            search_space = Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__1gram__sum_pool()
+
+    elif search_space_option == 'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2gram__sum_pool': # tuning done
+            search_space = Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2gram__sum_pool()
+
+
 
     # -----------------------------------------------------------
 

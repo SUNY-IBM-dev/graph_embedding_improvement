@@ -3219,9 +3219,10 @@ non_trace_command_malware_case2_set2 = {
 # SET
 subgraphs_savedirpath = \
 "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/Indices"
-# "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/Indices"
-# "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/Indices"
+
 # "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/Indices"
+# "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/Indices"
+# "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/Indices"
 
 
 
@@ -3238,7 +3239,7 @@ elastic_search_machine = "panther"
 #     non_trace_command_benign_case2_set2
 #     non_trace_command_malware_case1_set2
 #     non_trace_command_malware_case2_set2
-es_indices_and_ProcessIDs = non_trace_command_malware_case2 
+es_indices_and_ProcessIDs = non_trace_command_malware_case2_set2 
 
 dir_start_pattern = "malware"  # change based on the indice
 
@@ -3273,8 +3274,8 @@ Test_ratio = 1 - Train_ratio
 
 
 # SET steps
-target__step_1 = False # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
-target__step_2 = False   # organize into Label Dir
+target__step_1 = True # JY @ 2023-05-21 : currently first_step is commented out as want to start from edge-direction
+target__step_2 = True   # organize into Label Dir
 target__step_3 = True   # generate process pickle files
 target__step_4 = False
 

@@ -2044,70 +2044,74 @@ if __name__ == "__main__":
          # print(f"\nMalware Step-2 elapsed time: {str(step3_done - step3_start)}", flush=True)
 
 
-      # (Step-3) Train & Test split the newly created Processed-data,
+      # (Step-4) Train & Test split the newly created Processed-data,
       #          distribute the "train-set" and "test-set" to 
       #          "offline_training_subgraphs_dirpath" and "offline_testing_subgraphs_dirpath", respectively.
       #          (Even if we are adding new train and test-data to existing train and test-dirs,
       #          the 80% vs 20% ratio will be preserved, as we are also distributing new train and test data 
       #          based on that ratio. )
       #          + For future refernce, add a "txt file that records these increments of data."
+
+      ''' JY @ 2024-2-4: Incorporate double-stratification (class & data-source) here ''' 
+
       if target__step_4:
-         step4_start = datetime.datetime.now()
+         raise ValueError("Use double_strat_splitter.py")
+      #    step4_start = datetime.datetime.now()
 
-         Processed_picklefiles_dirpath = f"{subgraphs_savedirpath}/Processed_{label}_ONLY_TaskName_edgeattr"
-         source_dirpath = Processed_picklefiles_dirpath
-         saved_dirname = os.path.split(source_dirpath)[1] # e.g. 'Processed_Benign_ONLY_TaskName_edgeattr'
+      #    Processed_picklefiles_dirpath = f"{subgraphs_savedirpath}/Processed_{label}_ONLY_TaskName_edgeattr"
+      #    source_dirpath = Processed_picklefiles_dirpath
+      #    saved_dirname = os.path.split(source_dirpath)[1] # e.g. 'Processed_Benign_ONLY_TaskName_edgeattr'
          
-         # prepare the destination dirpaths for both train-pickle and test-pickles (if non-existent, create dest-dir)
-         train_dest_dirpath = os.path.join(main_offline_train_data_dirpath, saved_dirname)
-         test_dest_dirpath = os.path.join(main_offline_test_data_main_dirpath, saved_dirname)
-         if not os.path.exists(train_dest_dirpath):
-            os.makedirs(train_dest_dirpath)
-            print(f"Created A New Destination-Directory for New Train-Subgraphs {train_dest_dirpath}",flush=True)
-         if not os.path.exists(test_dest_dirpath):
-            os.makedirs(test_dest_dirpath)
-            print(f"Created A New Destination-Directory for New Test-Subgraphs {test_dest_dirpath}",flush=True)
+      #    # prepare the destination dirpaths for both train-pickle and test-pickles (if non-existent, create dest-dir)
+      #    train_dest_dirpath = os.path.join(main_offline_train_data_dirpath, saved_dirname)
+      #    test_dest_dirpath = os.path.join(main_offline_test_data_main_dirpath, saved_dirname)
+      #    if not os.path.exists(train_dest_dirpath):
+      #       os.makedirs(train_dest_dirpath)
+      #       print(f"Created A New Destination-Directory for New Train-Subgraphs {train_dest_dirpath}",flush=True)
+      #    if not os.path.exists(test_dest_dirpath):
+      #       os.makedirs(test_dest_dirpath)
+      #       print(f"Created A New Destination-Directory for New Test-Subgraphs {test_dest_dirpath}",flush=True)
 
-         # split pickles into train and test
-         source_pickle_filenames = [ pklfname for pklfname in os.listdir(source_dirpath) if pklfname.startswith("Processed")] 
-         num_of_picklefiles = len(source_pickle_filenames)
-         first_X_for_train = int(num_of_picklefiles * Train_ratio)
+      #    # split pickles into train and test
+      #    # source_pickle_filenames = [ pklfname for pklfname in os.listdir(source_dirpath) if pklfname.startswith("Processed")] 
+      #    # num_of_picklefiles = len(source_pickle_filenames)
+      #    # first_X_for_train = int(num_of_picklefiles * Train_ratio)
+      #    # train_pickles = source_pickle_filenames[:first_X_for_train]
+      #    # test_pickles = source_pickle_filenames[first_X_for_train:]
 
-         train_pickles = source_pickle_filenames[:first_X_for_train]
-         test_pickles = source_pickle_filenames[first_X_for_train:]
 
-         # pointer to a train-pickle addition-record file
-         train_pickles_addition_record_fp = open(os.path.join(train_dest_dirpath, "train_pickles_addition_record.txt"), "a") # "a" flag: Open for appending at the end of the file without truncating it. 
-         print(f"="*150, flush= True, file= train_pickles_addition_record_fp)
-         print(f"Added at {datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}", flush= True, file= train_pickles_addition_record_fp)
-         print(f"> copy {len(train_pickles)} train-pickles from '{source_dirpath}' to '{train_dest_dirpath}'", flush= True, file= train_pickles_addition_record_fp)
-         print(f"> corresponds to {Train_ratio*100}% of total {len(source_pickle_filenames)} pickle files.", flush= True, file= train_pickles_addition_record_fp)
+      #    # pointer to a train-pickle addition-record file
+      #    train_pickles_addition_record_fp = open(os.path.join(train_dest_dirpath, "train_pickles_addition_record.txt"), "a") # "a" flag: Open for appending at the end of the file without truncating it. 
+      #    print(f"="*150, flush= True, file= train_pickles_addition_record_fp)
+      #    print(f"Added at {datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}", flush= True, file= train_pickles_addition_record_fp)
+      #    print(f"> copy {len(train_pickles)} train-pickles from '{source_dirpath}' to '{train_dest_dirpath}'", flush= True, file= train_pickles_addition_record_fp)
+      #    print(f"> corresponds to {Train_ratio*100}% of total {len(source_pickle_filenames)} pickle files.", flush= True, file= train_pickles_addition_record_fp)
                                                                     
-                                                                                                                           #           Creates a new file if it does not exist.
-         # pointer to a test-pickle addition-record file
-         test_pickles_addition_record_fp = open(os.path.join(test_dest_dirpath, "test_pickles_addition_record.txt"), "a")
-         print(f"="*150, flush= True, file= test_pickles_addition_record_fp)
-         print(f"Added at {datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}", flush= True, file= test_pickles_addition_record_fp)
-         print(f"> copy {len(test_pickles)} train-pickles from '{source_dirpath}' to '{test_dest_dirpath}'", flush= True, file= test_pickles_addition_record_fp)
-         print(f"> corresponds to {Test_ratio*100}% of total {len(source_pickle_filenames)} pickle files.", flush= True, file= test_pickles_addition_record_fp)
+      #                                                                                                                      #           Creates a new file if it does not exist.
+      #    # pointer to a test-pickle addition-record file
+      #    test_pickles_addition_record_fp = open(os.path.join(test_dest_dirpath, "test_pickles_addition_record.txt"), "a")
+      #    print(f"="*150, flush= True, file= test_pickles_addition_record_fp)
+      #    print(f"Added at {datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}", flush= True, file= test_pickles_addition_record_fp)
+      #    print(f"> copy {len(test_pickles)} train-pickles from '{source_dirpath}' to '{test_dest_dirpath}'", flush= True, file= test_pickles_addition_record_fp)
+      #    print(f"> corresponds to {Test_ratio*100}% of total {len(source_pickle_filenames)} pickle files.", flush= True, file= test_pickles_addition_record_fp)
 
 
-         train_pickle_cnt = 1
-         for train_pkl in train_pickles:
-            shutil.copyfile(src= os.path.join(source_dirpath, train_pkl),
-                              dst= os.path.join(train_dest_dirpath, train_pkl))
-            print(f"{train_pickle_cnt}.copied '{train_pkl}' from '{source_dirpath}' to '{train_dest_dirpath}'", flush= True)
-            print(f"{train_pickle_cnt}.copied '{train_pkl}' from '{source_dirpath}' to '{train_dest_dirpath}'", flush= True, file= train_pickles_addition_record_fp)
-            train_pickle_cnt += 1
+      #    train_pickle_cnt = 1
+      #    for train_pkl in train_pickles:
+      #       shutil.copyfile(src= os.path.join(source_dirpath, train_pkl),
+      #                         dst= os.path.join(train_dest_dirpath, train_pkl))
+      #       print(f"{train_pickle_cnt}.copied '{train_pkl}' from '{source_dirpath}' to '{train_dest_dirpath}'", flush= True)
+      #       print(f"{train_pickle_cnt}.copied '{train_pkl}' from '{source_dirpath}' to '{train_dest_dirpath}'", flush= True, file= train_pickles_addition_record_fp)
+      #       train_pickle_cnt += 1
 
-         test_pickle_cnt = 1
-         for test_pkl in test_pickles:
-            shutil.copyfile(src= os.path.join(source_dirpath, test_pkl),
-                              dst= os.path.join(test_dest_dirpath, test_pkl))
-            print(f"{test_pickle_cnt}. copied '{test_pkl}' from '{source_dirpath}' to '{test_dest_dirpath}'", flush= True)
-            print(f"{test_pickle_cnt}. copied '{test_pkl}' from '{source_dirpath}' to '{test_dest_dirpath}'", flush= True, file= test_pickles_addition_record_fp)
-            test_pickle_cnt += 1
+      #    test_pickle_cnt = 1
+      #    for test_pkl in test_pickles:
+      #       shutil.copyfile(src= os.path.join(source_dirpath, test_pkl),
+      #                         dst= os.path.join(test_dest_dirpath, test_pkl))
+      #       print(f"{test_pickle_cnt}. copied '{test_pkl}' from '{source_dirpath}' to '{test_dest_dirpath}'", flush= True)
+      #       print(f"{test_pickle_cnt}. copied '{test_pkl}' from '{source_dirpath}' to '{test_dest_dirpath}'", flush= True, file= test_pickles_addition_record_fp)
+      #       test_pickle_cnt += 1
 
-         step4_done = datetime.datetime.now()
+      #    step4_done = datetime.datetime.now()
 
-         print(f"\nStep-4 elapsed time: {str(step4_done - step4_start)}", flush=True)
+      #    print(f"\nStep-4 elapsed time: {str(step4_done - step4_start)}", flush=True)

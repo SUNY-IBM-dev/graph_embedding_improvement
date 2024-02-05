@@ -1083,34 +1083,56 @@ if __name__ == '__main__':
                                  "XGBoost_searchspace_1",
                                  "RandomForest_searchspace_1",
 
-                                 # Best tuned of following -------------------------------------------
-                                 "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125", # Ran
-                                 "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515", # Ran
-                                 "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029", # Ran
+                                 # # Best tuned of following -------------------------------------------
+                                 # "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125", # Ran
+                                 # "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515", # Ran
+                                 # "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029", # Ran
 
-                                 "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149", # Ran
-                                 "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539", # Ran
-                                 "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047", # Ran
+                                 # "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149", # Ran
+                                 # "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539", # Ran
+                                 # "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047", # Ran
 
-                                 # Best tuned of following (update-weight 0.7)-------------------------
-                                 "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__uW70p__2024_01_07_093822", # Running
-                                 "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__uW70p__2024_01_07_093920", # Running
-                                 "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194304", # Running
+                                 # # Best tuned of following (update-weight 0.7)-------------------------
+                                 # "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__uW70p__2024_01_07_093822", # Running
+                                 # "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__uW70p__2024_01_07_093920", # Running
+                                 # "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194304", # Running
 
-                                 "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__uW70p__2024_01_07_093850", # TUNING NOT DONE YET
-                                 "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__uW70p__2024_01_07_093936", # TUNING NOT DONE YET
-                                 "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194347",
+                                 # "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__uW70p__2024_01_07_093850", # TUNING NOT DONE YET
+                                 # "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__uW70p__2024_01_07_093936", # TUNING NOT DONE YET
+                                 # "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194347",
 
-                                 # Best tuned for Adhoc are the following: ==================================
-                                 "Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144",   
+                                 # # Best tuned for Adhoc are the following: ==================================
+                                 # "Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144",   
+
+
+                                  # -------------------------------------------------------------------------------------
+                                  # standard_message_passing_graph_embedding
+                                  'Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__1hop_sumaggr_sumpool_uw1', # tuning done # final-tested
+                                  'Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__2hop_sumaggr_sumpool_uw1', # tuning done # final-tested
+                                  'Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__3hop_sumaggr_sumpool_uw1', # tuning done # final-tested    
+
+                                  'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__1hop_sumaggr_sumpool_uw1', # tuning done # final-tested 
+                                  'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2hop_sumaggr_sumpool_uw1', # tuning done # final-tested 
+                                  'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__3hop_sumaggr_sumpool_uw1', # tuning done                              
+
+                                  # -------------------------------------------------------------------------------------
+                                  # standard_message_passing_graph_embedding
+                                  'Best_RF__Full_Dataset_1_NoTraceUIDupdated__1hop_sumaggr_sumpool_uw1', 
+                                  'Best_RF__Full_Dataset_1_NoTraceUIDupdated__2hop_sumaggr_sumpool_uw1', 
+                                  'Best_RF__Full_Dataset_1_NoTraceUIDupdated__3hop_sumaggr_sumpool_uw1',      
+
+                                  'Best_RF__Full_Dataset_2_NoTraceUIDupdated__1hop_sumaggr_sumpool_uw1', 
+                                  'Best_RF__Full_Dataset_2_NoTraceUIDupdated__2hop_sumaggr_sumpool_uw1', 
+                                  'Best_RF__Full_Dataset_2_NoTraceUIDupdated__3hop_sumaggr_sumpool_uw1',    
+
 
                                   ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                  default = ["Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__3hop_sumaggr_sumpool_uw1"])
    
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
 
     # --------- specific to standard-message-passing 
@@ -1137,7 +1159,7 @@ if __name__ == '__main__':
                          default = ["felis"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [5])  # Added by JY @ 2024-1-20
+                        default = [1])  # Added by JY @ 2024-1-20
 
 
     # --------------------------------------------------
@@ -1583,211 +1605,311 @@ if __name__ == '__main__':
 
     # Best found hyperparameter sets ===================================================================================================================================================
 
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060125",
-    def Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125():
-         manual_space = []
-         manual_space.append(
-               {'bootstrap': False,
-               'criterion': 'gini',
-               'max_depth': 15,
-               'max_features': 'log2',
-               'min_samples_leaf': 1,
-               'min_samples_split': 2,
-               'n_estimators': 300,
-               'random_state': 42,
-               'split_shuffle_seed': 100}
-         )
-         return manual_space      
+   #  # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060125",
+   #  def Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125():
+   #       manual_space = []
+   #       manual_space.append(
+   #             {'bootstrap': False,
+   #             'criterion': 'gini',
+   #             'max_depth': 15,
+   #             'max_features': 'log2',
+   #             'min_samples_leaf': 1,
+   #             'min_samples_split': 2,
+   #             'n_estimators': 300,
+   #             'random_state': 42,
+   #             'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space      
 
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__2023-12-29_055515",
-    def Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515():
-         manual_space = []
-         manual_space.append(
-               {'bootstrap': False,
-               'criterion': 'gini',
-               'max_depth': 15,
-               'max_features': 'sqrt',
-               'min_samples_leaf': 1,
-               'min_samples_split': 5,
-               'n_estimators': 100,
-               'random_state': 0,
-               'split_shuffle_seed': 100}         
-         )
-         return manual_space      
+   #  # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__2023-12-29_055515",
+   #  def Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515():
+   #       manual_space = []
+   #       manual_space.append(
+   #             {'bootstrap': False,
+   #             'criterion': 'gini',
+   #             'max_depth': 15,
+   #             'max_features': 'sqrt',
+   #             'min_samples_leaf': 1,
+   #             'min_samples_split': 5,
+   #             'n_estimators': 100,
+   #             'random_state': 0,
+   #             'split_shuffle_seed': 100}         
+   #       )
+   #       return manual_space      
                                  
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225029",
-    def Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': False,
-            'criterion': 'gini',
-            'max_depth': 15,
-            'max_features': 'sqrt',
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 200,
-            'random_state': 42,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space      
+   #  # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225029",
+   #  def Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029():
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': False,
+   #          'criterion': 'gini',
+   #          'max_depth': 15,
+   #          'max_features': 'sqrt',
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 200,
+   #          'random_state': 42,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space      
 
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060149",
-    def Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': False,
-            'criterion': 'gini',
-            'max_depth': None,
-            'max_features': 'sqrt',
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 300,
-            'random_state': 99,
-            'split_shuffle_seed': 100}         
-         )
-         return manual_space      
+   #  # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2023-12-29_060149",
+   #  def Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149():
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': False,
+   #          'criterion': 'gini',
+   #          'max_depth': None,
+   #          'max_features': 'sqrt',
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 300,
+   #          'random_state': 99,
+   #          'split_shuffle_seed': 100}         
+   #       )
+   #       return manual_space      
 
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__2023-12-29_055539",
-    def Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': True,
-            'criterion': 'gini',
-            'max_depth': None,
-            'max_features': None,
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 200,
-            'random_state': 0,
-            'split_shuffle_seed': 100}         
-         )
-         return manual_space      
-
-
-    # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225047",
-    def Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': True,
-            'criterion': 'gini',
-            'max_depth': 15,
-            'max_features': None,
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 100,
-            'random_state': 0,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space      
-
-    # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    # Best-RF when update-weight 0.7
-
-    # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-07_093822 
-    def Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093822():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': True,
-            'criterion': 'gini',
-            'max_depth': 9,
-            'max_features': None,
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 100,
-            'random_state': 0,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space  
+   #  # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__2023-12-29_055539",
+   #  def Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539():
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': True,
+   #          'criterion': 'gini',
+   #          'max_depth': None,
+   #          'max_features': None,
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 200,
+   #          'random_state': 0,
+   #          'split_shuffle_seed': 100}         
+   #       )
+   #       return manual_space      
 
 
-    # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-07_093920
-    def Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093920():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': True,
-            'criterion': 'gini',
-            'max_depth': None,
-            'max_features': None,
-            'min_samples_leaf': 1,
-            'min_samples_split': 5,
-            'n_estimators': 200,
-            'random_state': 99,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space  
+   #  # "sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__2023-12-28_225047",
+   #  def Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047():
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': True,
+   #          'criterion': 'gini',
+   #          'max_depth': 15,
+   #          'max_features': None,
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 100,
+   #          'random_state': 0,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space      
 
-    # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-06_194304
-    def Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_06_194304():
-         manual_space = []
-         manual_space.append(
-            {'bootstrap': False,
-            'criterion': 'gini',
-            'max_depth': 20,
-            'max_features': 'sqrt',
-            'min_samples_leaf': 1,
-            'min_samples_split': 2,
-            'n_estimators': 500,
-            'random_state': 42,
-            'split_shuffle_seed': 100}
-         )
-         return manual_space  
+   #  # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   #  # Best-RF when update-weight 0.7
 
-     # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-07_093850
-     # NOT DONE YET, AS OF 2024-1-8 9:32AM
-    def Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093850():
-         manual_space = []
-         manual_space.append(
-
-         )
-         return manual_space  
-
-     # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-07_093936
-     # NOT DONE YET, AS OF 2024-1-8 9:32AM
-    def Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093936():
-         manual_space = []
-         manual_space.append(
-
-         )
-         return manual_space  
-
-     # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-06_194347
-    def Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_06_194347():
-         manual_space = []
-         manual_space.append(
-         {'bootstrap': True,
-         'criterion': 'gini',
-         'max_depth': 20,
-         'max_features': None,
-         'min_samples_leaf': 1,
-         'min_samples_split': 2,
-         'n_estimators': 200,
-         'random_state': 42,
-         'split_shuffle_seed': 100}
-         )
-         return manual_space  
+   #  # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-07_093822 
+   #  def Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093822():
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': True,
+   #          'criterion': 'gini',
+   #          'max_depth': 9,
+   #          'max_features': None,
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 100,
+   #          'random_state': 0,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space  
 
 
+   #  # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-07_093920
+   #  def Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093920():
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': True,
+   #          'criterion': 'gini',
+   #          'max_depth': None,
+   #          'max_features': None,
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 5,
+   #          'n_estimators': 200,
+   #          'random_state': 99,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space  
+
+   #  # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-06_194304
+   #  def Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_06_194304():
+   #       manual_space = []
+   #       manual_space.append(
+   #          {'bootstrap': False,
+   #          'criterion': 'gini',
+   #          'max_depth': 20,
+   #          'max_features': 'sqrt',
+   #          'min_samples_leaf': 1,
+   #          'min_samples_split': 2,
+   #          'n_estimators': 500,
+   #          'random_state': 42,
+   #          'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space  
+
+   #   # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-07_093850
+   #   # NOT DONE YET, AS OF 2024-1-8 9:32AM
+   #  def Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093850():
+   #       manual_space = []
+   #       manual_space.append(
+
+   #       )
+   #       return manual_space  
+
+   #   # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-07_093936
+   #   # NOT DONE YET, AS OF 2024-1-8 9:32AM
+   #  def Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093936():
+   #       manual_space = []
+   #       manual_space.append(
+
+   #       )
+   #       return manual_space  
+
+   #   # sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__updateWeight_0.7__2024-01-06_194347
+   #  def Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_06_194347():
+   #       manual_space = []
+   #       manual_space.append(
+   #       {'bootstrap': True,
+   #       'criterion': 'gini',
+   #       'max_depth': 20,
+   #       'max_features': None,
+   #       'min_samples_leaf': 1,
+   #       'min_samples_split': 2,
+   #       'n_estimators': 200,
+   #       'random_state': 42,
+   #       'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space  
 
 
 
-    def Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144():
-         manual_space = []
-         manual_space.append(
-         {'bootstrap': True,
-         'criterion': 'gini',
-         'max_depth': 9,
-         'max_features': None,
-         'min_samples_leaf': 3,
-         'min_samples_split': 2,
-         'n_estimators': 500,
-         'random_state': 99,
-         'split_shuffle_seed': 100}
-         )
-         return manual_space        
+
+
+   #  def Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144():
+   #       manual_space = []
+   #       manual_space.append(
+   #       {'bootstrap': True,
+   #       'criterion': 'gini',
+   #       'max_depth': 9,
+   #       'max_features': None,
+   #       'min_samples_leaf': 3,
+   #       'min_samples_split': 2,
+   #       'n_estimators': 500,
+   #       'random_state': 99,
+   #       'split_shuffle_seed': 100}
+   #       )
+   #       return manual_space        
 
 
     # ====================================================================================================================================================================================
 
+
+    def Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__1hop_sumaggr_sumpool_uw1(): # tuning done
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135515/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135515.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': 15,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 100,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space        
+
+
+    def Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__2hop_sumaggr_sumpool_uw1(): # tuning done
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135713/RandomForest__Dataset_1__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135713.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': 15,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 100,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space        
+
+
+    def Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__3hop_sumaggr_sumpool_uw1(): # tuning done 
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 3,
+            'min_samples_split': 15,
+            'n_estimators': 200,
+            'random_state': 99,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space        
+
+
+    def Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__1hop_sumaggr_sumpool_uw1(): # tuning done 
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135627/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135627.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': 15,
+            'max_features': 'log2',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 200,
+            'random_state': 99,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space        
+
+    def Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2hop_sumaggr_sumpool_uw1(): # tuning done 
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135739/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__2hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135739.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': 20,
+            'max_features': 'log2',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 200,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space        
+
+    def Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__3hop_sumaggr_sumpool_uw1(): # tuning done 
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_3__Standard_Message_Passing/RESULTS/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135843/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__standard_message_passing_graph_embedding__3hops__sum_aggr__sum_pool__uW_1.0__2024-02-03_135843.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': 'log2',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 500,
+            'random_state': 99,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space        
+
+  
 
 
 
@@ -1802,45 +1924,66 @@ if __name__ == '__main__':
 
     # --------------------------------------------------------------------------------------------------
     # best found
-    elif search_space_option == "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125":
-         search_space = Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125()
+   #  elif search_space_option == "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125":
+   #       search_space = Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__2023_12_29_060125()
 
-    elif search_space_option == "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515":
-         search_space = Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515()
+   #  elif search_space_option == "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515":
+   #       search_space = Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__2023_12_29_055515()
     
-    elif search_space_option == "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029":
-         search_space = Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029()
+   #  elif search_space_option == "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029":
+   #       search_space = Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__2023_12_28_225029()
 
-    elif search_space_option == "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149":
-         search_space = Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149()
+   #  elif search_space_option == "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149":
+   #       search_space = Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149()
 
-    elif search_space_option == "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539":
-         search_space = Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539()
+   #  elif search_space_option == "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539":
+   #       search_space = Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__2023_12_29_055539()
 
-    elif search_space_option == "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047":
-         search_space = Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047()
+   #  elif search_space_option == "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047":
+   #       search_space = Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__2023_12_28_225047()
       
-    # --------------------------------------------------------------------------------------------------
-    elif search_space_option == "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__uW70p__2024_01_07_093822":
-         search_space = Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093822()
+   #  # --------------------------------------------------------------------------------------------------
+   #  elif search_space_option == "Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__uW70p__2024_01_07_093822":
+   #       search_space = Best_RF__Dataset_Case_1__1hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093822()
     
-    elif search_space_option == "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__uW70p__2024_01_07_093920":
-         search_space = Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093920()
+   #  elif search_space_option == "Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__uW70p__2024_01_07_093920":
+   #       search_space = Best_RF__Dataset_Case_1__2hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093920()
 
-    elif search_space_option == "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194304":
-         search_space = Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_06_194304()
+   #  elif search_space_option == "Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194304":
+   #       search_space = Best_RF__Dataset_Case_1__3hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_06_194304()
 
-    elif search_space_option == "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__uW70p__2024_01_07_093850":
-         search_space = Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093850()
+   #  elif search_space_option == "Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__uW70p__2024_01_07_093850":
+   #       search_space = Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093850()
 
-    elif search_space_option == "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__uW70p__2024_01_07_093936":
-         search_space = Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093936()
+   #  elif search_space_option == "Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__uW70p__2024_01_07_093936":
+   #       search_space = Best_RF__Dataset_Case_2__2hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_07_093936()
 
-    elif search_space_option == "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194347":
-         search_space = Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_06_194347()         
+   #  elif search_space_option == "Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__uW70p__2024_01_06_194347":
+   #       search_space = Best_RF__Dataset_Case_2__3hops__sum_aggr__sum_pool__updateWeight_70p__2024_01_06_194347()         
 
-    elif search_space_option == "Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144":
-         search_space = Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144()
+   #  elif search_space_option == "Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144":
+   #       search_space = Best_RF__Dataset_1__Adhoc__1hops__sum_aggr__sum_pool__uW1__01_13_193144()
+
+    elif search_space_option == "Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__1hop_sumaggr_sumpool_uw1": # tuning done
+         search_space = Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__1hop_sumaggr_sumpool_uw1()
+
+    elif search_space_option == "Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__2hop_sumaggr_sumpool_uw1": # tuning done
+         search_space = Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__2hop_sumaggr_sumpool_uw1()
+
+    elif search_space_option == "Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__3hop_sumaggr_sumpool_uw1": # tuning done
+         search_space = Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__3hop_sumaggr_sumpool_uw1()
+
+
+    elif search_space_option == "Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__1hop_sumaggr_sumpool_uw1": # tuning done
+         search_space = Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__1hop_sumaggr_sumpool_uw1()
+
+    elif search_space_option == "Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2hop_sumaggr_sumpool_uw1": # tuning done
+         search_space = Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2hop_sumaggr_sumpool_uw1()
+
+    elif search_space_option == "Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__3hop_sumaggr_sumpool_uw1": # tuning done
+         search_space = Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__3hop_sumaggr_sumpool_uw1()
+
+
 
     else:
         ValueError("Unavailable search-space option")
