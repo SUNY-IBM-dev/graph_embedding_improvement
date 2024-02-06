@@ -24,17 +24,33 @@ if __name__ == "__main__":
    # First Check normal distribution
 
    plt.hist(Baseline_Ngram__Entire_Full_Dataset_1__AvgVal_Accuracy, 
-            bins=30, density=True, alpha=0.7, color='blue', label='Histogram')
+            bins= 50, density=False, alpha=0.7, color='blue', label='Baseline 2-gram')
+            # bins=len(Baseline_Ngram__Entire_Full_Dataset_1__AvgVal_Accuracy), density=True, alpha=0.7, color='blue', label='Histogram')
 
    plt.hist(Thread_Ngram__Entire_Full_Dataset_1__AvgVal_Accuracy, 
-            bins=30, density=True, alpha=0.7, color='red', label='Histogram')
-   plt.savefig("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Hypothesis_Testing__for__Baseline_VS_Optimization/Dist_for__BaselineNgram_VS_ThreadNgram__Entire_Full_Dataset_1__AvgVal_Accuracy.png")
+            bins= 50, density=False, alpha=0.7, color='red', label='Thread 2-gram')
+
+   plt.title('Full Dataset-1', fontsize=11, pad=10)
+   plt.xlabel('Avg.Val.Accuracy', fontsize=11, labelpad=10)
+   plt.ylabel('Count of Hyperparam. Sets (Total 6913)', fontsize=11, labelpad=10)
+   plt.legend(fontsize=10)
+   plt.savefig("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Statistical_Comparison__for__Baseline_VS_Optimization/Dist_for__BaselineNgram_VS_ThreadNgram__Entire_Full_Dataset_1__AvgVal_Accuracy.png")
+   # plt.tight_layout()
+
    plt.close()
 
 
    plt.hist(Baseline_Ngram__Entire_Full_Dataset_1__AvgVal_F1, 
-            bins=30, density=True, alpha=0.7, color='blue', label='Histogram')
+            bins=50, density=False, alpha=0.7, color='blue', label='Baseline 2-gram')
    plt.hist(Thread_Ngram__Entire_Full_Dataset_1__AvgVal_F1, 
-            bins=30, density=True, alpha=0.7, color='red', label='Histogram')
-   plt.savefig("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Hypothesis_Testing__for__Baseline_VS_Optimization/Dist_for__BaselineNgram_VS_ThreadNgram__Entire_Full_Dataset_1__AvgVal_F1.png")
+            bins=50, density=False, alpha=0.7, color='red', label='Thread 2-gram')
+
+   plt.title('Full Dataset-2', fontsize=11, pad=10)
+   plt.xlabel('Avg.Val.F1', fontsize=11, labelpad=10)
+   plt.ylabel('Count of Hyperparam. Sets (Total 6913)', fontsize=11, labelpad=10)
+   plt.legend(fontsize=10)
+   # plt.tight_layout()
+   
+   plt.savefig("/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Statistical_Comparison__for__Baseline_VS_Optimization/Dist_for__BaselineNgram_VS_ThreadNgram__Entire_Full_Dataset_1__AvgVal_F1.png")
+   
    plt.close()
