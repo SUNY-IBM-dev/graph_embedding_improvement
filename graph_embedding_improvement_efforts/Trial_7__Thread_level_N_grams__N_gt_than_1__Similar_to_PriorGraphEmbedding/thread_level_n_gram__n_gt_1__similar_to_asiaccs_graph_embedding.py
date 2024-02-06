@@ -1441,7 +1441,7 @@ if __name__ == '__main__':
                                   'Full_Dataset_1_NoTraceUIDupdated',
                                   'Full_Dataset_2_NoTraceUIDupdated',
                                   ], 
-                        default = ['Dataset_1__NoTrace_UIDruleUpdated'])
+                        default = ['Full_Dataset_2_NoTraceUIDupdated'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1494,7 +1494,7 @@ if __name__ == '__main__':
                                   'Best_RF__Full_Dataset_2_NoTraceUIDupdated__4gram__sum_pool',    
 
                                   ], 
-                                  default = ["Best_RF__Partial_Dataset_1_NoTraceUIDUpdated__4gram__sum_pool"])
+                                  default = ["RandomForest_searchspace_1"])
 
 #PW: Why 10 Kfold? just common values
  # flatten vs no graph ?? is that only ML tuning differece??
@@ -1527,7 +1527,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["final_test"] )
+                         default = ["search_on_all"] )
 
 
     # --------- For Thread-level N-gram
@@ -1547,7 +1547,7 @@ if __name__ == '__main__':
                          default = ["felis"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [20])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 
@@ -2230,8 +2230,22 @@ if __name__ == '__main__':
          return manual_space
 
 
+    def Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__4gram__sum_pool() -> dict :
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_103053/RandomForest__Dataset_2__NoTrace_UIDruleUpdated__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-03_103053.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': 20,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 200,
+            'random_state': 0,
+            'split_shuffle_seed': 100}
 
-
+         )
+         return manual_space
 
     ####################################################################################################################################################
 
@@ -2301,7 +2315,8 @@ if __name__ == '__main__':
     elif search_space_option == 'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2gram__sum_pool': # tuning done
             search_space = Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__2gram__sum_pool()
 
-
+    elif search_space_option == 'Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__4gram__sum_pool': # tuning done
+            search_space = Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__4gram__sum_pool()
 
     # -----------------------------------------------------------
 
