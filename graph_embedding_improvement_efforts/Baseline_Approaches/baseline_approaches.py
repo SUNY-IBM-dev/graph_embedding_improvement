@@ -701,7 +701,7 @@ if __name__ == '__main__':
                                   'Full_Dataset_2_Double_Stratified'
 
                                   ], 
-                        default = ['Full_Dataset_2_Double_Stratified'])
+                        default = ['Full_Dataset_1_Double_Stratified'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -732,6 +732,8 @@ if __name__ == '__main__':
 
 
 
+                                  'Best_RF__Full_Dataset_1_Double_Stratified_2gram__baseline_3', # tuning-complete # final-tested
+
 
                                   ], 
                                   default = ["RandomForest_searchspace_1"])
@@ -758,7 +760,7 @@ if __name__ == '__main__':
 
 
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [2])  # Added by JY @ 2024-1-20
+                        default = [1])  # Added by JY @ 2024-1-20
 
 
 
@@ -1399,7 +1401,22 @@ if __name__ == '__main__':
 
 
 
+    def Best_RF__Full_Dataset_1_Double_Stratified_2gram__baseline_3() -> dict:
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_225838/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_225838.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 5,
+            'n_estimators': 200,
+            'random_state': 42,
+            'split_shuffle_seed': 100}
 
+         )
+         return manual_space
 
 
 
@@ -1419,6 +1436,9 @@ if __name__ == '__main__':
 
     elif search_space_option == "RandomForest_default_hyperparam":
        search_space = RandomForest_default_hyperparam()   
+
+    elif search_space_option == "Best_RF__Full_Dataset_1_Double_Stratified_2gram__baseline_3":
+       search_space = Best_RF__Full_Dataset_1_Double_Stratified_2gram__baseline_3()
 
 
     # --tuned

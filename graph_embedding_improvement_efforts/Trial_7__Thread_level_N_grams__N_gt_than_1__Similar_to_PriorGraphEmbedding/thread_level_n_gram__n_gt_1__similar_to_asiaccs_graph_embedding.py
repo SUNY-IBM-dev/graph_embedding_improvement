@@ -1445,7 +1445,7 @@ if __name__ == '__main__':
                                   'Full_Dataset_1_Double_Stratified',
                                   'Full_Dataset_2_Double_Stratified'
                                   ], 
-                        default = ['Full_Dataset_2_Double_Stratified'])
+                        default = ['Full_Dataset_1_Double_Stratified'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1496,9 +1496,12 @@ if __name__ == '__main__':
                                   'Best_RF__Full_Dataset_2_NoTraceUIDupdated__1gram__sum_pool', 
                                   'Best_RF__Full_Dataset_2_NoTraceUIDupdated__2gram__sum_pool', 
                                   'Best_RF__Full_Dataset_2_NoTraceUIDupdated__4gram__sum_pool',    
+                                  # -------------------------------------------------------------------------------------
+
+                                  "Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool", # tuning-complete
 
                                   ], 
-                                  default = ["RandomForest_searchspace_1"])
+                                  default = ["Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool"])
 
 #PW: Why 10 Kfold? just common values
  # flatten vs no graph ?? is that only ML tuning differece??
@@ -1531,7 +1534,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_train"] )
+                         default = ["final_test"] )
 
 
     # --------- For Thread-level N-gram
@@ -1551,7 +1554,7 @@ if __name__ == '__main__':
                          default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [7])  # Added by JY @ 2024-1-20
+                        default = [1])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 
@@ -2278,6 +2281,25 @@ if __name__ == '__main__':
 
          )
          return manual_space
+    
+
+
+    def Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool() -> dict:        
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_230350/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_230350.csv
+         manual_space = []
+         manual_space.append(
+               {'bootstrap': False,
+               'criterion': 'gini',
+               'max_depth': 15,
+               'max_features': 'sqrt',
+               'min_samples_leaf': 1,
+               'min_samples_split': 2,
+               'n_estimators': 200,
+               'random_state': 42,
+               'split_shuffle_seed': 100}             
+         )
+         return manual_space
+    
 
     ####################################################################################################################################################
 
@@ -2295,6 +2317,9 @@ if __name__ == '__main__':
 
     elif search_space_option == "RandomForest_default_hyperparam":
        search_space = RandomForest_default_hyperparam()   
+
+
+      
 
     # -----------------------------------------------------------
 
@@ -2353,7 +2378,8 @@ if __name__ == '__main__':
     # -----------------------------------------------------------
 
 
-
+    elif search_space_option == "Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool": # tuning done
+            search_space = Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool()
 
 
     else:
