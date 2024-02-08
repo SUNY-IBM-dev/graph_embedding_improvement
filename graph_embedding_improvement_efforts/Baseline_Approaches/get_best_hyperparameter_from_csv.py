@@ -9,11 +9,12 @@ if __name__ == "__main__":
       raise ValueError("'up_to_row' should only either be integer or None")
 
     dataset_csvpath =\
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_225838/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_225838.csv"
+      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817.csv"
     # -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     tuning_df = pd.read_csv(dataset_csvpath)
- 
+
+    print(tuning_df.size)
     if up_to_row:
          print(f"up_to_row: {up_to_row}", flush=True)
          tuning_df = tuning_df[:up_to_row + 1]

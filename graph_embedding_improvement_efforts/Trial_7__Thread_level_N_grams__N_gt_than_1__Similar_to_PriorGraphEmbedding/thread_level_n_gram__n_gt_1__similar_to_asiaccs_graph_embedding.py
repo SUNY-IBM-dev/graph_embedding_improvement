@@ -592,11 +592,6 @@ def pretrain__countvectorizer_on_training_set__before_graph_embedding_generation
 
             pretrained_countvectorizers_list.append( countvectorizer )
 
-
-      
-
-
-
       return pretrained_countvectorizers_list
 
 
@@ -1445,7 +1440,7 @@ if __name__ == '__main__':
                                   'Full_Dataset_1_Double_Stratified',
                                   'Full_Dataset_2_Double_Stratified'
                                   ], 
-                        default = ['Full_Dataset_1_Double_Stratified'])
+                        default = ['Full_Dataset_2_Double_Stratified'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1498,10 +1493,15 @@ if __name__ == '__main__':
                                   'Best_RF__Full_Dataset_2_NoTraceUIDupdated__4gram__sum_pool',    
                                   # -------------------------------------------------------------------------------------
 
-                                  "Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool", # tuning-complete
+                                  "Best_RF__Full_Dataset_1_Double_Stratified__1gram__sum_pool", # tuning-complete # final-tested
+                                  "Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool", # tuning-complete # final-tested
+
+
+                                  "Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool", # tuning-complete 
+                                  "Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool", # tuning-complete # final-tested
 
                                   ], 
-                                  default = ["Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool"])
+                                  default = ["Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool"])
 
 #PW: Why 10 Kfold? just common values
  # flatten vs no graph ?? is that only ML tuning differece??
@@ -1539,7 +1539,7 @@ if __name__ == '__main__':
 
     # --------- For Thread-level N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [2])  # Added by JY @ 2024-1-20
+                        default = [1])  # Added by JY @ 2024-1-20
 
 
     parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
@@ -1551,7 +1551,7 @@ if __name__ == '__main__':
     parser.add_argument("--running_from_machine", 
                                  
                          choices= ["panther", "ocelot", "felis"], 
-                         default = ["panther"] )
+                         default = ["felis"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
                         default = [1])  # Added by JY @ 2024-1-20
@@ -2284,6 +2284,24 @@ if __name__ == '__main__':
     
 
 
+    def Best_RF__Full_Dataset_1_Double_Stratified__1gram__sum_pool() -> dict:
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-06_134503/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-06_134503.csv
+         manual_space = []
+         manual_space.append(
+               {'bootstrap': False,
+               'criterion': 'gini',
+               'max_depth': 20,
+               'max_features': 'sqrt',
+               'min_samples_leaf': 1,
+               'min_samples_split': 5,
+               'n_estimators': 100,
+               'random_state': 0,
+               'split_shuffle_seed': 100}      
+         )
+         return manual_space
+    
+
+
     def Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool() -> dict:        
          # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_230350/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_230350.csv
          manual_space = []
@@ -2299,6 +2317,45 @@ if __name__ == '__main__':
                'split_shuffle_seed': 100}             
          )
          return manual_space
+    
+
+
+    def Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool() -> dict:
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-07_145320/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-07_145320.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': None,
+            'min_samples_leaf': 1,
+            'min_samples_split': 10,
+            'n_estimators': 500,
+            'random_state': 0,
+            'split_shuffle_seed': 100}            
+         )
+         return manual_space
+          
+
+
+
+    def Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool() -> dict:
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_230519/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_230519.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': 15,
+            'max_features': None,
+            'min_samples_leaf': 3,
+            'min_samples_split': 2,
+            'n_estimators': 500,
+            'random_state': 0,
+            'split_shuffle_seed': 100}           
+         )
+         return manual_space
+    
+
     
 
     ####################################################################################################################################################
@@ -2377,9 +2434,19 @@ if __name__ == '__main__':
 
     # -----------------------------------------------------------
 
+    elif search_space_option == "Best_RF__Full_Dataset_1_Double_Stratified__1gram__sum_pool": # tuning done
+            search_space = Best_RF__Full_Dataset_1_Double_Stratified__1gram__sum_pool()
 
     elif search_space_option == "Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool": # tuning done
             search_space = Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool()
+
+    elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool": # tuning done
+            search_space = Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool()
+
+
+
+    elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool": # tuning done
+            search_space = Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool()
 
 
     else:

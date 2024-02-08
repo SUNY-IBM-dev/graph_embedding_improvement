@@ -29,7 +29,7 @@
 
 import pandas as pd 
 import matplotlib.pyplot as plt
-
+import os
 from scipy.stats import wilcoxon
 
 # import bootstrapped.bootstrap as bs
@@ -83,9 +83,10 @@ if __name__ == "__main__":
    # ----------------------------------------------- 
    # Set the following
 
-   Baseline_Tuning_csvpath = Baseline_4gram__Entire_Full_Dataset_1_Tuning_csvpath
-   Optimization_Tuning_csvpath = Thread_4gram__Entire_Full_Dataset_1_Tuning_csvpath
+   Baseline_Tuning_csvpath = Baseline_2gram__Entire_Full_Dataset_1_Tuning_csvpath
+   Optimization_Tuning_csvpath = Thread_2gram__Entire_Full_Dataset_1_Tuning_csvpath
 
+   statistic_choice = "mean_statistic"
    # -------------------------------------------------------------------------------------------------------------------------
 
 
@@ -126,23 +127,32 @@ if __name__ == "__main__":
    def correlation_coefficient(x, y):
        return np.corrcoef(x, y)[0, 1]
 
+
+   statistic_dict = {"mean_statistic": mean_statistic,
+   "sum_of_ranks": sum_of_ranks,
+   "anova_f_statistic": anova_f_statistic,
+   "correlation_coefficient": correlation_coefficient, }
+
    result = permutation_test( ( Baseline_Tuning__AvgVal_F1[:available_hyperparam_sets_num] ,  
                                 Optimization_Tuning__AvgVal_F1[:available_hyperparam_sets_num] ) ,
-                                correlation_coefficient, 
+                                statistic_dict[statistic_choice], 
                                 alternative='two-sided')
+
+
+   print(f"{os.path.split(Baseline_Tuning_csvpath)[1]}\nvs\n{os.path.split(Optimization_Tuning_csvpath)[1]}")
    if result.pvalue < 0.05:
-      print(f"AvgVal_F1: The difference is statistically significant. p-value: {result.pvalue}")
+      print(f"AvgVal_F1: The difference is statistically significant (permutation_test-{statistic_choice}).\np-value: {result.pvalue}")
    else:
-      print(f"AvgVal_F1: The difference is not statistically significant. p-value: {result.pvalue}")
+      print(f"AvgVal_F1: The difference is not statistically significant (permutation_test-{statistic_choice}).\np-value: {result.pvalue}")
 
    result = permutation_test( ( Baseline_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num] ,  
                                 Optimization_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num] ) ,
-                                correlation_coefficient, 
+                                statistic_dict[statistic_choice], 
                                 alternative='two-sided')
    if result.pvalue < 0.05:
-      print(f"AvgVal_Accuracy: The difference is statistically significant. p-value: {result.pvalue}")
+      print(f"AvgVal_Accuracy: The difference is statistically significant (permutation_test-{statistic_choice}).\np-value: {result.pvalue}")
    else:
-      print(f"AvgVal_Accuracy: The difference is not statistically significant. p-value: {result.pvalue}")
+      print(f"AvgVal_Accuracy: The difference is not statistically significant (permutation_test-{statistic_choice}).\np-value: {result.pvalue}")
 
 
    # results = bs.bootstrap_ab(Baseline_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num], 
