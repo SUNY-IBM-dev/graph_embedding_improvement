@@ -32,11 +32,14 @@ import matplotlib.pyplot as plt
 
 from scipy.stats import wilcoxon
 
-import bootstrapped.bootstrap as bs
-import bootstrapped.stats_functions as bs_stats
+# import bootstrapped.bootstrap as bs
+# import bootstrapped.stats_functions as bs_stats
 import numpy as np
 
 from scipy.stats import friedmanchisquare
+
+# https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.permutation_test.html
+from scipy.stats import permutation_test
 
 if __name__ == "__main__":
 
@@ -80,8 +83,8 @@ if __name__ == "__main__":
    # ----------------------------------------------- 
    # Set the following
 
-   Baseline_Tuning_csvpath = Baseline_1gram__Entire_Full_Dataset_1_Tuning_csvpath
-   Optimization_Tuning_csvpath = Thread_1gram__Entire_Full_Dataset_1_Tuning_csvpath
+   Baseline_Tuning_csvpath = Baseline_4gram__Entire_Full_Dataset_1_Tuning_csvpath
+   Optimization_Tuning_csvpath = Thread_4gram__Entire_Full_Dataset_1_Tuning_csvpath
 
    # -------------------------------------------------------------------------------------------------------------------------
 
@@ -101,44 +104,45 @@ if __name__ == "__main__":
    available_hyperparam_sets_num = min( len(Baseline_Tuning__AvgVal_Accuracy), len(Optimization_Tuning__AvgVal_Accuracy) )
    if available_hyperparam_sets_num != all_possible_hyperparam_sets_num:
       tuning_incomplete = True
-      print(f"Either one did not finish tuning all {all_possible_hyperparam_sets_num} hyperparameter-sets.\nSo plotting based on the shorter length {available_hyperparam_sets_num}", flush = True)
+      print(f"Either one did not finish tuning all {all_possible_hyperparam_sets_num} hyperparameter-sets.\nSo doing based on the shorter length {available_hyperparam_sets_num}", flush = True)
 
+   # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.permutation_test.html
+   # Assuming a two-sided test (alternative='two-sided'), you can change it if needed
 
+   # Better understand this -- WHAT WOULD BE A GOOD STATISTIC FOR OUR PROBLEM?
+   def mean_statistic(x, y, axis):
+      return np.mean(x, axis=axis) - np.mean(y, axis=axis)
 
-   # It turns out nose are NOT normal distribution, but rather multi-modal distribution
-   # So apply paired-Non-parameteric statistical signficiance test
+   def sum_of_ranks(y_true, y_pred):
+      ranks = np.argsort(np.concatenate((y_true, y_pred)))
+      rank_sum_baseline = ranks[:len(y_true)].sum()
+      rank_sum_optimization = ranks[len(y_true):].sum()
+      return rank_sum_optimization - rank_sum_baseline
 
-   # Perform the Wilcoxon signed-rank test
-   statistic, p_value = wilcoxon(Baseline_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num], 
-                                 Optimization_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num])
+   # Your test statistic function (replace this with your own)
+   def anova_f_statistic(*groups):
+      return np.var(np.concatenate(groups)) / np.mean([np.var(group) for group in groups])
+   
+   def correlation_coefficient(x, y):
+       return np.corrcoef(x, y)[0, 1]
 
-   # Print the results
-   print(f"Wilcoxon signed-rank statistic (Avg.Val.Acc): {statistic}")
-   print(f"P-value: {p_value}")
-
-   # Check for statistical significance (using a common significance level of 0.05)
-   if p_value < 0.05:
-      print("The difference is statistically significant.")
+   result = permutation_test( ( Baseline_Tuning__AvgVal_F1[:available_hyperparam_sets_num] ,  
+                                Optimization_Tuning__AvgVal_F1[:available_hyperparam_sets_num] ) ,
+                                correlation_coefficient, 
+                                alternative='two-sided')
+   if result.pvalue < 0.05:
+      print(f"AvgVal_F1: The difference is statistically significant. p-value: {result.pvalue}")
    else:
-      print("The difference is not statistically significant.")
+      print(f"AvgVal_F1: The difference is not statistically significant. p-value: {result.pvalue}")
 
-
-
-
-   # Perform the Wilcoxon signed-rank test
-   statistic, p_value = wilcoxon(Baseline_Tuning__AvgVal_F1[:available_hyperparam_sets_num], 
-                                 Optimization_Tuning__AvgVal_F1[:available_hyperparam_sets_num])
-
-   # Print the results
-   print(f"Wilcoxon signed-rank statistic (Avg.Val.F1): {statistic}")
-   print(f"P-value: {p_value}")
-
-   # Check for statistical significance (using a common significance level of 0.05)
-   if p_value < 0.05:
-      print("The difference is statistically significant.")
+   result = permutation_test( ( Baseline_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num] ,  
+                                Optimization_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num] ) ,
+                                correlation_coefficient, 
+                                alternative='two-sided')
+   if result.pvalue < 0.05:
+      print(f"AvgVal_Accuracy: The difference is statistically significant. p-value: {result.pvalue}")
    else:
-      print("The difference is not statistically significant.")
-
+      print(f"AvgVal_Accuracy: The difference is not statistically significant. p-value: {result.pvalue}")
 
 
    # results = bs.bootstrap_ab(Baseline_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num], 
@@ -203,3 +207,52 @@ if __name__ == "__main__":
    #    print("There are significant differences among the groups.")
    # else:
    #    print("There are no significant differences among the groups.")      
+
+
+
+   ''' The Wilcoxon signed-rank test is paired non-parametric but problem is it has 'symmetry assumption'.
+       Our Avg.Val.Accuracies and Avg.Val.F1-scores are multimodal distribution.  
+       SO NOT APPLICALE
+   '''
+
+   # # It turns out nose are NOT normal distribution, but rather multi-modal distribution
+   # # So apply paired-Non-parameteric statistical signficiance test
+
+   # # Perform the Wilcoxon signed-rank test  --- Try different parameters?
+   # # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html
+   # statistic, p_value = wilcoxon(Baseline_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num], 
+   #                               Optimization_Tuning__AvgVal_Accuracy[:available_hyperparam_sets_num],
+   #                               zero_method = "wilcox",
+   #                               # correction = "true",
+   #                               mode = "exact")
+
+   # # Print the results
+   # print(f"Wilcoxon signed-rank statistic (Avg.Val.Acc): {statistic}")
+   # print(f"P-value: {p_value}")
+
+   # # Check for statistical significance (using a common significance level of 0.05)
+   # if p_value < 0.05:
+   #    print("The difference is statistically significant.")
+   # else:
+   #    print("The difference is not statistically significant.")
+
+
+
+
+   # # Perform the Wilcoxon signed-rank test
+   # statistic, p_value = wilcoxon(Baseline_Tuning__AvgVal_F1[:available_hyperparam_sets_num], 
+   #                               Optimization_Tuning__AvgVal_F1[:available_hyperparam_sets_num],
+
+   #                               zero_method = "wilcox",
+   #                               # correction = "true",
+   #                               mode = "auto")
+
+   # # Print the results
+   # print(f"Wilcoxon signed-rank statistic (Avg.Val.F1): {statistic}")
+   # print(f"P-value: {p_value}")
+
+   # # Check for statistical significance (using a common significance level of 0.05)
+   # if p_value < 0.05:
+   #    print("The difference is statistically significant.")
+   # else:
+   #    print("The difference is not statistically significant.")

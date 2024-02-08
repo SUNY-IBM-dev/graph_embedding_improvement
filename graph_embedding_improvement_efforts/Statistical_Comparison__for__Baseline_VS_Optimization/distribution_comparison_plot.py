@@ -21,7 +21,7 @@ def plot_distribution_comparison_histograms(Baseline_AvgVal_Accuracies,
 
 
 
-
+   tuning_incomplete = False
    all_possible_hyperparam_sets_num = 6912
    available_hyperparam_sets_num = min( len(Baseline_AvgVal_Accuracies), len(Optimization_AvgVal_Accuracies) )
    if available_hyperparam_sets_num != all_possible_hyperparam_sets_num:
@@ -54,9 +54,9 @@ def plot_distribution_comparison_histograms(Baseline_AvgVal_Accuracies,
 
 
    plt.hist(Baseline_AvgVal_F1s[:available_hyperparam_sets_num], 
-            bins=50, density=False, alpha=0.7, color='blue', label='Baseline 2-gram')
+            bins=50, density=False, alpha=0.7, color='blue', label=Baseline_label)
    plt.hist(Optimization_AvgVal_F1s[:available_hyperparam_sets_num], 
-            bins=50, density=False, alpha=0.7, color='red', label='Thread 2-gram')
+            bins=50, density=False, alpha=0.7, color='red', label= Optimization_label)
 
    plt.title(f"{Dataset_name}", fontsize=11, pad=10)
    plt.xlabel('Avg.Val.F1', fontsize=11, labelpad=10)
