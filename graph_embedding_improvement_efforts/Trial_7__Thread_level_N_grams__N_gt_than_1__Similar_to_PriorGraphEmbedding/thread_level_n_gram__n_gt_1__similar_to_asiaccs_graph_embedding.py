@@ -1385,6 +1385,16 @@ def get_thread_level_N_gram_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__di
       return data_dict
 
 
+
+get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict
+
+# JY @ 2024-2-10: thread-level N>1 gram events + nodetype-5bits + FRNP event-counts (+incoming & outgoing) + Average Number of Different Threads per F/R/N/P node 
+def get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
+                                                            pretrained_Ngram_countvectorizer_list : list, # TODO        
+                                                            dataset : list, 
+                                                            pool : str = "sum",
+                                                      ):
+
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 
@@ -1501,7 +1511,7 @@ if __name__ == '__main__':
                                   "Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool", # tuning-complete # final-tested
 
                                   ], 
-                                  default = ["Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool"])
+                                  default = ["RandomForest_searchspace_1"])
 
 #PW: Why 10 Kfold? just common values
  # flatten vs no graph ?? is that only ML tuning differece??
@@ -1534,12 +1544,12 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["final_test"] )
+                         default = ["search_on_train"] )
 
 
     # --------- For Thread-level N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [4])  # Added by JY @ 2024-1-20
 
 
     parser.add_argument('--only_train_specified_Ngram', nargs = 1, type = bool, 
@@ -1551,10 +1561,10 @@ if __name__ == '__main__':
     parser.add_argument("--running_from_machine", 
                                  
                          choices= ["panther", "ocelot", "felis"], 
-                         default = ["felis"] )
+                         default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [30])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 
@@ -2586,6 +2596,41 @@ if __name__ == '__main__':
              Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
          feature_names = nodetype_names + FRNP_AvgNum_DiffThreads +\
                          Ngram_edge_feature_names # yes this order is correct
+   
+
+
+    # JY @ 2024-2-10: Integrate all thread-level N-gram variants (i.e., thread-level N-1gram with all additional features)
+    elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP":
+
+
+         pretrained_Ngram_countvectorizer_list = pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( Ngram = Ngram,
+                                                                                                                               dataset= train_dataset,
+                                                                                                                               only_train_specified_Ngram = only_train_specified_Ngram 
+                                                                                                                              )
+
+
+         train_dataset__signal_amplified_dict = get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
+                                                                                       pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                       dataset= train_dataset,
+                                                                                       pool = pool_option
+                                                                                    )
+
+         nodetype_names = ["file", "registry", "network", "process", "thread"] 
+         FRNP_event_count_features = ["file_event_cnt", "registry_event_cnt", "network_event_cnt", "process_event_cnt" ]
+         FRNP_outgoing_and_incoming_events_count_features = \
+                                    ["file_outgoing_event_cnt", "registry_outgoing_event_cnt", "network_outgoing_event_cnt", "process_outgoing_event_cnt",
+                                     "file_incoming_event_cnt", "registry_incoming_event_cnt", "network_incoming_event_cnt", "process_incoming_event_cnt"]   
+         FRNP_AvgNum_DiffThreads = ["file_avg_diff_threads", "registry_avg_diff_threads", "network_avg_diff_threads", "process_avg_diff_threads" ]
+
+
+         Ngram_edge_feature_names = []
+         for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+             Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+         # JY @ 2024-2-10
+         feature_names = nodetype_names + FRNP_event_count_features + FRNP_outgoing_and_incoming_events_count_features + FRNP_AvgNum_DiffThreads +\
+                         Ngram_edge_feature_names # yes this order is correct
+
+
 
     else:
          ValueError(f"Invalid graph_embedding_option ({graph_embedding_option})")                  
@@ -2630,7 +2675,7 @@ if __name__ == '__main__':
                FRNP_event_count_features = ["file_event_cnt", "registry_event_cnt", "network_event_cnt", "process_event_cnt" ] 
                Ngram_edge_feature_names = []
                for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
-                  Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+                   Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
                feature_names = nodetype_names + FRNP_event_count_features + \
                                Ngram_edge_feature_names # yes this order is correct       
 
@@ -2671,6 +2716,32 @@ if __name__ == '__main__':
                   Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
                feature_names = nodetype_names + FRNP_AvgNum_DiffThreads +\
                               Ngram_edge_feature_names # yes this order is correct
+
+
+         # JY @ 2024-2-10: Integrate all thread-level N-gram variants (i.e., thread-level N-1gram with all additional features)
+         elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP":
+
+
+               final_test_dataset__signal_amplified_dict = get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
+                                                                                             pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
+                                                                                             dataset= final_test_dataset,
+                                                                                             pool = pool_option
+                                                                                          )
+
+               nodetype_names = ["file", "registry", "network", "process", "thread"] 
+               FRNP_event_count_features = ["file_event_cnt", "registry_event_cnt", "network_event_cnt", "process_event_cnt" ]
+               FRNP_outgoing_and_incoming_events_count_features = \
+                                          ["file_outgoing_event_cnt", "registry_outgoing_event_cnt", "network_outgoing_event_cnt", "process_outgoing_event_cnt",
+                                          "file_incoming_event_cnt", "registry_incoming_event_cnt", "network_incoming_event_cnt", "process_incoming_event_cnt"]   
+               FRNP_AvgNum_DiffThreads = ["file_avg_diff_threads", "registry_avg_diff_threads", "network_avg_diff_threads", "process_avg_diff_threads" ]
+
+
+               Ngram_edge_feature_names = []
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  Ngram_edge_feature_names += pretrained_Ngram_countvectorizer.get_feature_names_out().tolist()
+               # JY @ 2024-2-10
+               feature_names = nodetype_names + FRNP_event_count_features + FRNP_outgoing_and_incoming_events_count_features + FRNP_AvgNum_DiffThreads +\
+                               Ngram_edge_feature_names # yes this order is correct
 
 
 
