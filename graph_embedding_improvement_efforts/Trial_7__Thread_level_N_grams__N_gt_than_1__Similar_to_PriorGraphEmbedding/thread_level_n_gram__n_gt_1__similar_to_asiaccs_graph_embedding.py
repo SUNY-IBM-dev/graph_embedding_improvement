@@ -1386,8 +1386,8 @@ def get_thread_level_N_gram_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__di
 
 
 
-# JY @ 2024-2-10: thread-level N>1 gram events + nodetype-5bits + FRNP event-counts (+incoming & outgoing) + Average Number of Different Threads per F/R/N/P node 
-def get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
+# JY @ 2024-2-10: thread-level N>1 gram events + nodetype-5bits + FRNP event-counts (outgoing & incoming) + Average Number of Different Threads per F/R/N/P node 
+def get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
                                                             pretrained_Ngram_countvectorizer_list : list, # TODO        
                                                             dataset : list, 
                                                             pool : str = "sum",
@@ -1420,6 +1420,17 @@ def get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount
   
             data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.tensor([]) # Added by JY @ 2023-07-19
             data_thread_level_all_Ngram_features = torch.tensor([]) # Added by JY @ 2023-01-20
+
+
+
+
+            data_thread_node___dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node = torch.tensor([]) # Added by JY @ 2024-01-27
+
+            data_thread_node___dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node = torch.tensor([]) # Added by JY @ 2024-01-27
+            data_thread_node___dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node = torch.tensor([]) # Added by JY @ 2024-01-27
+
+
+
             for thread_node_idx in thread_node_indices:
 
                edge_src_indices = data.edge_index[0]
@@ -1672,8 +1683,10 @@ def get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount
             # [ node-type5bit + AvgNum_DiffThreads_perFRNP + N>1gram events ]
 
             upto_Non_Ngramfeats_Dim =\
-               len(data_thread_node_all_unique_adjacent_nodes_5bit_dists) + len(data_thread_node___dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node) +\
-               len(data_thread_node___dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node) + len(data_thread_node___dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node)
+               data_thread_node_all_unique_adjacent_nodes_5bit_dists.shape[1]+\
+               data_thread_node___dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node.shape[1] +\
+               data_thread_node___dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node.shape[1] +\
+               data_thread_node___dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node.shape[1]
 
             thread_level_nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__N_gram_events__dist = torch.cat( 
                                                                                          [data_thread_node_all_unique_adjacent_nodes_5bit_dists,
@@ -1760,7 +1773,7 @@ if __name__ == '__main__':
                                   'Full_Dataset_1_Double_Stratified',
                                   'Full_Dataset_2_Double_Stratified'
                                   ], 
-                        default = ['Full_Dataset_2_Double_Stratified'])
+                        default = ['Full_Dataset_1_Double_Stratified'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1835,10 +1848,10 @@ if __name__ == '__main__':
 
                                   'thread_level__N>1_grams_events__nodetype5bit__AvgNum_DiffThreads_perFRNP', # implemented at 2024-1-29
 
-                                  'thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP', # TODO: implement
+                                  'thread_level__N>1_grams_events__nodetype5bit__All_Additional_Features', # TODO: implement
 
                                   ], 
-                                  default = ['thread_level__N>1_grams_events__nodetype5bit'])
+                                  default = ['thread_level__N>1_grams_events__nodetype5bit__All_Additional_Features'])
     
     parser.add_argument('-pool_opt', '--pool_option', 
                         choices= ['sum',
@@ -1854,7 +1867,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_train"] )
+                         default = ["search_on_all"] )
 
 
     # --------- For Thread-level N-gram
@@ -1874,7 +1887,7 @@ if __name__ == '__main__':
                          default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [30])  # Added by JY @ 2024-1-20
+                        default = [1])  # Added by JY @ 2024-1-20
 
    # ==================================================================================================================================
 
@@ -2910,7 +2923,7 @@ if __name__ == '__main__':
 
 
     # JY @ 2024-2-10: Integrate all thread-level N-gram variants (i.e., thread-level N-1gram with all additional features)
-    elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP":
+    elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__All_Additional_Features":
 
 
          pretrained_Ngram_countvectorizer_list = pretrain__countvectorizer_on_training_set__before_graph_embedding_generation( Ngram = Ngram,
@@ -2919,7 +2932,7 @@ if __name__ == '__main__':
                                                                                                                               )
 
 
-         train_dataset__signal_amplified_dict = get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
+         train_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
                                                                                        pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
                                                                                        dataset= train_dataset,
                                                                                        pool = pool_option
@@ -3029,10 +3042,10 @@ if __name__ == '__main__':
 
 
          # JY @ 2024-2-10: Integrate all thread-level N-gram variants (i.e., thread-level N-1gram with all additional features)
-         elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP":
+         elif graph_embedding_option == "thread_level__N>1_grams_events__nodetype5bit__All_Additional_Features":
 
 
-               final_test_dataset__signal_amplified_dict = get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
+               final_test_dataset__signal_amplified_dict = get_thread_level_N_gram_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
                                                                                              pretrained_Ngram_countvectorizer_list = pretrained_Ngram_countvectorizer_list,
                                                                                              dataset= final_test_dataset,
                                                                                              pool = pool_option
