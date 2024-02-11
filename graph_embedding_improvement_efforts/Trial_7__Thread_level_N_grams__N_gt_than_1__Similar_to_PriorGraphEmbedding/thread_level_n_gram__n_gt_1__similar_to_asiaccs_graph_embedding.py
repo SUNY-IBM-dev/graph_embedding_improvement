@@ -1386,14 +1386,324 @@ def get_thread_level_N_gram_events__nodetype5bit__AvgNum_DiffThreads_perFRNP__di
 
 
 
-get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict
-
 # JY @ 2024-2-10: thread-level N>1 gram events + nodetype-5bits + FRNP event-counts (+incoming & outgoing) + Average Number of Different Threads per F/R/N/P node 
 def get_1_grams_events__nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__AvgNum_DiffThreads_perFRNP__dict( 
                                                             pretrained_Ngram_countvectorizer_list : list, # TODO        
                                                             dataset : list, 
                                                             pool : str = "sum",
                                                       ):
+
+      thread_node_tensor = torch.tensor([0, 0, 0, 0, 1])
+
+      file_node_tensor = torch.tensor([1, 0, 0, 0, 0])
+      reg_node_tensor = torch.tensor([0, 1, 0, 0, 0])
+      net_node_tensor = torch.tensor([0, 0, 1, 0, 0])
+      proc_node_tensor = torch.tensor([0, 0, 0, 1, 0])
+
+
+      data_dict = dict()
+
+      cnt = 1
+      for data in dataset:
+            
+            print(f"{cnt} / {len(dataset)}: {data.name} -- generate graph-embedding", flush = True)
+
+            # Added by JY @ 2023-07-18 to handle node-attr dim > 5  
+            # if data.x.shape[1] != 5:
+  
+
+            # ------------------------------------------------------------------------------------------------------------------------------------------------
+            data_x_first5 = data.x[:,:5]
+            thread_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, thread_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+
+            # which this node is a source-node (outgoing-edge w.r.t this node)
+  
+            data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.tensor([]) # Added by JY @ 2023-07-19
+            data_thread_level_all_Ngram_features = torch.tensor([]) # Added by JY @ 2023-01-20
+            for thread_node_idx in thread_node_indices:
+
+               edge_src_indices = data.edge_index[0]
+               edge_tar_indices = data.edge_index[1]
+
+               # which this node is a target-node (outgoing-edge w.r.t this node)
+               outgoing_edges_from_thread_node_idx = torch.nonzero( edge_src_indices == thread_node_idx ).flatten()
+               # which this node is a target-node (incoming-edge w.r.t this node)
+               incoming_edges_to_thread_node_idx = torch.nonzero( edge_tar_indices == thread_node_idx ).flatten()
+
+               # Following is to deal with edge-attr (event-dist & time-scalar) -------------------------------------------------------------------------------------
+               edge_attr_of_incoming_edges_from_thread_node_idx = data.edge_attr[incoming_edges_to_thread_node_idx]
+               edge_attr_of_outgoing_edges_from_thread_node_idx = data.edge_attr[outgoing_edges_from_thread_node_idx]
+
+
+
+               ''' JY @ 2024-1-20: Get thread-level event-sequence sorted by timestamps '''
+               # Refered to : https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/thread_level_n_gram__n_gt_1__similar_to_asiaccs_graph_embedding.py#L483C1-L491C95
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx = torch.cat([edge_attr_of_incoming_edges_from_thread_node_idx, 
+                                                                                   edge_attr_of_outgoing_edges_from_thread_node_idx],
+                                                                                   dim = 0)
+
+
+               timestamp_sorted_indices = torch.argsort(edge_attr_of_both_direction_edges_from_thread_node_idx[:, -1], descending=False)
+
+               edge_attr_of_both_direction_edges_from_thread_node_idx__sorted = edge_attr_of_both_direction_edges_from_thread_node_idx[ timestamp_sorted_indices ]
+
+               taskname_indices = torch.nonzero(edge_attr_of_both_direction_edges_from_thread_node_idx__sorted[:,:-1], as_tuple=False)[:, -1]
+
+
+               thread_sorted_event_list = [taskname_colnames[i] for i in taskname_indices]
+
+               thread_sorted_event_str_sequence = " ".join(thread_sorted_event_list) # for compabitiblity with countvecotrizer
+
+               # transform and get count -- https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#sklearn.feature_extraction.text.CountVectorizer.transform
+               # Refer to: https://github.com/SUNY-IBM-dev/graph_embedding_improvement/blob/20627016d59466d3dad191ff208efce97b15d35e/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/local_ngram__standard_message_passing__graph_embedding.py#L760C41-L760C72
+
+               # Get all Ngrams (N could be multiple, depending on 'only_train_specified_Ngram' parameter value)
+               thread_all_Ngram_counts__appended_nparray = np.array([]) # torch.Tensor()
+               for pretrained_Ngram_countvectorizer in pretrained_Ngram_countvectorizer_list:
+                  # If multiple countvectorizers, supposed to start from 1gram to Ngram
+                  #print(f"pretrained_Ngram_countvectorizer.ngram_range: {pretrained_Ngram_countvectorizer.ngram_range}", flush= True)
+                  thread_Ngram_counts__portion = pretrained_Ngram_countvectorizer.transform( [ thread_sorted_event_str_sequence ] ).toarray() # needs to be in a list
+                  thread_all_Ngram_counts__appended_nparray = np.append(thread_all_Ngram_counts__appended_nparray, thread_Ngram_counts__portion )           
+               #print("\n")
+
+               # JY @ 2024-1-20: so that can stack on 'data_thread_level_all_Ngram_features' for all thread's Ngram features within this subgrpah(data)
+               thread_all_Ngram_counts__appended_tensor = torch.Tensor(thread_all_Ngram_counts__appended_nparray).view(1,-1) # for Size([1,edge_feat_len])
+               data_thread_level_all_Ngram_features = torch.cat((data_thread_level_all_Ngram_features, thread_all_Ngram_counts__appended_tensor), dim=0)                  
+
+
+
+               # ==============================================================================================================================================
+               # Node-level
+
+               # But also need to consider the multi-graph aspect here. 
+               # So here, do not count twice for duplicate adjacent nodes due to multigraph.
+               # Just need to get the distribution.
+               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
+               unique_outgoing_edges_from_thread_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_thread_node_idx ], dim=1, return_inverse=True)
+
+               # Find unique column-wise pairs (dropping duplicates - src/dst pairs that come from multi-graph)
+               unique_incoming_edges_to_thread_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_thread_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_thread_node = unique_outgoing_edges_from_thread_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_thread_node = unique_incoming_edges_to_thread_node[0] # edge-src is index 0
+
+
+               #-- Option-1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
+               # # Already handled multi-graph case, but how about the bi-directional edge case?
+               # # For, T-->F and T<--F, information of F will be recorded twice."Dont Let it happen"
+               unique_adjacent_nodes_of_both_direction_edges_of_thread_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_thread_node, 
+                                                                                                         source_nodes_of_incoming_edges_to_thread_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_thread = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_thread_node], dim = 0 )
+               
+               data_thread_node_all_unique_adjacent_nodes_5bit_dists = torch.cat(( data_thread_node_all_unique_adjacent_nodes_5bit_dists,
+                                                                                   integrated_5bit_of_all_unique_adjacent_nodes_to_thread.unsqueeze(0) ), dim = 0)
+               # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+               # ==============================================================================================================================================
+               # Thread's File/Registry/Network/Process Event-Counts
+
+               ALL_outgoing_edges_from_thread_node = data.edge_index[:, outgoing_edges_from_thread_node_idx ]
+               ALL_incoming_edges_to_thread_node = data.edge_index[:, incoming_edges_to_thread_node_idx ]
+
+
+               target_nodes_of_ALL_outgoing_edges_from_thread_node___duplicate_possible = ALL_outgoing_edges_from_thread_node[1]
+               source_nodes_of_ALL_incoming_edges_to_thread_node___duplicate_possible = ALL_incoming_edges_to_thread_node[0]
+
+               types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node = data_x_first5[ target_nodes_of_ALL_outgoing_edges_from_thread_node___duplicate_possible ]
+               types_of_source_nodes_of_ALL_incoming_edges_to_thread_node = data_x_first5[ source_nodes_of_ALL_incoming_edges_to_thread_node___duplicate_possible ]
+
+
+               # FRNP 'outgoing and incoming' event count
+               # -- "dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node(duplicate possible)" is basically "F/R/N/P outgoing event counts from thread node" 
+               # -- "dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node(duplicate possible)" is basically "F/R/N/P incoming event counts to thread node"
+               #
+               #  * do need to drop the thread-node column though since we want F/R/N/P instead of F/R/N/P/T
+               dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node = torch.sum( types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node, dim = 0 )[:4]
+               dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node = torch.sum( types_of_source_nodes_of_ALL_incoming_edges_to_thread_node, dim = 0 )[:4]
+
+
+               # 'FRNP event count' can be obtained by vector-summing 'FRNP outgoing event count' and 'FRNP incoming event count'
+               # --- no need to involve any torch.unique operations
+               #     because we are not trying to find unique nodes, 
+               #     but just trying to get the total count of edges(==events) involved between thread-node and F/R/N/P nodes
+               dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node = \
+                                                                  torch.sum( 
+                                                                             torch.cat((dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node.unsqueeze(0),
+                                                                                        dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node.unsqueeze(0)), 
+                                                                                        dim = 0 ) ,
+                                                                           dim = 0 )
+
+               data_thread_node___dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node = \
+                                                      torch.cat(( data_thread_node___dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node,
+                                                                  dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node.unsqueeze(0) ), dim = 0)                                                                                  
+                                                                  # unsqueeze is necessary -- Returns a new tensor with a dimension of size one inserted at the specified position.
+                                                                  #                           https://pytorch.org/docs/stable/generated/torch.unsqueeze.html
+
+
+               data_thread_node___dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node = \
+                                                      torch.cat(( data_thread_node___dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node,
+                                                                  dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node.unsqueeze(0) ), dim = 0)
+
+               data_thread_node___dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node = \
+                                                      torch.cat(( data_thread_node___dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node,
+                                                                  dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node.unsqueeze(0)), dim = 0)
+
+
+               STOP_HERE = 1
+
+
+
+            # **************************************************************************************************************************************************
+
+            # ======================================================================================================================================================
+
+            # JY @ 2024-1-29 : Now deal with F/R/N/P
+
+            file_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, file_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+            reg_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, reg_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+            net_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, net_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+            proc_node_indices = torch.nonzero(torch.all(torch.eq( data_x_first5, proc_node_tensor), dim=1), as_tuple=False).flatten().tolist()
+
+
+            edge_src_indices = data.edge_index[0]
+            edge_tar_indices = data.edge_index[1]
+            data__num_diff_thread_nodes__file_node_interacted_with = []
+            for file_node_idx in file_node_indices:
+               outgoing_edges_from_file_node_idx = torch.nonzero( edge_src_indices == file_node_idx ).flatten()
+               incoming_edges_to_file_node_idx = torch.nonzero( edge_tar_indices == file_node_idx ).flatten()
+
+               unique_outgoing_edges_from_file_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_file_node_idx ], dim=1, return_inverse=True)
+               unique_incoming_edges_to_file_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_file_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_file_node = unique_outgoing_edges_from_file_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_file_node = unique_incoming_edges_to_file_node[0] # edge-src is index 0
+
+               unique_adjacent_nodes_of_both_direction_edges_of_file_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_file_node, 
+                                                                                                       source_nodes_of_incoming_edges_to_file_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_file = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_file_node], dim = 0 )
+               num_diff_thread_nodes__file_node_interacted_with = int(integrated_5bit_of_all_unique_adjacent_nodes_to_file[-1])
+               data__num_diff_thread_nodes__file_node_interacted_with.append(num_diff_thread_nodes__file_node_interacted_with)
+
+            data__num_diff_thread_nodes__reg_node_interacted_with = []
+            for reg_node_idx in reg_node_indices:
+               outgoing_edges_from_reg_node_idx = torch.nonzero( edge_src_indices == reg_node_idx ).flatten()
+               incoming_edges_to_reg_node_idx = torch.nonzero( edge_tar_indices == reg_node_idx ).flatten()
+
+               unique_outgoing_edges_from_reg_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_reg_node_idx ], dim=1, return_inverse=True)
+               unique_incoming_edges_to_reg_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_reg_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_reg_node = unique_outgoing_edges_from_reg_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_reg_node = unique_incoming_edges_to_reg_node[0] # edge-src is index 0
+
+               unique_adjacent_nodes_of_both_direction_edges_of_reg_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_reg_node, 
+                                                                                                       source_nodes_of_incoming_edges_to_reg_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_reg = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_reg_node], dim = 0 )
+               num_diff_thread_nodes__reg_node_interacted_with = int(integrated_5bit_of_all_unique_adjacent_nodes_to_reg[-1])
+               data__num_diff_thread_nodes__reg_node_interacted_with.append(num_diff_thread_nodes__reg_node_interacted_with)
+
+
+            data__num_diff_thread_nodes__net_node_interacted_with = []
+            for net_node_idx in net_node_indices:
+               outgoing_edges_from_net_node_idx = torch.nonzero( edge_src_indices == net_node_idx ).flatten()
+               incoming_edges_to_net_node_idx = torch.nonzero( edge_tar_indices == net_node_idx ).flatten()
+
+               unique_outgoing_edges_from_net_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_net_node_idx ], dim=1, return_inverse=True)
+               unique_incoming_edges_to_net_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_net_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_net_node = unique_outgoing_edges_from_net_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_net_node = unique_incoming_edges_to_net_node[0] # edge-src is index 0
+
+               unique_adjacent_nodes_of_both_direction_edges_of_net_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_net_node, 
+                                                                                                       source_nodes_of_incoming_edges_to_net_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_net = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_net_node], dim = 0 )
+               num_diff_thread_nodes__net_node_interacted_with = int(integrated_5bit_of_all_unique_adjacent_nodes_to_net[-1])
+               data__num_diff_thread_nodes__net_node_interacted_with.append(num_diff_thread_nodes__net_node_interacted_with)
+
+            data__num_diff_thread_nodes__proc_node_interacted_with = []
+            for proc_node_idx in proc_node_indices:
+               outgoing_edges_from_proc_node_idx = torch.nonzero( edge_src_indices == proc_node_idx ).flatten()
+               incoming_edges_to_proc_node_idx = torch.nonzero( edge_tar_indices == proc_node_idx ).flatten()
+
+               unique_outgoing_edges_from_proc_node, _ = torch.unique( data.edge_index[:, outgoing_edges_from_proc_node_idx ], dim=1, return_inverse=True)
+               unique_incoming_edges_to_proc_node, _ = torch.unique( data.edge_index[:, incoming_edges_to_proc_node_idx ], dim=1, return_inverse=True)
+
+               target_nodes_of_outgoing_edges_from_proc_node = unique_outgoing_edges_from_proc_node[1] # edge-target is index 1
+               source_nodes_of_incoming_edges_to_proc_node = unique_incoming_edges_to_proc_node[0] # edge-src is index 0
+
+               unique_adjacent_nodes_of_both_direction_edges_of_proc_node = torch.unique( torch.cat( [ target_nodes_of_outgoing_edges_from_proc_node, 
+                                                                                                       source_nodes_of_incoming_edges_to_proc_node ] ) )
+               integrated_5bit_of_all_unique_adjacent_nodes_to_proc = torch.sum( data_x_first5[unique_adjacent_nodes_of_both_direction_edges_of_proc_node], dim = 0 )
+               num_diff_thread_nodes__proc_node_interacted_with = int(integrated_5bit_of_all_unique_adjacent_nodes_to_proc[-1])
+               data__num_diff_thread_nodes__proc_node_interacted_with.append(num_diff_thread_nodes__proc_node_interacted_with)
+
+
+
+            if data__num_diff_thread_nodes__file_node_interacted_with == []:
+               AvgNum_DiffThreads_for_File_Nodes = 0
+            else:
+               AvgNum_DiffThreads_for_File_Nodes = float(np.mean(data__num_diff_thread_nodes__file_node_interacted_with))
+            
+            if data__num_diff_thread_nodes__reg_node_interacted_with == []:
+               AvgNum_DiffThreads_for_Registry_Nodes = 0
+            else:
+               AvgNum_DiffThreads_for_Registry_Nodes = float(np.mean(data__num_diff_thread_nodes__reg_node_interacted_with))
+            
+            if data__num_diff_thread_nodes__net_node_interacted_with == []:
+               AvgNum_DiffThreads_for_Network_Nodes = 0
+            else:
+               AvgNum_DiffThreads_for_Network_Nodes = float(np.mean(data__num_diff_thread_nodes__net_node_interacted_with))
+            
+            if data__num_diff_thread_nodes__proc_node_interacted_with == []:
+               AvgNum_DiffThreads_for_Process_Nodes = 0
+            else:
+               AvgNum_DiffThreads_for_Process_Nodes = float(np.mean(data__num_diff_thread_nodes__proc_node_interacted_with))
+
+
+            data_AvgNum_DiffThreads_perFRNP = [AvgNum_DiffThreads_for_File_Nodes, AvgNum_DiffThreads_for_Registry_Nodes, 
+                                               AvgNum_DiffThreads_for_Network_Nodes, AvgNum_DiffThreads_for_Process_Nodes]
+            # 다 sumpool하고 
+            # feature value 똑갘나 비교해보는방법도있음 
+            # ---> torch.sum( data_thread_node_all_unique_adjacent_nodes_5bit_dists, dim = 0)[0] 와 sum(data__num_diff_thread_nodes__file_node_interacted_with) 비교햇을때 
+            #                  같은경우있는거 보니 맞는듯.
+
+
+            # ======================================================================================================================================================
+            # [ node-type5bit + AvgNum_DiffThreads_perFRNP + N>1gram events ]
+
+            upto_Non_Ngramfeats_Dim =\
+               len(data_thread_node_all_unique_adjacent_nodes_5bit_dists) + len(data_thread_node___dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node) +\
+               len(data_thread_node___dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node) + len(data_thread_node___dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node)
+
+            thread_level_nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__N_gram_events__dist = torch.cat( 
+                                                                                         [data_thread_node_all_unique_adjacent_nodes_5bit_dists,
+
+                                                                                          data_thread_node___dist_of__types_of_nodes__associated_with_ALL_edges__connected_to__thread_node,
+
+                                                                                          data_thread_node___dist_of__types_of_target_nodes_of_ALL_outgoing_edges_from_thread_node,
+                                                                                          data_thread_node___dist_of__types_of_source_nodes_of_ALL_incoming_edges_to_thread_node,
+
+                                                                                          data_thread_level_all_Ngram_features 
+                                                                                         ], dim = 1)
+            
+            
+            
+            ''' JY @ 2024-1-29: Following pooling applys to 'node-type5bit' and 'N>1gram events' '''
+            if pool == "sum": pool__func = torch.sum
+            elif pool == "mean": pool__func = torch.mean
+
+            data__pooled__nodetype5bit__NgramEvents = pool__func(thread_level_nodetype5bit__FRNPeventCount__FRNP_OutgoIncom_eventCount__N_gram_events__dist, dim = 0)            
+            
+            graph_embedding = data__pooled__nodetype5bit__NgramEvents[ : upto_Non_Ngramfeats_Dim ].tolist() + \
+                              data_AvgNum_DiffThreads_perFRNP +\
+                              data__pooled__nodetype5bit__NgramEvents[ upto_Non_Ngramfeats_Dim :].tolist()
+            
+            data_dict[ re.search(r'Processed_SUBGRAPH_P3_(.*?)\.pickle', data.name).group(1) ] = graph_embedding
+
+            # data_dict[ data.name.lstrip("Processed_SUBGRAPH_P3_").rstrip(".pickle") ] = data_thread_node_both_direction_edges_edge_attrs.tolist()
+            cnt+=1
+      return data_dict
+
 
 ##########################################################################################################################################################
 ##########################################################################################################################################################
