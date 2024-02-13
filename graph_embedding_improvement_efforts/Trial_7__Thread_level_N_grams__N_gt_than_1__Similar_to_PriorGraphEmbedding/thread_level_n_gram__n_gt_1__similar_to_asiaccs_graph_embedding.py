@@ -7,6 +7,7 @@ import numpy as np
 import re
 from collections import Counter
 
+
 '''
 Replaced 'code' to 'source' as there's conflict with vscode debugger.
 from code.dataprocessor_graphs import LoadGraphs
@@ -79,7 +80,7 @@ from argparse import ArgumentParser
 import pprint
 from collections import defaultdict
 import time
-
+import shutil
 
 from sklearn.feature_extraction.text import CountVectorizer
 
@@ -1773,7 +1774,7 @@ if __name__ == '__main__':
                                   'Full_Dataset_1_Double_Stratified',
                                   'Full_Dataset_2_Double_Stratified'
                                   ], 
-                        default = ['Full_Dataset_1_Double_Stratified'])
+                        default = ['Full_Dataset_2_NoTraceUIDupdated'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1828,10 +1829,13 @@ if __name__ == '__main__':
 
                                   "Best_RF__Full_Dataset_1_Double_Stratified__1gram__sum_pool", # tuning-complete # final-tested
                                   "Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool", # tuning-complete # final-tested
+                                  "Best_RF__Full_Dataset_1_Double_Stratified__4gram__sum_pool", # tuning-complete # final-tested
 
 
-                                  "Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool", # tuning-complete 
+                                  "Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool", # tuning-complete # final-tested
                                   "Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool", # tuning-complete # final-tested
+
+                                  "Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool__5813"
 
                                   ], 
                                   default = ["RandomForest_searchspace_1"])
@@ -1851,7 +1855,7 @@ if __name__ == '__main__':
                                   'thread_level__N>1_grams_events__nodetype5bit__All_Additional_Features', # TODO: implement
 
                                   ], 
-                                  default = ['thread_level__N>1_grams_events__nodetype5bit__All_Additional_Features'])
+                                  default = ['thread_level__N>1_grams_events__nodetype5bit'])
     
     parser.add_argument('-pool_opt', '--pool_option', 
                         choices= ['sum',
@@ -1887,7 +1891,17 @@ if __name__ == '__main__':
                          default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [15])  # Added by JY @ 2024-1-20
+
+
+
+    # Added by JY @ 2024-2-8
+    parser.add_argument("--resume_tuning_on_csv", 
+                         nargs = 1, type = str,
+                         # None or tuning-csv-path 
+                         default = ['/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301.csv'] )
+
+
 
    # ==================================================================================================================================
 
@@ -1907,6 +1921,14 @@ if __name__ == '__main__':
 
     running_from_machine = parser.parse_args().running_from_machine[0] 
     RF__n_jobs = parser.parse_args().RF__n_jobs[0] 
+
+
+    # Added by JY @ 2024-2-8 --------------------------------------------------------------------------
+    resume_tuning_on_csv = parser.parse_args().resume_tuning_on_csv[0] 
+    if not ( resume_tuning_on_csv == None or type(resume_tuning_on_csv) == str ):
+      raise TypeError("'resume_tuning_on_csv' should be None or csvfpath")
+    # -------------------------------------------------------------------------------------------------
+
     # -----------------------------------------------------------------------------------------------------------------------------------
  
     if running_from_machine == "ocelot":
@@ -1924,11 +1946,56 @@ if __name__ == '__main__':
       #  else:
       #    run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"  
 
-       run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{Ngram}gram__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
-       this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/{run_identifier}"
-       experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
-       if not os.path.exists(this_results_dirpath):
-           os.makedirs(this_results_dirpath)
+       # Added by JY @ 2024-2-8:
+       if resume_tuning_on_csv == None:
+
+            run_identifier = f"{model_choice}__{dataset_choice}__{search_space_option}__{K}_FoldCV__{search_on_train__or__final_test}__{graph_embedding_option}__{Ngram}gram__{pool_option}_pool__only_train_specified_Ngram_{only_train_specified_Ngram}__{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
+            this_results_dirpath = f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/{run_identifier}"
+            experiment_results_df_fpath = os.path.join(this_results_dirpath, f"{run_identifier}.csv")
+            if not os.path.exists(this_results_dirpath):
+               os.makedirs(this_results_dirpath)
+       
+       # Added by JY @ 2024-2-8: ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+       else:
+            # check if current run's setting matches the passed-in csv
+            resume_tuning_csv_fname = os.path.split(resume_tuning_on_csv)[1] 
+
+            resume_model_choice, resume_dataset_choice, resume_search_space_option, resume_K, \
+            resume_search_on_train__or__final_test, resume_rest = resume_tuning_csv_fname.split("__", 5) # first split up to first 6 '__'s
+
+            resume_graph_embedding_option, resume_Ngram, resume_pool, resume_only_train_specified_Ngram, resume_datetime = resume_rest.rsplit('__', 4)
+
+            assert resume_model_choice == model_choice, f"resume and current setting should be same. [ resume: {resume_model_choice} vs current: {model_choice} ]"
+            assert resume_dataset_choice == dataset_choice, f"resume and current setting should be same. [ resume: {resume_dataset_choice} vs current: {dataset_choice} ]"
+            assert resume_search_space_option == search_space_option, f"resume and current setting should be same. [ resume: {resume_search_space_option} vs current: {search_space_option} ]"
+            assert resume_K.removesuffix("_FoldCV") == str(K), f"resume and current setting should be same. [ resume: {resume_K} vs current: {K} ]"
+            assert resume_search_on_train__or__final_test == search_on_train__or__final_test, f"to-resume and current setting should be same. [ resume: {resume_search_on_train__or__final_test} vs current: {search_on_train__or__final_test} ]"
+            
+            assert resume_graph_embedding_option == graph_embedding_option, f"to-resume and current setting should be same. [ resume: {resume_graph_embedding_option} vs current: {graph_embedding_option} ]"
+            assert resume_Ngram.removesuffix("gram") == str(Ngram), f"to-resume and current setting should be same. [ resume: {resume_Ngram} vs current: {Ngram} ]"
+            assert resume_pool.removesuffix("_pool") == pool_option, f"to-resume and current setting should be same. [ resume: {resume_pool} vs current: {pool_option} ]"
+            assert bool(resume_only_train_specified_Ngram.removeprefix("only_train_specified_Ngram_")) == only_train_specified_Ngram,  f"to-resume and current setting should be same. [ resume: {resume_only_train_specified_Ngram} vs current: {only_train_specified_Ngram} ]"
+   
+
+            confirmation_proof = False
+            while True:
+               confirmation_of_resuming = input(f"\nAre you intending to resume tuning at \n'{resume_tuning_on_csv}'\nType 'yes' or 'no'\n:")
+               if confirmation_of_resuming == "yes":
+                  confirmation_proof = True
+
+                  experiment_results_df_fpath = resume_tuning_on_csv
+                  this_results_dirpath = None
+                  # create backup for just in case
+                  resume_tuning_on_csv__backup = resume_tuning_on_csv.removesuffix(".csv") + "__BACKUP.csv"
+                  shutil.copy(resume_tuning_on_csv, resume_tuning_on_csv__backup)
+                  print(f"Backup file created:\n'{resume_tuning_on_csv__backup}'.")
+                  break
+               elif confirmation_of_resuming == "no":
+                  raise ValueError(f"Your answer is {confirmation_of_resuming}")
+               else:
+                  continue 
+      # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
     if search_on_train__or__final_test == "final_test":
@@ -2653,6 +2720,22 @@ if __name__ == '__main__':
     
 
 
+    def Best_RF__Full_Dataset_1_Double_Stratified__4gram__sum_pool():
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-07_101858/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-07_101858.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': 20,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 100,
+            'random_state': 0,
+            'split_shuffle_seed': 100}        
+         )
+         return manual_space
+
     def Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool() -> dict:
          # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-07_145320/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-07_145320.csv
          manual_space = []
@@ -2688,6 +2771,23 @@ if __name__ == '__main__':
          )
          return manual_space
     
+
+    def Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool__5813() -> dict:
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-09_163746/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-09_163746.csv
+         # Best-RF:  0.895 Acc. / 0.885 F1.
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 2,
+            'n_estimators': 500,
+            'random_state': 99,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space      
 
     
 
@@ -2773,6 +2873,10 @@ if __name__ == '__main__':
     elif search_space_option == "Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool": # tuning done
             search_space = Best_RF__Full_Dataset_1_Double_Stratified__2gram__sum_pool()
 
+    elif search_space_option == "Best_RF__Full_Dataset_1_Double_Stratified__4gram__sum_pool": # tuning done
+            search_space = Best_RF__Full_Dataset_1_Double_Stratified__4gram__sum_pool()
+
+
     elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool": # tuning done
             search_space = Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool()
 
@@ -2780,6 +2884,10 @@ if __name__ == '__main__':
 
     elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool": # tuning done
             search_space = Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool()
+
+
+    elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool__5813":
+            search_space = Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool__5813()
 
 
     else:
@@ -2963,7 +3071,10 @@ if __name__ == '__main__':
     X.columns = feature_names
     X.reset_index(inplace = True)
     X.rename(columns = {'index':'data_name'}, inplace = True)
-    X.to_csv(os.path.join(this_results_dirpath,"X.csv"))
+
+    # Added by JY @ 2024-2-8
+    if this_results_dirpath is not None:
+       X.to_csv(os.path.join(this_results_dirpath,"X.csv"))
 
 
 
@@ -3095,7 +3206,25 @@ if __name__ == '__main__':
          colnames= list(search_space[0].keys()) + [t+"_"+m for t,m in list(product(["Avg_Val"],["Accuracy","F1","Precision","Recall"]))] +\
                                                          ["Std_Val_F1", "Std_Val_Accuracy"] + \
                                                          ["K_Val_"+m for m in list(["Accuracy","Precision","Recall","F1"])]
-         experiment_results_df = pd.DataFrame(columns=colnames)
+
+         # Added by JY @ 2024-2-8 ---------------------------------------------------------------------------------------------------------------------------
+         if (resume_tuning_on_csv != None) and (confirmation_proof == True):
+            assert experiment_results_df_fpath == resume_tuning_on_csv
+            experiment_results_df = pd.read_csv( experiment_results_df_fpath )
+            experiment_results_df.replace({np.nan: None}, inplace=True)
+
+            # reduce the search-space 
+            list_of_row_dicts = experiment_results_df.loc[:, list(search_space[0].keys())].to_dict(orient ='records')
+            
+            for hyperparam_set in search_space.copy():
+               if hyperparam_set in list_of_row_dicts:
+                  print(f"Popping from search-space as already in row-{list_of_row_dicts.index(hyperparam_set)} of existing tuning-dataframe -- hyperparameter-set {hyperparam_set} ", flush = True)
+                  search_space.remove(hyperparam_set)
+
+         else: # if not resuming empty df as originally 
+            experiment_results_df = pd.DataFrame(columns=colnames)
+         # ---------------------------------------------------------------------------------------------------------------------------------------------------
+
 
          ####################################################################################################################################################
 

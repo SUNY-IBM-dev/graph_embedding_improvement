@@ -48,7 +48,7 @@ def plot_distribution_shift_histograms( Ngram_approach_choice : dict,
       color = next(color_iter)
       models += f"{Ngram_desc}_"
       plt.hist( AvgVal_F1s, 
-                bins= 50, density=False, alpha=0.7, color= color, label= f"{Ngram_desc}(#{len(AvgVal_Accuracies)})" )
+                bins= 50, density=False, alpha=0.7, color= color, label= f"{Ngram_desc}(#{len(AvgVal_F1s)})" )
             # bins=len(Baseline_Ngram__Entire_Full_Dataset_1__AvgVal_Accuracy), density=True, alpha=0.7, color='blue', label='Histogram')
 
    # e.g. Dist_for__Baseline_2gram_VS_Thread_2gram__Entire_Full_Dataset_1

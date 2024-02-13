@@ -842,8 +842,17 @@ if __name__ == '__main__':
                                    # 
                                   'Dataset_1__NoTrace_UIDruleUpdated',
                                   'Dataset_2__NoTrace_UIDruleUpdated',
+
+
+                                  'Full_Dataset_1_NoTraceUIDupdated',
+                                  'Full_Dataset_2_NoTraceUIDupdated',
+
+
+                                  'Full_Dataset_1_Double_Stratified',
+                                  'Full_Dataset_2_Double_Stratified'
+
                                   ], 
-                        default = ['Dataset_2__NoTrace_UIDruleUpdated'])
+                        default = ['Full_Dataset_2_NoTraceUIDupdated'])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -873,17 +882,17 @@ if __name__ == '__main__':
 
 
                                   ], 
-                                  default = ["Best_RF__Partial_Dataset_2_NoTraceUIDUpdated__4gram_2hop"])
+                                  default = ["RandomForest_searchspace_1"])
    
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["final_test"] )
+                         default = ["search_on_all"] )
 
 
     # --------- specific to standard-message-passing 
     parser.add_argument('--n_hops',  nargs = 1, type = int, 
-                        default = [2])
+                        default = [3])
 
     parser.add_argument('-aggr', '--neighborhood_aggregation', 
                         choices= ['sum', 'mean' ],  # mean 도 해봐라 
@@ -904,7 +913,7 @@ if __name__ == '__main__':
                          default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [7])  # Added by JY @ 2024-1-20
    
    # ==================================================================================================================================
 
@@ -964,6 +973,7 @@ if __name__ == '__main__':
 
     trace_filename = f'traces_stratkfold_double_strat_{model_cls_name}__generated@'+str(datetime.now())+".txt" 
 
+
     ###############################################################################################################################################
     # Set data paths
     projection_datapath_Benign_Train_dict = {
@@ -987,9 +997,25 @@ if __name__ == '__main__':
 
       # JY @ 2024-2-3
       'Dataset_1__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/train"}, # dim-node == 5
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/train/Processed_Benign_ONLY_TaskName_edgeattr"}, # dim-node == 5
       'Dataset_2__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/train"},
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/train/Processed_Benign_ONLY_TaskName_edgeattr"},
+
+      # JY @ 2024-2-4
+      'Full_Dataset_1_NoTraceUIDupdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_train_set/Processed_Benign_ONLY_TaskName_edgeattr", # dim-node == 5,
+         "35":f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_train_adhoc"}, # dim-node == 35 (adhoc)
+      'Full_Dataset_2_NoTraceUIDupdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/Full_train_set/Processed_Benign_ONLY_TaskName_edgeattr",
+         "35": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_case2/Full_train_adhoc"},
+
+
+      # JY @ 2024-2-5
+      'Full_Dataset_1_Double_Stratified':\
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_train_set__double_strat"},
+      'Full_Dataset_2_Double_Stratified':\
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/Full_train_set__double_strat"},
+
 
     }
     projection_datapath_Malware_Train_dict = {
@@ -1014,13 +1040,29 @@ if __name__ == '__main__':
 
       # JY @ 2024-2-3
       'Dataset_1__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/train"}, # dim-node == 5
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/train/Processed_Malware_ONLY_TaskName_edgeattr"}, # dim-node == 5
       'Dataset_2__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/train"},
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/train/Processed_Malware_ONLY_TaskName_edgeattr"},
 
+
+      # JY @ 2024-2-4
+      'Full_Dataset_1_NoTraceUIDupdated':\
+        {"5":f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/Full_train_set/Processed_Malware_ONLY_TaskName_edgeattr",
+         "35":f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_case1/Full_train_adhoc"},
+      'Full_Dataset_2_NoTraceUIDupdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_train_set/Processed_Malware_ONLY_TaskName_edgeattr",
+         "35": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_case2/Full_train_adhoc"},
+      
+
+      # JY @ 2024-2-5
+      'Full_Dataset_1_Double_Stratified':\
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/Full_train_set__double_strat"},
+      'Full_Dataset_2_Double_Stratified':\
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_train_set__double_strat"},
 
 
     }
+
     projection_datapath_Benign_Test_dict = {
       # Dataset-1 (B#73, M#62) ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       "Dataset-Case-1": \
@@ -1043,9 +1085,24 @@ if __name__ == '__main__':
 
       # JY @ 2024-2-3
       'Dataset_1__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case1/test"}, # dim-node == 5
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/test/Processed_Benign_ONLY_TaskName_edgeattr"}, # dim-node == 5
       'Dataset_2__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/test"},
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/test/Processed_Benign_ONLY_TaskName_edgeattr"},
+
+      # JY @ 2024-2-4
+      'Full_Dataset_1_NoTraceUIDupdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_test_set/Processed_Benign_ONLY_TaskName_edgeattr",
+         "35": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_test_adhoc"},
+      'Full_Dataset_2_NoTraceUIDupdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/Full_test_set/Processed_Benign_ONLY_TaskName_edgeattr",
+         "35": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/Full_test_adhoc"},
+
+
+      # JY @ 2024-2-5
+      'Full_Dataset_1_Double_Stratified':\
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_test_set__double_strat"},
+      'Full_Dataset_2_Double_Stratified':\
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/Full_test_set__double_strat"},
 
     }
 
@@ -1069,14 +1126,28 @@ if __name__ == '__main__':
       "Dataset-Case-3__FR_UID_rule_updated": \
         {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/Subgraphs/Dataset_3_Malware/test"},
 
-
-
       # JY @ 2024-2-3
       'Dataset_1__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case1/test"}, # dim-node == 5
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/test/Processed_Malware_ONLY_TaskName_edgeattr"}, # dim-node == 5
       'Dataset_2__NoTrace_UIDruleUpdated':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/test"},
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/test/Processed_Malware_ONLY_TaskName_edgeattr"},
+
+      # JY @ 2024-2-4
+      'Full_Dataset_1_NoTraceUIDupdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/Full_test_set/Processed_Malware_ONLY_TaskName_edgeattr",
+         "35": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/Full_test_adhoc"},
+      'Full_Dataset_2_NoTraceUIDupdated':\
+        {"5": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_test_set/Processed_Malware_ONLY_TaskName_edgeattr",
+         "35": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_test_adhoc"},
+
+      # JY @ 2024-2-5
+      'Full_Dataset_1_Double_Stratified':\
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/Full_test_set__double_strat"},
+      'Full_Dataset_2_Double_Stratified':\
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_test_set__double_strat"},
+
     }
+
 
     ###############################################################################################################################################
 

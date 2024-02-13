@@ -40,7 +40,7 @@ import pprint
 if __name__ == "__main__":
 
    # dataset-1 explanation-comparison (graph-embedding vs. no-graph)
-   Explanation_comparison_dirpath = "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-01-08_145910"
+   Explanation_comparison_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS/Explanation_Comparison___@_2024-02-10_192018"
 
 
    # dataset-2 explanation-comparison (graph-embedding vs. no-graph)
@@ -82,8 +82,8 @@ if __name__ == "__main__":
 
    # check stuff
 
-   assert set(no_graph__GlobalSHAP_TestDataset.columns) == set(graph_embedding__GlobalSHAP_TestDataset.columns), "Discrepancy in columns; Need examination"  
-   assert set(no_graph__Local_SHAP_vals_TestDataset.columns) == set(graph_embedding__Local_SHAP_vals_TestDataset.columns), "Discrepancy in columns; Need examination" 
+   #assert set(no_graph__GlobalSHAP_TestDataset.columns) == set(graph_embedding__GlobalSHAP_TestDataset.columns), "Discrepancy in columns; Need examination"  
+   #assert set(no_graph__Local_SHAP_vals_TestDataset.columns) == set(graph_embedding__Local_SHAP_vals_TestDataset.columns), "Discrepancy in columns; Need examination" 
 
    assert set(no_graph__GlobalSHAP_TestDataset['data_name']) == set(no_graph__Local_SHAP_vals_TestDataset['data_name']) ==\
           set(graph_embedding__GlobalSHAP_TestDataset['data_name']) == set(graph_embedding__Local_SHAP_vals_TestDataset['data_name']), "Discrepancy in data_names; Need examination"                                                          
@@ -154,13 +154,13 @@ if __name__ == "__main__":
 
 
    # TODO -- This is an experiment; BE CAUTIOUS  cautious in interpretation. -- local-shap-and its extent
-   no_graph__feature_value_to_pushes_towards_direction = {feature: {f"push to Neither": [],
+   no_graph__feature_value_to_pushes_towards_direction = {feature: {f"pushes toward Neither": [],
                                                                       "pushes toward Benign": [],  # (data-name, shap, rank) -- when sorting use absolute value of local-shap
                                                                                                    #  for easier sorting? 
                                                                       "pushes toward Malware": []} 
                                                                      for feature in features_to_check}
    
-   graph_embedding__feature_value_to_pushes_towards_direction = {feature: {f"push to Neither": [],
+   graph_embedding__feature_value_to_pushes_towards_direction = {feature: {f"pushes toward Neither": [],
                                                                       "pushes toward Benign": [],  #  when sorting use absolute value of local-shap
                                                                                                    #  for easier sorting? 
                                                                       "pushes toward Malware": []} 

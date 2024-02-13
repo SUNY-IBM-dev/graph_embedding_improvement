@@ -702,7 +702,7 @@ if __name__ == '__main__':
                                   'Full_Dataset_2_Double_Stratified'
 
                                   ], 
-                        default = ['Dataset-Case-1'])
+                        default = ['Full_Dataset_2_Double_Stratified'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -736,12 +736,12 @@ if __name__ == '__main__':
 
                                   'Best_RF__Full_Dataset_1_Double_Stratified_2gram__baseline_3', # tuning-complete # final-tested
 
+                                  'Best_RF__Full_Dataset_1_Double_Stratified_4gram__baseline_3', # tuning-complete # final-tested
 
-                                  'Best_RF__Full_Dataset_2_Double_Stratified_1gram__baseline_3', # tuning-complete
-
+                                  'Best_RF__Full_Dataset_2_Double_Stratified_1gram__baseline_3', # tuning-complete  # final-tested
                                   'Best_RF__Full_Dataset_2_Double_Stratified_2gram__baseline_3', # tuning-complete # final-tested
 
-
+                                  'Best_RF__Full_Dataset_2_Double_Stratified_4gram__baseline_3__3526'
                                   ], 
                                   default = ["RandomForest_searchspace_1"])
 
@@ -768,7 +768,7 @@ if __name__ == '__main__':
 
     # baseline N-gram
     parser.add_argument('--N', nargs = 1, type = int, 
-                        default = [2])  # Added by JY @ 2024-1-20
+                        default = [4])  # Added by JY @ 2024-1-20
 
 
 
@@ -776,17 +776,17 @@ if __name__ == '__main__':
     parser.add_argument("--running_from_machine", 
                                  
                          choices= ["panther", "ocelot", "felis"], 
-                         default = ["panther"] )
+                         default = ["felis"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [1])  # Added by JY @ 2024-1-20
+                        default = [45])  # Added by JY @ 2024-1-20
 
 
     # Added by JY @ 2024-2-8
     parser.add_argument("--resume_tuning_on_csv", 
                          nargs = 1, type = str,
                          # None or tuning-csv-path 
-                         default = ["/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/INCOMPLETE_TUNING_KILLED_RESULTS/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-01-23_103411/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-01-23_103411.csv"] )
+                         default = ['/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817.csv'] )
 
 
    # ==================================================================================================================================
@@ -1501,6 +1501,24 @@ if __name__ == '__main__':
          )
          return manual_space
 
+    def Best_RF__Full_Dataset_1_Double_Stratified_4gram__baseline_3() -> dict:
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_000006/RandomForest__Full_Dataset_1_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_000006.csv
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': True,
+            'criterion': 'gini',
+            'max_depth': None,
+            'max_features': None,
+            'min_samples_leaf': 3,
+            'min_samples_split': 2,
+            'n_estimators': 200,
+            'random_state': 0,
+            'split_shuffle_seed': 100}
+         )
+         return manual_space      
+
+
+
     def Best_RF__Full_Dataset_2_Double_Stratified_1gram__baseline_3():
          # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-07_150007/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-07_150007.csv
          manual_space = []
@@ -1533,8 +1551,22 @@ if __name__ == '__main__':
          )
          return manual_space
     
-
-
+    def Best_RF__Full_Dataset_2_Double_Stratified_4gram__baseline_3__3526():
+         # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817.csv
+         # Best-RF : 0.868 Acc. / 0.853 F1.
+         manual_space = []
+         manual_space.append(
+            {'bootstrap': False,
+            'criterion': 'gini',
+            'max_depth': 20,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 1,
+            'min_samples_split': 5,
+            'n_estimators': 200,
+            'random_state': 42,
+            'split_shuffle_seed': 100} 
+         )
+         return manual_space
     ####################################################################################################################################################
 
 
@@ -1558,11 +1590,20 @@ if __name__ == '__main__':
     elif search_space_option == "Best_RF__Full_Dataset_1_Double_Stratified_2gram__baseline_3":
        search_space = Best_RF__Full_Dataset_1_Double_Stratified_2gram__baseline_3()
 
+    elif search_space_option == "Best_RF__Full_Dataset_1_Double_Stratified_4gram__baseline_3":
+       search_space = Best_RF__Full_Dataset_1_Double_Stratified_4gram__baseline_3()
+
+
     elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified_1gram__baseline_3":
        search_space = Best_RF__Full_Dataset_2_Double_Stratified_1gram__baseline_3()
 
     elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified_2gram__baseline_3":
        search_space = Best_RF__Full_Dataset_2_Double_Stratified_2gram__baseline_3()        
+
+    elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified_4gram__baseline_3__3526":
+       search_space = Best_RF__Full_Dataset_2_Double_Stratified_4gram__baseline_3__3526()        
+
+
 
     # --tuned
 

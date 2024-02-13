@@ -178,7 +178,7 @@ def produce_explanation_comparisons(predictions_comparisons__dict: dict ,
 
       # 1. Create directory for this trial's explanation comparisons
       EXPLANATION_COMPARISONS_DIRPATH = \
-         "/home/jgwak1/temp_JY/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS"
+         "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/EXPLANATION_COMPARISONS"
       explanation_comparison_trial_dirpath = os.path.join(EXPLANATION_COMPARISONS_DIRPATH,
                                                          f"Explanation_Comparison___@_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}")
       
@@ -444,9 +444,9 @@ if __name__ == "__main__":
 
    # JY @ 2024-1-4 : compare BestRFs of standard-message-passing-1gram-1hop-sumaggr-sumpool vs. baseline of 1gram, on dataset-1
    graph_embedding__mispredictions__dirpath = \
-   "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__Best_RF__Dataset_Case_2__1hops__sum_aggr__sum_pool__2023_12_29_060149__final_test__standard_message_passing_graph_embedding__1hops__sum_aggr__sum_pool__2024-01-01_213448/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
+   "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool__final_test__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__2024-02-07_092211/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
    no_graph__mispredictions__dirpath = \
-   "/data/d1/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/RESULTS/sklearn.ensemble._forest.RandomForestClassifier__Dataset-Case-2__RandomForest_best_hyperparameter_max_case2_nograph__final_test__no_graph_structure__event_1gram_nodetype_5bit__max__2024-01-08_104251/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
+   "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__Best_RF__Full_Dataset_2_Double_Stratified_2gram__baseline_3__final_test__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-07_091545/WATERFALL_PLOTS_Local-Explanation_1gram/Mispredictions"
 
 
    predictions_comparisons_dict = predictions_comparisons(graph_embedding__mispredictions__dirpath, no_graph__mispredictions__dirpath)
