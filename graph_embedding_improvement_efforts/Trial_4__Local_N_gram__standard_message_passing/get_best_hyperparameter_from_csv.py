@@ -9,7 +9,7 @@ if __name__ == "__main__":
       raise ValueError("'up_to_row' should only either be integer or None")
 
     dataset_csvpath =\
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817.csv"
+      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/RESULTS/RandomForest_Full_Dataset_2_Double_Stratified_RandomForest_searchspace_1_10FoldCV_search_on_train_local_ngram__standard_message_passing__graph_embedding_Local4gram_3hop_sumaggr_sumpool_2024-02-13_222808/RandomForest_Full_Dataset_2_Double_Stratified_RandomForest_searchspace_1_10FoldCV_search_on_train_local_ngram__standard_message_passing__graph_embedding_Local4gram_3hop_sumaggr_sumpool_2024-02-13_222808.csv"
     # -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     tuning_df = pd.read_csv(dataset_csvpath)

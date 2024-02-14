@@ -1600,7 +1600,7 @@ subgraphs_savedirpath = \
 elastic_search_machine = "panther"
 
 
-es_indices_and_ProcessIDs = non_trace_command_malware_full_dataset_2 
+es_indices_and_ProcessIDs = {"malware_poshc2_powershell_logs_invoke-pbind": "7156"} 
 
 dir_start_pattern = "malware"  # change based on the indice
 
@@ -1646,7 +1646,7 @@ target__step_4 = False
 
 # SET Number of processes to run in parallel for benign_step_1 & benign_step_2
 # IMPORTANT: IF N_parallel is TOO HIGH (SAY OVER 5), IT IS POSSIBLE THAT ELASTIC-SEARCH dies
-N_parallel = 5 # (JUST FIX IT TO 5, since we don't want to end up having issue)
+N_parallel = 1 # (JUST FIX IT TO 5, since we don't want to end up having issue)
 if N_parallel > 5:
    raise ValueError(f"N_parallel ({N_parallel}) > 5 has risk to server-down of Elastic-Search")
 

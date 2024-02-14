@@ -848,11 +848,11 @@ if __name__ == '__main__':
                                   'Full_Dataset_2_NoTraceUIDupdated',
 
 
-                                  'Full_Dataset_1_Double_Stratified',
-                                  'Full_Dataset_2_Double_Stratified'
+                                 #  'Full_Dataset_1_Double_Stratified',
+                                  'Full_Dataset_2_Double_Stratified' # JY @ 2024-2-13
 
                                   ], 
-                        default = ['Full_Dataset_2_NoTraceUIDupdated'])
+                        default = ['Full_Dataset_2_Double_Stratified'])
 
 
     parser.add_argument('-graphemb_opt', '--graph_embedding_option', 
@@ -887,7 +887,7 @@ if __name__ == '__main__':
     parser.add_argument("--search_on_train__or__final_test", 
                                  
                          choices= ["search_on_train", "final_test", "search_on_all"],  # TODO PW:use "final_test" on test dataset #PW: serach on all- more robust, --> next to run                                  
-                         default = ["search_on_all"] )
+                         default = ["search_on_train"] )
 
 
     # --------- specific to standard-message-passing 
@@ -913,7 +913,7 @@ if __name__ == '__main__':
                          default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [7])  # Added by JY @ 2024-1-20
+                        default = [5])  # Added by JY @ 2024-1-20
    
    # ==================================================================================================================================
 
@@ -1011,10 +1011,12 @@ if __name__ == '__main__':
 
 
       # JY @ 2024-2-5
-      'Full_Dataset_1_Double_Stratified':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_train_set__double_strat"},
+      # 'Full_Dataset_1_Double_Stratified':\
+      #   {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_train_set__double_strat"},
+      
+      # JY @ 2024-2-13
       'Full_Dataset_2_Double_Stratified':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/Full_train_set__double_strat"},
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/Full_train_set__double_strat"},
 
 
     }
@@ -1055,10 +1057,12 @@ if __name__ == '__main__':
       
 
       # JY @ 2024-2-5
-      'Full_Dataset_1_Double_Stratified':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/Full_train_set__double_strat"},
+      # 'Full_Dataset_1_Double_Stratified':\
+      #   {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/Full_train_set__double_strat"},
+      
+      # JY @ 2024-2-13      
       'Full_Dataset_2_Double_Stratified':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_train_set__double_strat"},
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_train_set__double_strat"},
 
 
     }
@@ -1099,10 +1103,12 @@ if __name__ == '__main__':
 
 
       # JY @ 2024-2-5
-      'Full_Dataset_1_Double_Stratified':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_test_set__double_strat"},
+      # 'Full_Dataset_1_Double_Stratified':\
+      #   {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case1/Full_test_set__double_strat"},
+      
+      # JY @ 2024-2-13      
       'Full_Dataset_2_Double_Stratified':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Benign_Case2/Full_test_set__double_strat"},
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Benign_Case2/Full_test_set__double_strat"},
 
     }
 
@@ -1141,10 +1147,12 @@ if __name__ == '__main__':
          "35": f"{abs_path_to_tabby}/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_test_adhoc"},
 
       # JY @ 2024-2-5
-      'Full_Dataset_1_Double_Stratified':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/Full_test_set__double_strat"},
+      # 'Full_Dataset_1_Double_Stratified':\
+      #   {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case1/Full_test_set__double_strat"},
+
+      # JY @ 2024-2-13   
       'Full_Dataset_2_Double_Stratified':\
-        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/making_CG_more_accurate/PW_NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_test_set__double_strat"},
+        {"5": f"{abs_path_to_tabby}/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_4__Local_N_gram__standard_message_passing/Subgraphs__SimpleGraph/NON_TRACE_COMMAND_DATASET/Malware_Case2/Full_test_set__double_strat"},
 
     }
 

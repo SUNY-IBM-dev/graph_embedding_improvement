@@ -137,8 +137,6 @@ if __name__ == "__main__":
       raise ValueError("Need to set either one direction (wrong or correct)")
 
    with open(os.path.join(results_dirpath, f"{samples_of_interest}_{Direction_Desc}_Pushing_Features___{final_model_identifier}.json"), "w") as json_file:
-   # with open(os.path.join(results_dirpath, f"Correction_Predictions_Correct_Direction_Pushing_Features___{final_model_identifier}.json"), "w") as json_file:
-
          json.dump(result_dict, json_file) 
 
 
@@ -147,10 +145,31 @@ if __name__ == "__main__":
    JY @ TODO FOR 2023-2-14 
 
    Could perform some intersection operations on 'wrong-direction pushing features'
-   to identify frequently appearing wrong-direction pushing features and try to interpret with domian knolwedge 
-   
+   to identify frequently appearing wrong-direction pushing features and 
+   ** try to interpret with domian knolwedge **
+    
    '''
-   
+
+   # Specific - TODOs
+   # 1-1. get wrong-direction-pushing-features that appear often in mispredicted malware-samples , by checking intersection-frequency 
+   # 1-2. get wrong-direction-pushing-features that appear often in mispredicted benign-samples , by checking intersection-frequency    
+   # 1-3. get wrong-direction-pushing-features that appear often in mispredicted all-samples , by checking intersection-frequency    
+   # 1-4. check how those wrong-direction-pushing-features did in correctly-predicted samples (did they push towards correct direction or wrong direction on average?)
+
+   # 2-1. get correct-direction-pushing-feautres that appear often in correctly-predicted malware-samples , by checking intersection-frequency  
+   # 2-2. get correct-direction-pushing-feautres that appear often in correctly-predicted benign-samples , by checking intersection-frequency  
+   # 2-3. get correct-direction-pushing-feautres that appear often in correctly-predicted all-samples , by checking intersection-frequency  
+   # 2-4. check how those correct-direction-pushing-features did in mispredicted samples (did they push towards correct direction or wrong direction on average?)
 
 
+
+   result_dict
    print()
+
+
+
+
+
+
+
+
