@@ -1774,7 +1774,7 @@ if __name__ == '__main__':
                                   'Full_Dataset_1_Double_Stratified',
                                   'Full_Dataset_2_Double_Stratified'
                                   ], 
-                        default = ['Full_Dataset_2_NoTraceUIDupdated'])
+                        default = ['Full_Dataset_2_Double_Stratified'])
 
 
     model_cls_map = {"RandomForest": RandomForestClassifier, "XGBoost": GradientBoostingClassifier,
@@ -1835,7 +1835,7 @@ if __name__ == '__main__':
                                   "Best_RF__Full_Dataset_2_Double_Stratified__1gram__sum_pool", # tuning-complete # final-tested
                                   "Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool", # tuning-complete # final-tested
 
-                                  "Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool__5813"
+                                  "Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool"  # tuning-complete # final-tested
 
                                   ], 
                                   default = ["RandomForest_searchspace_1"])
@@ -1855,7 +1855,7 @@ if __name__ == '__main__':
                                   'thread_level__N>1_grams_events__nodetype5bit__All_Additional_Features', # TODO: implement
 
                                   ], 
-                                  default = ['thread_level__N>1_grams_events__nodetype5bit'])
+                                  default = ['thread_level__N>1_grams_events__nodetype5bit__All_Additional_Features'])
     
     parser.add_argument('-pool_opt', '--pool_option', 
                         choices= ['sum',
@@ -1871,7 +1871,7 @@ if __name__ == '__main__':
                          #PW: serach on all- more robust, --> next to run
                                   
                          #default = ["search_on_train"] )
-                         default = ["search_on_all"] )
+                         default = ["search_on_train"] )
 
 
     # --------- For Thread-level N-gram
@@ -1891,7 +1891,7 @@ if __name__ == '__main__':
                          default = ["panther"] )
     
     parser.add_argument('--RF__n_jobs', nargs = 1, type = int, 
-                        default = [15])  # Added by JY @ 2024-1-20
+                        default = [30])  # Added by JY @ 2024-1-20
 
 
 
@@ -1899,7 +1899,9 @@ if __name__ == '__main__':
     parser.add_argument("--resume_tuning_on_csv", 
                          nargs = 1, type = str,
                          # None or tuning-csv-path 
-                         default = ['/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301.csv'] )
+                         default = [None] )
+
+                        #  default = ['/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301.csv'] )
 
 
 
@@ -2772,24 +2774,27 @@ if __name__ == '__main__':
          return manual_space
     
 
-    def Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool__5813() -> dict:
+
+
+    def Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool() -> dict:
          # /home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-09_163746/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-09_163746.csv
-         # Best-RF:  0.895 Acc. / 0.885 F1.
+         # Best-RF:  0.898 Acc. / 0.887 F1.
          manual_space = []
          manual_space.append(
             {'bootstrap': False,
             'criterion': 'gini',
-            'max_depth': None,
+            'max_depth': 20,
             'max_features': 'sqrt',
             'min_samples_leaf': 1,
             'min_samples_split': 2,
             'n_estimators': 500,
-            'random_state': 99,
+            'random_state': 42,
             'split_shuffle_seed': 100}
          )
          return manual_space      
 
-    
+
+
 
     ####################################################################################################################################################
 
@@ -2886,8 +2891,8 @@ if __name__ == '__main__':
             search_space = Best_RF__Full_Dataset_2_Double_Stratified__2gram__sum_pool()
 
 
-    elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool__5813":
-            search_space = Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool__5813()
+    elif search_space_option == "Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool": # tuning done
+            search_space = Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool()
 
 
     else:

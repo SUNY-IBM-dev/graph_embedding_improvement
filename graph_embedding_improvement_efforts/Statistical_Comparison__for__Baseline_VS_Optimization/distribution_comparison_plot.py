@@ -43,7 +43,7 @@ def plot_distribution_comparison_histograms(Baseline_AvgVal_Accuracies,
             bins= 50, density=False, alpha=0.7, color='red', label= Optimization_label)
 
 
-   plt.title(f"{Dataset_name}", fontsize=11, pad=10)
+   plt.title(f"{Dataset_name} ({Tuned_on_Entire_or_Train})", fontsize=11, pad=10)
    plt.xlabel('Avg.Val.Accuracy', fontsize=11, labelpad=10)
    plt.ylabel(f'Count of Hyperparam. Sets (Total {available_hyperparam_sets_num})', fontsize=11, labelpad=10)
    plt.legend(fontsize=10)
@@ -58,7 +58,7 @@ def plot_distribution_comparison_histograms(Baseline_AvgVal_Accuracies,
    plt.hist(Optimization_AvgVal_F1s[:available_hyperparam_sets_num], 
             bins=50, density=False, alpha=0.7, color='red', label= Optimization_label)
 
-   plt.title(f"{Dataset_name}", fontsize=11, pad=10)
+   plt.title(f"{Dataset_name} ({Tuned_on_Entire_or_Train})", fontsize=11, pad=10)
    plt.xlabel('Avg.Val.F1', fontsize=11, labelpad=10)
    plt.ylabel(f'Count of Hyperparam. Sets (Total {available_hyperparam_sets_num})', fontsize=11, labelpad=10)
    plt.legend(fontsize=10)
@@ -72,41 +72,62 @@ def plot_distribution_comparison_histograms(Baseline_AvgVal_Accuracies,
 
 if __name__ == "__main__":
 
-   # Dataset_1 1-gram ( tuning complete & plots created )    
-   Baseline_1gram__Entire_Full_Dataset_1_Tuning_csvpath =\
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-05_000556/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-05_000556.csv"
-   Thread_1gram__Entire_Full_Dataset_1_Tuning_csvpath = \
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_000813/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_000813.csv"
+   # # Dataset_1 1-gram ( tuning complete & plots created )    
+   # Baseline_1gram__Entire_Full_Dataset_1_Tuning_csvpath =\
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-05_000556/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-05_000556.csv"
+   # Thread_1gram__Entire_Full_Dataset_1_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_000813/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_000813.csv"
 
-   # Dataset_1 2-gram ( tuning complete & plots created ) 
-   Baseline_2gram__Entire_Full_Dataset_1_Tuning_csvpath = \
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_000419/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_000419.csv" 
-   Thread_2gram__Entire_Full_Dataset_1_Tuning_csvpath = \
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_000246/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_000246.csv"
+   # # Dataset_1 2-gram ( tuning complete & plots created ) 
+   # Baseline_2gram__Entire_Full_Dataset_1_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_000419/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_000419.csv" 
+   # Thread_2gram__Entire_Full_Dataset_1_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_000246/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_000246.csv"
 
-   # Dataset_1 4-gram (  ) 
-   Baseline_4gram__Entire_Full_Dataset_1_Tuning_csvpath = \
-      "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Full_dataset_results/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-05_114013/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-05_114013.csv" 
-   Thread_4gram__Entire_Full_Dataset_1_Tuning_csvpath = \
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_121751/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_121751.csv"
+   # # Dataset_1 4-gram (  ) 
+   # Baseline_4gram__Entire_Full_Dataset_1_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Full_dataset_results/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-05_114013/RandomForest__Dataset-Case-1__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-05_114013.csv" 
+   # Thread_4gram__Entire_Full_Dataset_1_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_121751/RandomForest__Full_Dataset_1_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_121751.csv"
 
-   # Dataset_2 1-gram ( tuning complete & plots created  ) 
-   Baseline_1gram__Entire_Full_Dataset_2_Tuning_csvpath = \
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-05_001844/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-05_001844.csv" 
-   Thread_1gram__Entire_Full_Dataset_2_Tuning_csvpath = \
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_002314/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_002314.csv"
+   # # Dataset_2 1-gram ( tuning complete & plots created  ) 
+   # Baseline_1gram__Entire_Full_Dataset_2_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-05_001844/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-05_001844.csv" 
+   # Thread_1gram__Entire_Full_Dataset_2_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_002314/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_002314.csv"
 
-   # Dataset_2 2-gram (  ) 
-   Baseline_2gram__Entire_Full_Dataset_2_Tuning_csvpath = \
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_002008/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_002008.csv" 
-   Thread_2gram__Entire_Full_Dataset_2_Tuning_csvpath = \
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_002353/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_002353.csv"
+   # # Dataset_2 2-gram (  ) 
+   # Baseline_2gram__Entire_Full_Dataset_2_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_002008/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_002008.csv" 
+   # Thread_2gram__Entire_Full_Dataset_2_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_002353/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_002353.csv"
 
-   # Dataset_2 4-gram (  ) 
-   Baseline_4gram__Entire_Full_Dataset_2_Tuning_csvpath = \
-      "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Full_dataset_results/RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-05_113957/RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-05_113957.csv" 
-   Thread_4gram__Entire_Full_Dataset_2_Tuning_csvpath = \
-      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301.csv"
+   # # Dataset_2 4-gram (  ) 
+   # Baseline_4gram__Entire_Full_Dataset_2_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/PW_NON_TRACE_COMMAND_DATASET/Full_dataset_results/RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-05_113957/RandomForest__Dataset-Case-2__RandomForest_searchspace_1__10_FoldCV__search_on_all__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-05_113957.csv" 
+   # Thread_4gram__Entire_Full_Dataset_2_Tuning_csvpath = \
+   #    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301/RandomForest__Full_Dataset_2_NoTraceUIDupdated__RandomForest_searchspace_1__10_FoldCV__search_on_all__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_122301.csv"
+
+
+
+   # Dataset_2__Train 1-gram ( tuning complete & plots created  ) 
+   Baseline_1gram__Train_Full_Dataset_2_Tuning_csvpath = \
+      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-07_150007/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__1gram__2024-02-07_150007.csv" 
+   Thread_1gram__Train_Full_Dataset_2_Tuning_csvpath = \
+      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-07_145320/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__1gram__sum_pool__only_train_specified_Ngram_True__2024-02-07_145320.csv"
+
+   # Dataset_2__Train 2-gram (  ) 
+   Baseline_2gram__Train_Full_Dataset_2_Tuning_csvpath = \
+      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_225907/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__2gram__2024-02-05_225907.csv" 
+   Thread_2gram__Train_Full_Dataset_2_Tuning_csvpath = \
+      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_230519/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__2gram__sum_pool__only_train_specified_Ngram_True__2024-02-05_230519.csv"
+
+   # Dataset_2__Train 4-gram (  ) 
+   Baseline_4gram__Train_Full_Dataset_2_Tuning_csvpath = \
+      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Baseline_Approaches/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__baseline_3__flattened_graph_Ngram_events__node_type_counts__4gram__2024-02-07_210817.csv" 
+   Thread_4gram__Train_Full_Dataset_2_Tuning_csvpath = \
+      "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-09_163746/RandomForest__Full_Dataset_2_Double_Stratified__RandomForest_searchspace_1__10_FoldCV__search_on_train__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__only_train_specified_Ngram_True__2024-02-09_163746.csv"
+
 
 
 
@@ -114,13 +135,13 @@ if __name__ == "__main__":
    # ----------------------------------------------- 
    # Set the following
 
-   Baseline_label = "Baseline 4-gram"     # e.g. Baseline 2-gram
-   Optimization_label = "Thread 4-gram"   # e.g. Thread 2-gram
+   Baseline_label = "Baseline 1-gram"     # e.g. Baseline 2-gram
+   Optimization_label = "Thread 1-gram"   # e.g. Thread 2-gram
    Dataset_name = "Full Dataset-2"        # e.g. Full Dataset-1
-   Tuned_on_Entire_or_Train = "Entire"    # 'Entire' or 'Train'
+   Tuned_on_Entire_or_Train = "Train"    # 'Entire' or 'Train'
 
-   Baseline_Tuning_csvpath = Baseline_4gram__Entire_Full_Dataset_2_Tuning_csvpath
-   Optimization_Tuning_csvpath = Thread_4gram__Entire_Full_Dataset_2_Tuning_csvpath
+   Baseline_Tuning_csvpath = Baseline_1gram__Train_Full_Dataset_2_Tuning_csvpath
+   Optimization_Tuning_csvpath = Thread_1gram__Train_Full_Dataset_2_Tuning_csvpath
    # -------------------------------------------------------------------------------------------------------------------------
 
    Baseline_Tuning_df = pd.read_csv(Baseline_Tuning_csvpath)
