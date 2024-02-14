@@ -13,6 +13,7 @@ on which features were most responsible for mispredictions (Dr. Xiaokui Case-Stu
 
 import os
 import pandas as pd
+import json
 
 if __name__ == "__main__":
 
@@ -20,6 +21,12 @@ if __name__ == "__main__":
 
    final_test_model_dirpath = \
    "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/graph_embedding_improvement_efforts/Trial_7__Thread_level_N_grams__N_gt_than_1__Similar_to_PriorGraphEmbedding/RESULTS/RandomForest__Full_Dataset_2_Double_Stratified__Best_RF__Full_Dataset_2_Double_Stratified__4gram__sum_pool__final_test__thread_level__N>1_grams_events__nodetype5bit__4gram__sum_pool__2024-02-13_121930"
+
+
+   samples_of_interest = "Mispredictions" # 'Mispredictions' or 'Correct_Predictions'
+   wrong_direction_features = True
+   correct_direction_features = False
+   topN = 10
 
    # ======================================================================================================================================
 
@@ -42,35 +49,107 @@ if __name__ == "__main__":
    Mispredictions = [ x[start_idx:].removesuffix('.png') for x in os.listdir(Mispredictions_Waterfallplots_dirpath) ]
    Correct_Predictions = [ x[start_idx:].removesuffix('.png') for x in os.listdir(Correct_Predictions_Waterfallplots_dirpath) ]
    
-   # -------------------------------------------------------------------------------------------------------------------------------------------------------
-   samples_of_interest = Mispredictions
+   samples_of_interest__dict = {"Mispredictions": Mispredictions, "Correct_Predictions": Correct_Predictions}
 
+   # -------------------------------------------------------------------------------------------------------------------------------------------------------
+   samples_to_check = samples_of_interest__dict[samples_of_interest]
+
+   top_N = 10
    Local_SHAP_vals_TestDataset.set_index("data_name", inplace = True)
+
+   result_dict = dict()
 
    for test_data in Local_SHAP_vals_TestDataset.index:
 
-      if test_data in samples_of_interest:
 
-         if test_data.startswith("malware"):
-            
+
+      if test_data.startswith("malware"):
+
+         if test_data in samples_to_check:
+
             # if 'malware', then features that push to correct direction have 'positive' local-shap value
+            
+            correct_direction_top_N_features = dict(Local_SHAP_vals_TestDataset.loc[test_data].sort_values(ascending = False)[0:top_N])            
+            wrong_direction_top_N_features = dict(Local_SHAP_vals_TestDataset.loc[test_data].sort_values(ascending = True)[0:top_N])
 
-            pass
+            direction_choice_dict = dict()
+            if wrong_direction_features == True:
+               direction_choice_dict |= {f"wrong_direction_top_{top_N}_features" :  wrong_direction_top_N_features}
+            if correct_direction_features == True:
+               direction_choice_dict |= {f"correct_direction_top_{top_N}_features" :  correct_direction_top_N_features}
+            # result_dict[test_data] = {
+            #    f"correct_direction_top_{top_N}_features" : correct_direction_top_N_features,
+            #    # f"wrong_direction_top_{top_N}_features" : wrong_direction_top_N_features
+            # }
 
-         elif test_data.startswith("benign"):
+            result_dict[test_data] = direction_choice_dict
+
+
+      elif test_data.startswith("benign"):
+
+
+         if test_data.startswith("benign_benign_"): # I have no idea why this happened somewhere
+            test_data_realname = test_data.removeprefix("benign_")
+         else:
+            test_data_realname = test_data
+
+         if test_data_realname in samples_to_check:
 
             # if 'benign', then features that push to correct direction have 'negative' local-shap value
+            correct_direction_top_N_features = dict(Local_SHAP_vals_TestDataset.loc[test_data].sort_values(ascending = True)[0:top_N])
+            wrong_direction_top_N_features = dict(Local_SHAP_vals_TestDataset.loc[test_data].sort_values(ascending = False)[0:top_N])
+            
+            direction_choice_dict = dict()
+            if wrong_direction_features == True:
+               direction_choice_dict |= {f"wrong_direction_top_{top_N}_features" :  wrong_direction_top_N_features}
+            if correct_direction_features == True:
+               direction_choice_dict |= {f"correct_direction_top_{top_N}_features" :  correct_direction_top_N_features}
+            # result_dict[test_data] = {
+            #    f"correct_direction_top_{top_N}_features" : correct_direction_top_N_features,
+            #    # f"wrong_direction_top_{top_N}_features" : wrong_direction_top_N_features
+            # }
 
-            pass
+            result_dict[test_data_realname] = direction_choice_dict
+
+            # result_dict[test_data_realname] = {
+            #    f"correct_direction_top_{top_N}_features" : correct_direction_top_N_features,
+            #    # f"wrong_direction_top_{top_N}_features" : wrong_direction_top_N_features
+            # }
 
 
-         else:
-            raise ValueError(f"{test_data} should either start with 'malware' or 'benign'")
+      else:
+         raise ValueError(f"{test_data} should either start with 'malware' or 'benign'")
 
 
-         Local_SHAP_vals_TestDataset.loc[test_data]   
+         #Local_SHAP_vals_TestDataset.loc[test_data]   
+   # ==============================================================================================================================
+   results_dirpath = "/home/jgwak1/tabby/graph_embedding_improvement_JY_git/analyze_at_model_explainer/Dr_Xiaokui_Case_Study_RESULTS"
+
+   final_model_identifier = os.path.split(final_test_model_dirpath)[1]
+
+   if wrong_direction_features == True and correct_direction_features == False:
+      Direction_Desc ="Wrong_Direction"
+   elif wrong_direction_features == False and correct_direction_features == True:
+      Direction_Desc ="Correct_Direction"
+   elif wrong_direction_features == True and correct_direction_features == True:
+      Direction_Desc ="Both"
+   else:
+      raise ValueError("Need to set either one direction (wrong or correct)")
+
+   with open(os.path.join(results_dirpath, f"{samples_of_interest}_{Direction_Desc}_Pushing_Features___{final_model_identifier}.json"), "w") as json_file:
+   # with open(os.path.join(results_dirpath, f"Correction_Predictions_Correct_Direction_Pushing_Features___{final_model_identifier}.json"), "w") as json_file:
+
+         json.dump(result_dict, json_file) 
+
+
+
+   '''
+   JY @ TODO FOR 2023-2-14 
+
+   Could perform some intersection operations on 'wrong-direction pushing features'
+   to identify frequently appearing wrong-direction pushing features and try to interpret with domian knolwedge 
    
-
+   '''
    
 
 

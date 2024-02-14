@@ -35,59 +35,59 @@ def run_Targetted_Subgraph_Generation( ESIndex_ProcessID_dict, subgraphs_to_save
 
         target_path = os.path.join(subgraphs_to_save_dirpath, idx)
 
-        try:
+        # try:
 
             
-            if not os.path.exists(target_path):
-                #shutil.rmtree(target_path)
-                os.makedirs(target_path)
-            # #malware_path = os.path.expanduser('~/tabby/SUNY_IBM_Project/data/'+idx)
-            
-            # Added by JY @ 2024-2-4
-            print("First check if already subgraph is generated", flush= True)
-            if "graph.GraphML" in os.listdir(target_path):
-                print(f"Subgraph already exists for '{idx}' in\n{target_path}", flush= True)
-                continue
+        if not os.path.exists(target_path):
+            #shutil.rmtree(target_path)
+            os.makedirs(target_path)
+        # #malware_path = os.path.expanduser('~/tabby/SUNY_IBM_Project/data/'+idx)
+        
+        # Added by JY @ 2024-2-4
+        print("First check if already subgraph is generated", flush= True)
+        if "graph.GraphML" in os.listdir(target_path):
+            print(f"Subgraph already exists for '{idx}' in\n{target_path}", flush= True)
+            continue
 
 
-            print("Igraph generation Phase", flush= True)
-            
+        print("Igraph generation Phase", flush= True)
+        
 
-            # # Added by JY @ 2023-03-02: Added 3rd argument "EventTypes_to_Exclude_set"
-            fstep.first_step(idx, target_path, elastic_search_machine)
+        # # Added by JY @ 2023-03-02: Added 3rd argument "EventTypes_to_Exclude_set"
+        fstep.first_step(idx, target_path, elastic_search_machine)
 
 
-            f = open(os.path.join(target_path,"file_edge.json"))
-            n = open(os.path.join(target_path,"net_edge.json"))
-            r = open(os.path.join(target_path,"reg_edge.json"))
-            p = open(os.path.join(target_path,"proc_edge.json")) 
-            file_data = json.load(f)
-            net_data = json.load(n)
-            reg_data = json.load(r)
-            proc_data = json.load(p)
-            edge_data = {**file_data , **net_data , **reg_data, **proc_data}
+        f = open(os.path.join(target_path,"file_edge.json"))
+        n = open(os.path.join(target_path,"net_edge.json"))
+        r = open(os.path.join(target_path,"reg_edge.json"))
+        p = open(os.path.join(target_path,"proc_edge.json")) 
+        file_data = json.load(f)
+        net_data = json.load(n)
+        reg_data = json.load(r)
+        proc_data = json.load(p)
+        edge_data = {**file_data , **net_data , **reg_data, **proc_data}
 
-            print("Edge direction phase", flush=True)
-            ed.set_edge_dir(target_path,file_data,net_data,reg_data,proc_data)
-            print("Edge direction phase DONE", flush=True)
+        print("Edge direction phase", flush=True)
+        ed.set_edge_dir(target_path,file_data,net_data,reg_data,proc_data)
+        print("Edge direction phase DONE", flush=True)
 
-            print("Attribute list generating phase", flush=True)
-            sstep.second_step(target_path)
-            print("Attribute list generating phase DONE", flush=True)
+        print("Attribute list generating phase", flush=True)
+        sstep.second_step(target_path)
+        print("Attribute list generating phase DONE", flush=True)
 
-            #print("Projection-2 phase")
-            #sub2.projection(malware_path,idx,mal_PID,edge_data)
+        #print("Projection-2 phase")
+        #sub2.projection(malware_path,idx,mal_PID,edge_data)
 
-            print("Projection-3 phase",flush=True)
-            sub3.projection(target_path, idx, str(ProcessID), edge_data) # VERY IMPORTANT THAT IT IS STRINGIFIED!!
-            print("Projection-3 phase DONE",flush=True)
+        print("Projection-3 phase",flush=True)
+        sub3.projection(target_path, idx, str(ProcessID), edge_data) # VERY IMPORTANT THAT IT IS STRINGIFIED!!
+        print("Projection-3 phase DONE",flush=True)
        
 
-        except Exception as e:
-            print(f"Problem with index {idx} and ProcessID {ProcessID}, {e}", flush = True)
-            time.sleep(120)
-            if os.path.exists(target_path):
-                shutil.rmtree(target_path)
+        # except Exception as e:
+        #     print(f"Problem with index {idx} and ProcessID {ProcessID}, {e}", flush = True)
+        #     time.sleep(120)
+        #     if os.path.exists(target_path):
+        #         shutil.rmtree(target_path)
 
         print(f"{idx} -- ELAPSED TIME: {str(datetime.now() - this_iteration_start)}")
 
