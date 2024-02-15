@@ -1,0 +1,14 @@
+-- one finding: 
+------------------------------------------------------------------------------------------
+Among_All_Mispred_Malware_Samples_Top 1 feature_Pushing_To_Wrong_Direction
+ ==
+Among_All_CorrectPredicted_Benign_Samples_Top 1 feature_Pushing_To_Correct_Direction
+
+which is "openkey openkey closekeys create" .
+So the thread-4gram model seems to associate that 4-gram feature with Benign-samples.
+------------------------------------------------------------------------------------------
+Among_All_Mispred_Benign_Samples_Top 1 feature_Pushing_To_Wrong_Direction
+==
+Among_All_CorrectPredicted_Malware_Samples_Top 1 feature_Pushing_To_Correct_Direction
+which is closekeys openkey create queryinformation
+So the thread-4gram model seems to associate that 4-gram feature with Malware-samples.
